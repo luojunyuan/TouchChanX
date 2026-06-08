@@ -1,6 +1,7 @@
-﻿using System;
+﻿using TouchChanX.Win32.Interop;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -18,9 +19,24 @@ namespace TouchChanX.UWP
         /// </summary>
         public App()
         {
-            InitializeComponent();
+            // 因为 Package 引用多个项目，这里我们手动注册 mux 依赖
+            var dependencyPackageList = Package.Current.Dependencies;
+            var muxPackage = dependencyPackageList
+                .FirstOrDefault(p => p.DisplayName.Contains("Microsoft.UI.Xaml"));
 
-            Suspending += OnSuspending;
+            if (muxPackage != null)
+            {
+                OsPlatformApi.TryRegisterDependency(
+                    muxPackage.Id.FamilyName,
+                    muxPackage.Id.Architecture switch
+                    {
+                        ProcessorArchitecture.Arm64 => PackageDependencyProcessorArchitectures.Arm64,
+                        ProcessorArchitecture.X64 => PackageDependencyProcessorArchitectures.X64,
+                        _ => throw new NotSupportedException("Unsupported architecture")
+                    });
+            }
+
+            InitializeComponent();
         }
 
         /// <inheritdoc/>
@@ -65,21 +81,6 @@ namespace TouchChanX.UWP
         private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
         {
             throw new Exception($"Failed to load page '{e.SourcePageType.FullName}'.");
-        }
-
-        /// <summary>
-        /// Invoked when application execution is being suspended. Application state is saved
-        /// without knowing whether the application will be terminated or resumed with the contents
-        /// of memory still intact.
-        /// </summary>
-        /// <param name="sender">The source of the suspend request.</param>
-        /// <param name="e">Details about the suspend request.</param>
-        private void OnSuspending(object sender, SuspendingEventArgs e)
-        {
-            SuspendingDeferral deferral = e.SuspendingOperation.GetDeferral();
-
-            // TODO: Save application state and stop any background activity
-            deferral.Complete();
         }
     }
 }

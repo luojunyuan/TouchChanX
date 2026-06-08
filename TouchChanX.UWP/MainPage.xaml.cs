@@ -11,5 +11,11 @@ namespace TouchChanX.UWP
         {
             InitializeComponent();
         }
+
+        private void Button_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+            //Process.Start("notepad");
+            var dir = Directory.GetDirectories("c:/");
+        }
     }
 }

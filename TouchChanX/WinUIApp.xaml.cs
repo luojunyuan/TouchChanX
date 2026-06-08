@@ -17,7 +17,7 @@ public static class WinUIApplication
 
         try
         {
-            // 使用 MSIX 动态依赖包 API，强行修改静态包图的依赖顺序
+            // 使用 MSIX 动态依赖包 API，强行修改静态包图的依赖顺序，注册 WindowsAppRuntime 依赖包到当前进程中
             var dependencyPackageList = Package.Current.Dependencies;
             var packageDependencyProcessorArchitectures =
                 Package.Current.Id.Architecture switch
@@ -27,6 +27,10 @@ public static class WinUIApplication
                     _ => throw new NotSupportedException("Unsupported architecture")
                 };
 
+            // Microsoft.UI.Xaml.2.8
+            // Microsoft Visual C++ 2015 UWP Runtime Package
+            // WindowsAppRuntime.2
+            // Microsoft Visual C++ 2015 UWP Desktop Runtime Package
             foreach (Package dependencyPackage in dependencyPackageList)
             {
                 if (!dependencyPackage.DisplayName.Contains("WindowsAppRuntime"))
