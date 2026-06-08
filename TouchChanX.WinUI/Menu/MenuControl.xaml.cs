@@ -73,15 +73,11 @@ public sealed partial class MenuControl : UserControl
         IsHitTestVisible = false;
 
         var activePage = _activePage!;
-        PageAnimator.PrepareHidden(activePage.Items, activePage.Descriptor.DefaultOrigin, CellDistance);
+        PageAnimator.PrepareHiddenInPlace(activePage.Items);
         TransitionPresentationVisible(true);
         await PlayMenuTransitionAnimationAsync();
         TransitionPresentationVisible(false);
-        await PageAnimator.PlayEnterAsync(
-            activePage.Items,
-            activePage.Descriptor.DefaultOrigin,
-            CellDistance,
-            PageTransitionDuration);
+        await PageAnimator.PlayFadeInAsync(activePage.Items, PageTransitionDuration);
         PageAnimator.Reset(activePage.Items);
 
         IsHitTestVisible = true;
@@ -97,13 +93,7 @@ public sealed partial class MenuControl : UserControl
         IsHitTestVisible = false;
 
         if (_activePage is not null)
-        {
-            await PageAnimator.PlayExitAsync(
-                _activePage.Items,
-                _activePage.Descriptor.DefaultOrigin,
-                CellDistance,
-                PageTransitionDuration);
-        }
+            await PageAnimator.PlayFadeOutAsync(_activePage.Items, PageTransitionDuration);
 
         TransitionPresentationVisible(true);
         await PlayMenuTransitionAnimationAsync(showing: false);

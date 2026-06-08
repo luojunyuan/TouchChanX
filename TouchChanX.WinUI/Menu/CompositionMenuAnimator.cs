@@ -73,6 +73,15 @@ internal sealed class CompositionMenuAnimator
                 Animate(item.Element, 0f, 1f, Vector3.Zero, Vector3.Zero, duration);
         });
 
+    public Task PlayFadeOutAsync(
+        IReadOnlyList<MenuItemView> items,
+        TimeSpan duration) =>
+        RunBatch(() =>
+        {
+            foreach (var item in items)
+                Animate(item.Element, 1f, 0f, Vector3.Zero, Vector3.Zero, duration);
+        });
+
     public void PrepareHidden(IReadOnlyList<MenuItemView> items, MenuCell origin, float cellDistance)
     {
         foreach (var item in items)
