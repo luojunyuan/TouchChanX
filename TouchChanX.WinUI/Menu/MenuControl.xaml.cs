@@ -39,6 +39,9 @@ public sealed partial class MenuControl : UserControl
 
         _lastTouchDockAnchor = touchDock;
         ResetToMainPage();
+        if (_activePage is not null)
+            PageAnimator.PrepareHiddenInPlace(_activePage.Items);
+
         Visibility = Visibility.Visible;
     }
 
@@ -75,9 +78,11 @@ public sealed partial class MenuControl : UserControl
         var activePage = _activePage!;
         PageAnimator.PrepareHiddenInPlace(activePage.Items);
         TransitionPresentationVisible(true);
-        await PlayMenuTransitionAnimationAsync();
+        await Task.WhenAll(
+            PlayMenuTransitionAnimationAsync(),
+            PlayMenuContentTranslationAnimationAsync(),
+            PageAnimator.PlayFadeInAsync(activePage.Items, MenuTransitionDuration));
         TransitionPresentationVisible(false);
-        await PageAnimator.PlayFadeInAsync(activePage.Items, PageTransitionDuration);
         PageAnimator.Reset(activePage.Items);
 
         IsHitTestVisible = true;
@@ -92,13 +97,18 @@ public sealed partial class MenuControl : UserControl
         _isTransitioning = true;
         IsHitTestVisible = false;
 
-        if (_activePage is not null)
-            await PageAnimator.PlayFadeOutAsync(_activePage.Items, PageTransitionDuration);
-
         TransitionPresentationVisible(true);
-        await PlayMenuTransitionAnimationAsync(showing: false);
-        TransitionPresentationVisible(false);
+        await Task.WhenAll(
+            PlayMenuTransitionAnimationAsync(showing: false),
+            _activePage is not null
+                ? PlayMenuContentTranslationAnimationAsync(showing: false)
+                : Task.CompletedTask,
+            _activePage is not null
+                ? PageAnimator.PlayFadeOutAsync(_activePage.Items, MenuTransitionDuration)
+                : Task.CompletedTask);
+
         Visibility = Visibility.Collapsed;
+        TransitionPresentationVisible(false);
 
         IsHitTestVisible = true;
         _isTransitioning = false;
@@ -246,7 +256,9 @@ public sealed partial class MenuControl : UserControl
     /// </summary>
     private void TransitionPresentationVisible(bool isVisible)
     {
-        MenuBorder.Opacity = isVisible ? 0 : 1;
+        MenuBorder.Background = isVisible
+            ? null
+            : (Microsoft.UI.Xaml.Media.Brush)Resources["AssistiveTouchBackground"];
         TransitionShellHost.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
         TransitionItemsHost.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
     }

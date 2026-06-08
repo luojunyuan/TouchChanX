@@ -16,9 +16,13 @@
     </UserControl.Resources>
 
     <Grid x:Name="BackgroundLayer" Background="Transparent">
+        <Grid x:Name="TransitionShellHost" />
+
         <Border x:Name="MenuBorder"
             Width="{x:Bind root:Shared.MenuSize}"
             Height="{x:Bind root:Shared.MenuSize}"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
             Background="{StaticResource AssistiveTouchBackground}"
             CornerRadius="{x:Bind top:Converters.CircleCornerRadius(root:Shared.TouchSize)}">
 
@@ -37,7 +41,6 @@
             </Grid>
         </Border>
 
-        <Grid x:Name="TransitionShellHost" />
         <Grid x:Name="TransitionItemsHost" />
     </Grid>
 </UserControl>

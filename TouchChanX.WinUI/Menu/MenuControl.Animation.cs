@@ -125,6 +125,34 @@ public partial class MenuControl
         return taskCompletionSource.Task;
     }
 
+    private Task PlayMenuContentTranslationAnimationAsync(bool showing = true)
+    {
+        var taskCompletionSource = new TaskCompletionSource();
+        var batch = Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
+
+        var anchorOffset = AnchorPoint(_lastTouchDockAnchor, ContainerSize).ToVector3();
+        var centerOffset = CenterPosition.ToVector3();
+        var travelOffset = anchorOffset - centerOffset;
+        var fromOffset = showing ? travelOffset : Vector3.Zero;
+        var toOffset = showing ? Vector3.Zero : travelOffset;
+        var visual = ElementCompositionPreview.GetElementVisual(MenuContentRoot);
+
+        visual.StopAnimation(nameof(Visual.Offset));
+        visual.Offset = toOffset;
+
+        var offsetAnimation = Compositor.CreateVector3KeyFrameAnimation();
+        offsetAnimation.Duration = MenuTransitionDuration;
+        offsetAnimation.InsertKeyFrame(0f, fromOffset);
+        offsetAnimation.InsertKeyFrame(1f, toOffset, MenuEasing);
+
+        visual.StartAnimation(nameof(Visual.Offset), offsetAnimation);
+
+        batch.Completed += (_, _) => taskCompletionSource.TrySetResult();
+        batch.End();
+
+        return taskCompletionSource.Task;
+    }
+
     /// <summary>
     /// 把 TouchDockAnchor 翻译到所位于的窗口坐标系位置。
     /// </summary>
