@@ -1,6 +1,6 @@
-﻿using Microsoft.UI.Xaml;
+﻿using System.Diagnostics;
+using Microsoft.UI.Xaml;
 using R3;
-using System.Diagnostics;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
 using Windows.ApplicationModel;
@@ -19,40 +19,33 @@ public static class WinUIApplication
         {
             // 使用 MSIX 动态依赖包 API，强行修改静态包图的依赖顺序，注册 WindowsAppRuntime 依赖包到当前进程中
             var dependencyPackageList = Package.Current.Dependencies;
-            var packageDependencyProcessorArchitectures =
+            // Microsoft.UI.Xaml.2.8
+            // WindowsAppRuntime.2
+            // Microsoft Visual C++ 2015 UWP Desktop Runtime Package
+            // Microsoft Visual C++ 2015 UWP Runtime Package
+
+            var windowsAppRuntimePackage = dependencyPackageList
+                .FirstOrDefault(p => p.DisplayName.Contains("WindowsAppRuntime"));
+
+            if (windowsAppRuntimePackage is null)
+                return false;
+
+            if (!OsPlatformApi.TryRegisterDependency(
+                windowsAppRuntimePackage.Id.FamilyName,
                 Package.Current.Id.Architecture switch
                 {
                     ProcessorArchitecture.Arm64 => PackageDependencyProcessorArchitectures.Arm64,
                     ProcessorArchitecture.X64 => PackageDependencyProcessorArchitectures.X64,
                     _ => throw new NotSupportedException("Unsupported architecture")
-                };
-
-            // Microsoft.UI.Xaml.2.8
-            // Microsoft Visual C++ 2015 UWP Runtime Package
-            // WindowsAppRuntime.2
-            // Microsoft Visual C++ 2015 UWP Desktop Runtime Package
-            foreach (Package dependencyPackage in dependencyPackageList)
+                }))
             {
-                if (!dependencyPackage.DisplayName.Contains("WindowsAppRuntime"))
-                    continue;
-
-                if (OsPlatformApi.TryRegisterDependency(
-                    dependencyPackage.Id.FamilyName,
-                    packageDependencyProcessorArchitectures))
-                {
-                    break;
-                }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
         }
         catch (InvalidOperationException ex)
         {
             // 临时跳过非打包项目检查用
             Debug.WriteLine(ex);
-            return true;
         }
 
         return true;
@@ -78,13 +71,6 @@ public partial class WinUIApp(nint gameWindowHandle)
     /// <remarks>QwQ: 耗时方法</remarks>
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        if (gameWindowHandle == nint.Zero)
-        {
-            var preference = new Window();
-            preference.Activate();
-            return;
-        }
-
         var window = new WinUI.MainWindow()
         {
             SystemBackdrop = new TransparentBackdrop()

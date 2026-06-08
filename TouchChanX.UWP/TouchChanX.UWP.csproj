@@ -17,6 +17,7 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls" />
     <PackageReference Include="Microsoft.UI.Xaml" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX">

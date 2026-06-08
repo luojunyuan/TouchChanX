@@ -6,6 +6,7 @@
   <ItemGroup>
     <PackageVersion Include="CalcBinding" Version="2.5.2" />
     <PackageVersion Include="CommunityToolkit.WinUI.Animations" Version="8.2.251219" />
+    <PackageVersion Include="CommunityToolkit.Uwp.Controls.SettingsControls" Version="8.2.251219" />
     <PackageVersion Include="DotnetRuntimeBootstrapper" Version="2.5.4" />
     <PackageVersion Include="LightResults" Version="10.0.3" />
     <PackageVersion Include="Microsoft.UI.Xaml" Version="2.8.7" />

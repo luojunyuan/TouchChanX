@@ -6,17 +6,14 @@ namespace TouchChanX.Win32;
 
 public static partial class GameStartup
 {
-    private const string MsixProtocolPrefix = "touchchanx://";
+    private const string MsixProtocolPrefix = "touchchanx:";
 
     /// <summary>
     /// 准备有效的游戏路径
     /// </summary>
     public static Result<string> PrepareValidGamePath(string path)
     {
-        if (path.StartsWith(MsixProtocolPrefix, StringComparison.OrdinalIgnoreCase) && path.EndsWith('/'))
-        {
-            path = path[MsixProtocolPrefix.Length..^1];
-        }
+        path = NormalizeProtocolPath(path);
 
         if (!File.Exists(path))
             return Result.Failure<string>($"Game path \"{path}\" not found, please check if it exist.");
@@ -41,6 +38,44 @@ public static partial class GameStartup
             return Result.Failure<string>($"Resolved link path \"{resolvedPath}\" not found, please try start from game folder.");
 
         return resolvedPath;
+    }
+
+    private static string NormalizeProtocolPath(string path)
+    {
+        path = path.Trim().Trim('"');
+
+        if (!path.StartsWith(MsixProtocolPrefix, StringComparison.OrdinalIgnoreCase))
+            return path;
+
+        if (Uri.TryCreate(path, UriKind.Absolute, out var uri))
+        {
+            var gamePath = GetQueryValue(uri.Query, "path");
+            if (!string.IsNullOrWhiteSpace(gamePath))
+                return gamePath;
+        }
+
+        var payload = path[MsixProtocolPrefix.Length..];
+        if (payload.StartsWith("//", StringComparison.Ordinal))
+            payload = payload[2..];
+        if (payload.EndsWith('/'))
+            payload = payload[..^1];
+
+        return Uri.UnescapeDataString(payload).Trim('"');
+    }
+
+    private static string? GetQueryValue(string query, string key)
+    {
+        foreach (var part in query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pair = part.Split('=', 2);
+            if (pair.Length == 2 &&
+                Uri.UnescapeDataString(pair[0]).Equals(key, StringComparison.OrdinalIgnoreCase))
+            {
+                return Uri.UnescapeDataString(pair[1]);
+            }
+        }
+
+        return null;
     }
 
     public static async Task<Result<Process>> GetOrLaunchGameWithSplashAsync(string path, Stream fileStream)
