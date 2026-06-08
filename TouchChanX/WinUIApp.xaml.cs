@@ -44,7 +44,7 @@ public static class WinUIApplication
         }
         catch (InvalidOperationException ex)
         {
-            // 临时跳过非打包项目检查用
+            // 临时跳过调试时非打包项目直接运行
             Debug.WriteLine(ex);
         }
 

@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:c="using:TouchChanX.WinUI.Controls"
     xmlns:local="using:TouchChanX.WinUI.Menu"
     xmlns:root="using:TouchChanX.WinUI"
     xmlns:top="using:TouchChanX.WinUI"
@@ -17,28 +16,31 @@
     </UserControl.Resources>
 
     <Grid x:Name="BackgroundLayer" Background="Transparent">
+        <Grid x:Name="TransitionShellHost" />
+
         <Border x:Name="MenuBorder"
             Width="{x:Bind root:Shared.MenuSize}"
             Height="{x:Bind root:Shared.MenuSize}"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
             Background="{StaticResource AssistiveTouchBackground}"
             CornerRadius="{x:Bind top:Converters.CircleCornerRadius(root:Shared.TouchSize)}">
 
-            <Grid ColumnDefinitions="*, *, *" RowDefinitions="*, *, *">
-                <c:MenuButton x:Name="EditButton"
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    Symbol="Edit"
-                    Text="Edit" />
+            <Grid x:Name="MenuContentRoot">
+                <Grid x:Name="CurrentPageHost"
+                    ColumnDefinitions="*, *, *"
+                    Margin="12"
+                    RowDefinitions="*, *, *" />
 
-                <c:MenuButton x:Name="SettingButton"
-                    Grid.Row="1"
-                    Grid.Column="0"
-                    Symbol="Setting"
-                    Text="Setting" />
+                <Grid x:Name="NextPageHost"
+                    ColumnDefinitions="*, *, *"
+                    IsHitTestVisible="False"
+                    Margin="12"
+                    RowDefinitions="*, *, *"
+                    Visibility="Collapsed" />
             </Grid>
         </Border>
 
-        <Grid x:Name="TransitionShellHost" />
         <Grid x:Name="TransitionItemsHost" />
     </Grid>
 </UserControl>

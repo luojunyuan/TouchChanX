@@ -10,26 +10,30 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
+        <SolidColorBrush x:Key="NormalBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="AccentBrush" Color="#6FC4F1" />
+        <SolidColorBrush x:Key="PressedBrush" Color="#A8DCF6" />
+        <SolidColorBrush x:Key="DisabledBrush" Color="#707070" />
     </UserControl.Resources>
 
-    <Grid Background="Transparent">
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-            <SymbolIcon Symbol="{x:Bind Symbol}" />
-            <TextBlock HorizontalAlignment="Center" Text="{x:Bind Text}" />
-        </StackPanel>
+    <Grid x:Name="LayoutRoot" Padding="4" Background="Transparent">
+        <StackPanel
+            MaxWidth="88"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="5">
+            <FontIcon x:Name="ItemIcon"
+                FontFamily="Segoe MDL2 Assets"
+                FontSize="28"
+                Glyph="{x:Bind Glyph, Mode=OneWay}" />
 
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup x:Name="PressStates">
-                <VisualState x:Name="Normal" />
-                <VisualState x:Name="Pressed">
-                    <Storyboard>
-                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Foreground">
-                            <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource AccentBrush}" />
-                        </ObjectAnimationUsingKeyFrames>
-                    </Storyboard>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
+            <TextBlock x:Name="ItemText"
+                HorizontalAlignment="Center"
+                FontSize="12"
+                MaxLines="2"
+                Text="{x:Bind Text, Mode=OneWay}"
+                TextAlignment="Center"
+                TextWrapping="WrapWholeWords" />
+        </StackPanel>
     </Grid>
 </UserControl>
