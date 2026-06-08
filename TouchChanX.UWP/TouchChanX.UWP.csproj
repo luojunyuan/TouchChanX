@@ -18,6 +18,7 @@
   
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls" />
+    <PackageReference Include="Kumo.Uwp.NavigationView.RailStyle" />
     <PackageReference Include="Microsoft.UI.Xaml" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools.MSIX">

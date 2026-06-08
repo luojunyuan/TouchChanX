@@ -40,7 +40,8 @@
             IsSettingsVisible="False"
             PaneDisplayMode="Left"
             PaneTitle="TouchChanX"
-            SelectionChanged="AppNav_SelectionChanged">
+            SelectionChanged="AppNav_SelectionChanged"
+            Style="{StaticResource RailNavigationViewStyle}">
             <muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItem
                     Content="主页"
@@ -50,6 +51,9 @@
                         <SymbolIcon Symbol="Home" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
+            </muxc:NavigationView.MenuItems>
+
+            <muxc:NavigationView.FooterMenuItems>
                 <muxc:NavigationViewItem Content="设置" Tag="settings">
                     <muxc:NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Setting" />
@@ -60,7 +64,7 @@
                         <SymbolIcon Symbol="Help" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-            </muxc:NavigationView.MenuItems>
+            </muxc:NavigationView.FooterMenuItems>
 
             <Grid Padding="32,24,32,32">
                 <ScrollViewer x:Name="HomePage">
