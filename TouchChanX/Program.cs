@@ -3,7 +3,7 @@ using TouchChanX.Win32.Interop;
 
 if (args.Length == 0)
 {
-    TouchChanX.WinUIApplication.RunPreference();
+    OsPlatformApi.MessageBox.Show("invalid game path");
     return;
 }
 

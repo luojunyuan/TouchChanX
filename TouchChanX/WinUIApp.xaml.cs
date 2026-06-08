@@ -54,15 +54,6 @@ public static class WinUIApplication
         return true;
     }
 
-    public static void RunPreference()
-    {
-        bool succeed = PrepareMsixDependency();
-        if (!succeed)
-            return;
-
-        Application.Start(p => _ = new WinUIApp());
-    }
-
     public static void RunWithGameWindow(nint gameWindowHandle)
     {
         bool succeed = PrepareMsixDependency();
@@ -70,14 +61,6 @@ public static class WinUIApplication
             return;
 
         Application.Start(p => _ = new WinUIApp(gameWindowHandle));
-    }
-}
-
-public partial class WinUIApp
-{
-    public WinUIApp() : this(nint.Zero)
-    {
-        this.InitializeComponent();
     }
 }
 
