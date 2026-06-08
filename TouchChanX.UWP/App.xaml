@@ -7,7 +7,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <RailNavigationViewResources xmlns="using:Kumo.WinUI.NavigationView.RailStyle" />
+                <ResourceDictionary Source="ms-appx:///Kumo.Uwp.NavigationView.RailStyle/Styles/CustomNavigationViewStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
