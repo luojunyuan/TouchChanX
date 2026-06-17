@@ -4,6 +4,8 @@ using Windows.Services.Store;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
+using Windows.UI;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -23,8 +25,16 @@ namespace TouchChanX.UWP
         public MainPage()
         {
             InitializeComponent();
+            SetupTitlebar();
             LoadGames();
             UpdateGameListState();
+        }
+
+        private static void SetupTitlebar()
+        {
+            var titleBar = ApplicationView.GetForCurrentView().TitleBar;
+            titleBar.ButtonBackgroundColor = Colors.Transparent;
+            titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
         }
 
         private void AppNav_SelectionChanged(

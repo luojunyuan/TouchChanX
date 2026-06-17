@@ -39,24 +39,15 @@
 
         <Border x:Name="AppTitleBar"
             Height="48"
-            Margin="48 0 0 0"
             VerticalAlignment="Top"
             Background="Transparent"
             Canvas.ZIndex="1"
             IsHitTestVisible="True">
-            <StackPanel Orientation="Horizontal">
-                <Image x:Name="AppFontIcon"
-                    Width="16"
-                    Height="16"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    Source="Assets/Square44x44Logo.png" />
-                <TextBlock x:Name="AppTitle"
-                    Margin="12 0 0 0"
-                    VerticalAlignment="Center"
-                    Style="{StaticResource CaptionTextBlockStyle}"
-                    Text="Test App Title" />
-            </StackPanel>
+            <TextBlock x:Name="AppTitle"
+                Margin="24 0 0 0"
+                VerticalAlignment="Center"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="TachiChan" />
         </Border>
 
         <muxc:NavigationView x:Name="AppNav"
