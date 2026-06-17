@@ -25,13 +25,13 @@ public static partial class GameStartup // Win32
 
         var goodHandle = proc.MainWindowHandle;
 
-        if (goodHandle == nint.Zero)
-            return Result.Failure<nint>(new ProcessPendingExitedError());
+        if (goodHandle != nint.Zero)
+        {
+            PInvoke.GetClientRect(new(goodHandle), out var clientRect);
 
-        PInvoke.GetClientRect(new(goodHandle), out var clientRect);
-
-        if (IsGoodWindow(clientRect))
-            return goodHandle;
+            if (IsGoodWindow(clientRect))
+                return goodHandle;
+        }
 
         var cts = new CancellationTokenSource(SearchWindowTimeout);
         var timeoutToken = cts.Token;

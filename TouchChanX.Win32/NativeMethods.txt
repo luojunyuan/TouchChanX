@@ -37,3 +37,9 @@ CWPSTRUCT
 SendMessage
 SetFocus
 IsWindow
+EnumWindows
+IsWindowVisible
+OpenProcess
+CloseHandle
+QueryFullProcessImageName
+PROCESS_ACCESS_RIGHTS

@@ -1,5 +1,9 @@
 ﻿using LightResults;
+using Microsoft.Win32.SafeHandles;
 using TouchChanX.SplashScreenGdiPlus;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.System.Threading;
 using WindowsShortcutFactory;
 
 namespace TouchChanX.Win32;
@@ -142,17 +146,90 @@ public static partial class GameStartup
     /// </summary>
     private static Task<Process?> GetWindowProcessByPathAsync(string gamePath)
     {
-        var friendlyName = Path.GetFileNameWithoutExtension(gamePath);
-        // FUTURE: .log main.bin situation
+        var normalizedGamePath = NormalizeExecutablePath(gamePath);
         return Task.Run(() =>
-            Process.GetProcessesByName(friendlyName)
-                .FirstOrDefault(p =>
-                {
-                    if (p.MainWindowHandle == nint.Zero)
-                        return false;
+        {
+            foreach (var processId in EnumerateVisibleDesktopWindowProcessIds())
+            {
+                var imagePath = GetProcessImagePath(processId);
+                if (!string.Equals(imagePath, normalizedGamePath, StringComparison.OrdinalIgnoreCase))
+                    continue;
 
-                    var mainModule = p.HasExited ? null : p.MainModule;
-                    return mainModule?.FileName.Equals(gamePath, StringComparison.OrdinalIgnoreCase) ?? false;
-                }));
+                try
+                {
+                    var process = Process.GetProcessById((int)processId);
+                    process.Refresh();
+
+                    if (!process.HasExited)
+                        return process;
+
+                    process.Dispose();
+                }
+                catch (ArgumentException)
+                {
+                    // Process exited after EnumWindows/GetWindowThreadProcessId.
+                }
+                catch (InvalidOperationException)
+                {
+                    // Process exited while creating or refreshing the managed Process wrapper.
+                }
+            }
+
+            return null;
+        });
+    }
+
+    private static IEnumerable<uint> EnumerateVisibleDesktopWindowProcessIds()
+    {
+        var processIds = new HashSet<uint>();
+
+        PInvoke.EnumWindows(EnumProc, 0);
+        return processIds;
+
+        BOOL EnumProc(HWND hwnd, LPARAM lParam)
+        {
+            if (!PInvoke.IsWindowVisible(hwnd))
+                return true;
+
+            _ = PInvoke.GetWindowThreadProcessId(hwnd, out var processId);
+            if (processId != 0)
+                processIds.Add(processId);
+
+            return true;
+        }
+    }
+
+    private static string? GetProcessImagePath(uint processId)
+    {
+        var processHandle = PInvoke.OpenProcess(
+            PROCESS_ACCESS_RIGHTS.PROCESS_QUERY_LIMITED_INFORMATION,
+            false,
+            processId);
+
+        if (processHandle == HANDLE.Null)
+            return null;
+
+        using var safeProcessHandle = new SafeFileHandle((nint)processHandle, ownsHandle: true);
+        const int MaxPathBufferLength = 32768;
+        var buffer = new char[MaxPathBufferLength];
+        var length = (uint)buffer.Length;
+
+        if (!PInvoke.QueryFullProcessImageName(safeProcessHandle, 0, buffer, ref length))
+            return null;
+
+        return NormalizeExecutablePath(new string(buffer, 0, (int)length));
+    }
+
+    private static string NormalizeExecutablePath(string path)
+    {
+        path = Path.GetFullPath(path);
+
+        if (path.StartsWith(@"\\?\UNC\", StringComparison.Ordinal))
+            return @"\\" + path[8..];
+
+        if (path.StartsWith(@"\\?\", StringComparison.Ordinal))
+            return path[4..];
+
+        return path;
     }
 }
