@@ -54,6 +54,51 @@ public static partial class GameStartup // Win32
 
         return Result.Failure<nint>(new WindowHandleNotFoundError());
     }
+
+    /// <summary>
+    /// 检查指定游戏窗口下是否已经挂载过当前 TouchChanX 程序。
+    /// </summary>
+    public static bool HasAttachedCurrentTouchChanX(nint gameWindowHandle)
+    {
+        var currentImagePath = GetCurrentProcessImagePath();
+        if (currentImagePath is null)
+            return false;
+
+        foreach (var childWindow in GetChildWindows(gameWindowHandle))
+        {
+            _ = PInvoke.GetWindowThreadProcessId(childWindow, out var processId);
+            if (processId == 0 || processId == Environment.ProcessId)
+                continue;
+
+            var imagePath = GetProcessImagePath(processId);
+            if (string.Equals(imagePath, currentImagePath, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static string? GetCurrentProcessImagePath()
+    {
+        var path = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            try
+            {
+                using var currentProcess = Process.GetCurrentProcess();
+                path = currentProcess.MainModule?.FileName;
+            }
+            catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException)
+            {
+                return null;
+            }
+        }
+
+        return string.IsNullOrWhiteSpace(path)
+            ? null
+            : NormalizeExecutablePath(path);
+    }
+
     private unsafe struct EnumState
     {
         public int TargetPid;
@@ -98,6 +143,20 @@ public static partial class GameStartup // Win32
                 state->ResultsPtr[state->Count++] = hwnd;
             }
     
+            return true;
+        }
+    }
+
+    private static HWND[] GetChildWindows(nint parentHandle)
+    {
+        var results = new List<HWND>();
+
+        PInvoke.EnumChildWindows(new(parentHandle), EnumProc, 0);
+        return [.. results];
+
+        BOOL EnumProc(HWND hwnd, LPARAM lParam)
+        {
+            results.Add(hwnd);
             return true;
         }
     }
