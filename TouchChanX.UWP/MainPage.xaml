@@ -6,6 +6,7 @@
     xmlns:ct="using:CommunityToolkit.WinUI.Controls"
     xmlns:local="using:TouchChanX.UWP"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:iuxc="using:Islands.UI.Xaml.Controls"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     mc:Ignorable="d">
 
@@ -78,10 +79,9 @@
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
             </muxc:NavigationView.FooterMenuItems>
-            
-            <ScrollViewer>
-                <Grid Margin="32 24 32 32">
 
+            <iuxc:ScrollView>
+                <Grid Margin="32 24 32 32">
                     <StackPanel x:Name="HomePage"  Spacing="24">
                         <Grid ColumnSpacing="16">
                             <Grid.ColumnDefinitions>
@@ -226,7 +226,7 @@
                         <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="TouchChanX 是开源项目，遵循仓库中的开源许可。" TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
-            </ScrollViewer>
+            </iuxc:ScrollView>
         </muxc:NavigationView>
     </Grid>
 </Page>
