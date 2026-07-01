@@ -1,4 +1,5 @@
-using Windows.ApplicationModel;
+﻿using Windows.ApplicationModel;
+using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Services.Store;
 using Windows.Storage;
@@ -32,6 +33,9 @@ namespace TouchChanX.UWP
 
         private static void SetupTitlebar()
         {
+            var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
+            coreTitleBar.ExtendViewIntoTitleBar = true;
+
             var titleBar = ApplicationView.GetForCurrentView().TitleBar;
             titleBar.ButtonBackgroundColor = Colors.Transparent;
             titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;

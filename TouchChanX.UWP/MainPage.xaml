@@ -1,4 +1,4 @@
-<Page x:Class="TouchChanX.UWP.MainPage"
+﻿<Page x:Class="TouchChanX.UWP.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -47,7 +47,7 @@
                 Margin="24 0 0 0"
                 VerticalAlignment="Center"
                 Style="{StaticResource CaptionTextBlockStyle}"
-                Text="TachiChan" />
+                Text="触控酱" />
         </Border>
 
         <muxc:NavigationView x:Name="AppNav"
@@ -78,10 +78,11 @@
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
             </muxc:NavigationView.FooterMenuItems>
+            
+            <ScrollViewer>
+                <Grid Margin="32 24 32 32">
 
-            <Grid Padding="32 24 32 32">
-                <ScrollViewer x:Name="HomePage">
-                    <StackPanel MaxWidth="980" Spacing="24">
+                    <StackPanel x:Name="HomePage"  Spacing="24">
                         <Grid ColumnSpacing="16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -170,10 +171,8 @@
                             </Grid>
                         </Border>
                     </StackPanel>
-                </ScrollViewer>
 
-                <ScrollViewer x:Name="SettingsPage" Visibility="Collapsed">
-                    <StackPanel MaxWidth="760" Spacing="16">
+                    <StackPanel Visibility="Collapsed" x:Name="SettingsPage"  Spacing="16">
                         <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="设置" />
                         <ct:SettingsCard Description="仅占位 UI，暂未连接 ShellMenuHandler 业务逻辑。" Header="在上下文菜单中显示 TouchChanX">
                             <ct:SettingsCard.HeaderIcon>
@@ -182,10 +181,8 @@
                             <ToggleSwitch IsOn="True" OffContent="关闭" OnContent="开启" />
                         </ct:SettingsCard>
                     </StackPanel>
-                </ScrollViewer>
 
-                <ScrollViewer x:Name="AboutPage" Visibility="Collapsed">
-                    <StackPanel MaxWidth="760" Spacing="16">
+                    <StackPanel Visibility="Collapsed" x:Name="AboutPage"  Spacing="16">
                         <StackPanel Orientation="Horizontal" Spacing="16">
                             <Image Width="64" Height="64" Source="ms-appx:///Images/StoreLogo.png" />
                             <StackPanel VerticalAlignment="Center" Spacing="2">
@@ -228,8 +225,8 @@
 
                         <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="TouchChanX 是开源项目，遵循仓库中的开源许可。" TextWrapping="Wrap" />
                     </StackPanel>
-                </ScrollViewer>
-            </Grid>
+                </Grid>
+            </ScrollViewer>
         </muxc:NavigationView>
     </Grid>
 </Page>
