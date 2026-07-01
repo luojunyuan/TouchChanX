@@ -124,50 +124,104 @@
                                         TextAlignment="Center" />
                                 </StackPanel>
 
-                                <ListView x:Name="GameList"
-                                    IsItemClickEnabled="True"
-                                    ItemClick="GameList_ItemClick"
-                                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                    ScrollViewer.HorizontalScrollMode="Enabled"
-                                    ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                    ScrollViewer.VerticalScrollMode="Disabled"
-                                    SelectionMode="None"
-                                    Visibility="Collapsed">
-                                    <ListView.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <ItemsStackPanel Orientation="Horizontal" />
-                                        </ItemsPanelTemplate>
-                                    </ListView.ItemsPanel>
-                                    <ListView.ItemContainerStyle>
-                                        <Style TargetType="ListViewItem">
-                                            <Setter Property="Margin" Value="0 0 12 0" />
-                                            <Setter Property="Padding" Value="0" />
-                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                        </Style>
-                                    </ListView.ItemContainerStyle>
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate x:DataType="local:GameEntry">
-                                            <Border
-                                                Width="152"
-                                                Height="128"
-                                                Padding="12"
-                                                Background="{ThemeResource TouchChanTileBackgroundBrush}"
-                                                CornerRadius="8"
-                                                ToolTipService.ToolTip="{x:Bind Path}">
-                                                <StackPanel VerticalAlignment="Center" Spacing="10">
-                                                    <FontIcon HorizontalAlignment="Center" FontSize="32" Glyph="&#xE7FC;" />
-                                                    <TextBlock
-                                                        HorizontalAlignment="Center"
-                                                        MaxLines="2"
-                                                        Text="{x:Bind Name}"
-                                                        TextAlignment="Center"
-                                                        TextTrimming="CharacterEllipsis"
-                                                        TextWrapping="WrapWholeWords" />
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                </ListView>
+                                <Grid RowSpacing="16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <ListView x:Name="GameList"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                        ScrollViewer.HorizontalScrollMode="Enabled"
+                                        ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                        ScrollViewer.VerticalScrollMode="Disabled"
+                                        SelectionChanged="GameList_SelectionChanged"
+                                        SelectionMode="Single"
+                                        Visibility="Collapsed">
+                                        <ListView.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <ItemsStackPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ListView.ItemsPanel>
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="ListViewItem">
+                                                <Setter Property="Margin" Value="0 0 12 0" />
+                                                <Setter Property="Padding" Value="0" />
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="local:GameEntry">
+                                                <Border
+                                                    Width="152"
+                                                    Height="136"
+                                                    Padding="12"
+                                                    Background="{ThemeResource TouchChanTileBackgroundBrush}"
+                                                    CornerRadius="8"
+                                                    DoubleTapped="GameItem_DoubleTapped"
+                                                    ToolTipService.ToolTip="{x:Bind Path}">
+                                                    <Border.ContextFlyout>
+                                                        <MenuFlyout>
+                                                            <MenuFlyoutItem Click="LaunchGame_Click" Tag="{x:Bind}" Text="启动">
+                                                                <MenuFlyoutItem.Icon>
+                                                                    <SymbolIcon Symbol="Play" />
+                                                                </MenuFlyoutItem.Icon>
+                                                            </MenuFlyoutItem>
+                                                            <MenuFlyoutItem Click="RenameGame_Click" Tag="{x:Bind}" Text="重命名">
+                                                                <MenuFlyoutItem.Icon>
+                                                                    <SymbolIcon Symbol="Edit" />
+                                                                </MenuFlyoutItem.Icon>
+                                                            </MenuFlyoutItem>
+                                                            <MenuFlyoutItem Click="RemoveGame_Click" Tag="{x:Bind}" Text="移除">
+                                                                <MenuFlyoutItem.Icon>
+                                                                    <SymbolIcon Symbol="Delete" />
+                                                                </MenuFlyoutItem.Icon>
+                                                            </MenuFlyoutItem>
+                                                        </MenuFlyout>
+                                                    </Border.ContextFlyout>
+                                                    <StackPanel VerticalAlignment="Center" Spacing="10">
+                                                        <Grid Width="48" Height="48" HorizontalAlignment="Center">
+                                                            <Image
+                                                                Width="48"
+                                                                Height="48"
+                                                                Source="{x:Bind Icon, Mode=OneWay}"
+                                                                Stretch="Uniform"
+                                                                Visibility="{x:Bind IconVisibility, Mode=OneWay}" />
+                                                            <FontIcon
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                FontSize="32"
+                                                                Glyph="&#xE7FC;"
+                                                                Visibility="{x:Bind FallbackIconVisibility, Mode=OneWay}" />
+                                                        </Grid>
+                                                        <TextBlock
+                                                            HorizontalAlignment="Center"
+                                                            MaxLines="2"
+                                                            Text="{x:Bind Name, Mode=OneWay}"
+                                                            TextAlignment="Center"
+                                                            TextTrimming="CharacterEllipsis"
+                                                            TextWrapping="WrapWholeWords" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+
+                                    <CommandBar x:Name="SelectedGameActions"
+                                        Grid.Row="1"
+                                        Background="Transparent"
+                                        DefaultLabelPosition="Right"
+                                        Visibility="Collapsed">
+                                        <CommandBar.Content>
+                                            <TextBlock x:Name="SelectedGameName"
+                                                VerticalAlignment="Center"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </CommandBar.Content>
+                                        <AppBarButton Icon="Play" Label="启动" Click="LaunchSelectedGame_Click" />
+                                        <AppBarButton Icon="Edit" Label="重命名" Click="RenameSelectedGame_Click" />
+                                        <AppBarButton Icon="Delete" Label="移除" Click="RemoveSelectedGame_Click" />
+                                    </CommandBar>
+                                </Grid>
                             </Grid>
                         </Border>
                     </StackPanel>
