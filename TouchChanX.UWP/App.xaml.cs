@@ -1,7 +1,4 @@
-﻿using TouchChanX.Win32.Interop;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.System;
+﻿using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -19,23 +16,6 @@ namespace TouchChanX.UWP
         /// </summary>
         public App()
         {
-            // 因为 Package 引用多个项目，这里我们手动注册 mux 依赖
-            var dependencyPackageList = Package.Current.Dependencies;
-            var muxPackage = dependencyPackageList
-                .FirstOrDefault(p => p.DisplayName.Contains("Microsoft.UI.Xaml"));
-
-            if (muxPackage != null)
-            {
-                OsPlatformApi.TryRegisterDependency(
-                    muxPackage.Id.FamilyName,
-                    muxPackage.Id.Architecture switch
-                    {
-                        ProcessorArchitecture.Arm64 => PackageDependencyProcessorArchitectures.Arm64,
-                        ProcessorArchitecture.X64 => PackageDependencyProcessorArchitectures.X64,
-                        _ => throw new NotSupportedException("Unsupported architecture")
-                    });
-            }
-
             InitializeComponent();
         }
 

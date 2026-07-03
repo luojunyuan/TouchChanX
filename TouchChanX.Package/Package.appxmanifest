@@ -2,30 +2,27 @@
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap4="http://schemas.microsoft.com/appx/manifest/uap/windows10/4"
   xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
-  xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
-  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
-  IgnorableNamespaces="uap rescap">
+  IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="e32627c0-75a8-4054-86f2-0776cf5d1604"
+    Name="415b7dc7-185a-4fcb-b109-6a32c106e99d"
     Publisher="CN=kimika"
-    Version="1.0.0.0" />
+    Version="1.0.15.0" />
 
   <Properties>
-    <DisplayName>TouchChanX.MSIX</DisplayName>
+    <DisplayName>TouchChanX.Package</DisplayName>
     <PublisherDisplayName>kimika</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.22000.0" MaxVersionTested="10.0.26226.0" />
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22000.0" MaxVersionTested="10.0.26226.0" />
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
   </Dependencies>
 
   <Resources>
@@ -33,59 +30,27 @@
   </Resources>
 
   <Applications>
-    <Application Id="UwpApp"
+    <Application Id="App"
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$"
-      uap10:TrustLevel="mediumIL">
+	  uap10:TrustLevel="mediumIL">
       <uap:VisualElements
-        DisplayName="TouchChanX"
-        Description="TouchChanX"
+        DisplayName="TouchChanX.Package"
+        Description="TouchChanX.Package"
         BackgroundColor="transparent"
         Square150x150Logo="Images\Square150x150Logo.png"
         Square44x44Logo="Images\Square44x44Logo.png">
         <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Images\SplashScreen.png" uap5:Optional="true" />
       </uap:VisualElements>
-    </Application>
-    <Application Id="WinUIApp"
-      Executable="TouchChanX\TouchChanX.exe"
-      EntryPoint="Windows.FullTrustApplication">
-        <uap:VisualElements
-          AppListEntry="none"
-          DisplayName="TouchChanX"
-          Description="TouchChanX"
-          BackgroundColor="transparent"
-          Square150x150Logo="Images\Square150x150Logo.png"
-          Square44x44Logo="Images\Square44x44Logo.png">
-            <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png" />
-            <uap:SplashScreen Image="Images\SplashScreen.png" />
-        </uap:VisualElements>
 
-        <Extensions>
-          <desktop4:Extension Category="windows.fileExplorerContextMenus">
-            <desktop4:FileExplorerContextMenus>
-              <desktop5:ItemType Type=".lnk">
-                <desktop5:Verb Id="TCommand" Clsid="C7F36224-0EBF-4CE7-A07B-71BD79CFEFC7" />
-                  </desktop5:ItemType>
-                <desktop5:ItemType Type=".exe">
-                <desktop5:Verb Id="TCommand" Clsid="C7F36224-0EBF-4CE7-A07B-71BD79CFEFC7" />
-              </desktop5:ItemType>
-            </desktop4:FileExplorerContextMenus>
-          </desktop4:Extension>
-          <com:Extension Category="windows.comServer">
-            <com:ComServer>
-              <com:SurrogateServer DisplayName="TachiChan context menu verb handler">
-                <com:Class Id="C7F36224-0EBF-4CE7-A07B-71BD79CFEFC7" Path="TouchChanX.ShellMenuHandler.dll" ThreadingModel="STA"/>
-              </com:SurrogateServer>
-            </com:ComServer>
-          </com:Extension>
-
-          <uap:Extension Category="windows.protocol">
-            <uap:Protocol Name="touchchanx">
-              <uap:DisplayName>TouchChanX</uap:DisplayName>
-            </uap:Protocol>
-          </uap:Extension>
-        </Extensions>
+      <Extensions>
+        <uap:Extension Category="windows.protocol" Executable="TouchChanX/TouchChanX.exe" EntryPoint="Windows.FullTrustApplication">
+          <uap:Protocol Name="touchchanx">
+            <uap:DisplayName>TouchChanX</uap:DisplayName>
+          </uap:Protocol>
+        </uap:Extension>
+      </Extensions>
     </Application>
   </Applications>
 

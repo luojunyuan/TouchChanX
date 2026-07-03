@@ -21,13 +21,12 @@
     <File Path="Settings.XamlStyler" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="TouchChanX.Package/TouchChanX.Package.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" Id="1264a89a-ccaa-4823-89c3-f7be97b5229d">
-    <BuildDependency Project="TouchChanX.ShellMenuHandler/TouchChanX.ShellMenuHandler.vcxproj" />
+  <Project Path="TouchChanX.Package/TouchChanX.Package.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" Id="2bf04da6-e190-4107-9a30-a69dc7b602fa">
     <Deploy />
   </Project>
   <Project Path="TouchChanX.ShellMenuHandler/TouchChanX.ShellMenuHandler.vcxproj" Id="1ff295e9-0faa-4c68-9440-9c30bed120ba" />
   <Project Path="TouchChanX.SplashScreenGdiPlus/TouchChanX.SplashScreenGdiPlus.csproj" />
-  <Project Path="TouchChanX.UWP/TouchChanX.UWP.csproj" Id="604d878a-b8b0-4b55-86d5-63eb500048f9">
+  <Project Path="TouchChanX.UWP/TouchChanX.UWP.csproj">
     <Platform Solution="*|ARM64" Project="arm64" />
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />
