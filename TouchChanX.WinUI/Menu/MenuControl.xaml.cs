@@ -1,9 +1,11 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using R3;
 using R3.ObservableEvents;
 using TouchChanX.WinUI.Controls;
 using TouchChanX.WinUI.Menu.Model;
+using Windows.UI;
 
 namespace TouchChanX.WinUI.Menu;
 
@@ -19,6 +21,7 @@ public sealed partial class MenuControl : UserControl
     private readonly Dictionary<string, bool> _toggleStates = [];
     private Grid _activePageHost = null!;
     private Grid _inactivePageHost = null!;
+    private Brush _menuBackgroundBrush = null!;
     private RenderedMenuPage? _activePage;
     private TouchMenuPageId _currentPageId = TouchMenuPageId.Main;
     private bool _isTransitioning;
@@ -48,6 +51,8 @@ public sealed partial class MenuControl : UserControl
     public MenuControl()
     {
         InitializeComponent();
+        _menuBackgroundBrush = MenuBorder.Background ?? new SolidColorBrush(Color.FromArgb(0xFF, 0x2A, 0x2A, 0x2A));
+
         _activePageHost = CurrentPageHost;
         _inactivePageHost = NextPageHost;
 
@@ -258,7 +263,7 @@ public sealed partial class MenuControl : UserControl
     {
         MenuBorder.Background = isVisible
             ? null
-            : (Microsoft.UI.Xaml.Media.Brush)Resources["AssistiveTouchBackground"];
+            : _menuBackgroundBrush;
         TransitionShellHost.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
         TransitionItemsHost.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
     }
