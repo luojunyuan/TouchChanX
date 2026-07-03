@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 using R3;
 using R3.ObservableEvents;
@@ -43,8 +44,12 @@ public sealed partial class MenuControl : UserControl
         _lastTouchDockAnchor = touchDock;
         ResetToMainPage();
         if (_activePage is not null)
-            PageAnimator.PrepareHiddenInPlace(_activePage.Items);
+            PageAnimator.Reset(_activePage.Items);
 
+        // 必须在 Visibility=Visible 之前隐藏 MenuBorder：
+        // Visible 之后 XAML 会立即 layout 并渲染，而 OpenMenuAsync 要等 LayoutUpdated 才触发，
+        // 两者之间有一帧间隙，会导致菜单项在屏幕正中心闪现。
+        ElementCompositionPreview.GetElementVisual(MenuBorder).Opacity = 0f;
         Visibility = Visibility.Visible;
     }
 
@@ -80,15 +85,17 @@ public sealed partial class MenuControl : UserControl
         _isTransitioning = true;
         IsHitTestVisible = false;
 
-        var activePage = _activePage!;
-        PageAnimator.PrepareHiddenInPlace(activePage.Items);
+        // Items 随壳整体缩放，不做独立淡入，先确保它们处于正常可见状态
+        PageAnimator.Reset(_activePage!.Items);
+        // 预先隐藏 MenuBorder，防止首次展开时菜单项在正中心闪现一帧
+        ElementCompositionPreview.GetElementVisual(MenuBorder).Opacity = 0f;
         TransitionPresentationVisible(true);
         await Task.WhenAll(
             PlayMenuTransitionAnimationAsync(),
-            PlayMenuContentTranslationAnimationAsync(),
-            PageAnimator.PlayFadeInAsync(activePage.Items, MenuTransitionDuration));
+            PlayMenuContentScaleTranslationAnimationAsync());
         TransitionPresentationVisible(false);
-        PageAnimator.Reset(activePage.Items);
+        // 展开后归还 MenuBorder 给 XAML 布局管理（确保窗口 resize 时位置正确）
+        ResetMenuContentVisual();
 
         IsHitTestVisible = true;
         _isTransitioning = false;
@@ -106,14 +113,13 @@ public sealed partial class MenuControl : UserControl
         await Task.WhenAll(
             PlayMenuTransitionAnimationAsync(showing: false),
             _activePage is not null
-                ? PlayMenuContentTranslationAnimationAsync(showing: false)
-                : Task.CompletedTask,
-            _activePage is not null
-                ? PageAnimator.PlayFadeOutAsync(_activePage.Items, MenuTransitionDuration)
+                ? PlayMenuContentScaleTranslationAnimationAsync(showing: false)
                 : Task.CompletedTask);
 
         Visibility = Visibility.Collapsed;
         TransitionPresentationVisible(false);
+        // 重置 Composition 变换，防止下次展开前短暂显示缩放状态
+        ResetMenuContentVisual();
 
         IsHitTestVisible = true;
         _isTransitioning = false;

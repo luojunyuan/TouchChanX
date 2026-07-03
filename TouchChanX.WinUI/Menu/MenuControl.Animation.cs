@@ -52,6 +52,11 @@ public partial class MenuControl
 
         ElementCompositionPreview.SetElementChildVisual(TransitionShellHost, MenuBackgroundVisual);
         TransitionItemsHost.Children.Add(TouchGlyph);
+
+        // 启用 MenuBorder 的 Translation 属性：
+        // Translation 叠加在 XAML layout Offset 之上，不受 XAML layout 覆写，
+        // 是对 XAML 元素做位移动画的正确方式
+        ElementCompositionPreview.SetIsTranslationEnabled(MenuBorder, true);
     }
 
     private TouchDockAnchor _lastTouchDockAnchor = TouchDockAnchor.Default;
@@ -74,24 +79,32 @@ public partial class MenuControl
         var touchSize = new Vector2((float)Shared.TouchSize, (float)Shared.TouchSize);
         var menuSize = new Vector2((float)Shared.MenuSize, (float)Shared.MenuSize);
 
-        var fromOffset = showing ? anchorOffset : centerOffset;
-        var toOffset = showing ? centerOffset : anchorOffset;
+        var shellFromOffset = showing ? anchorOffset : centerOffset;
+        var shellToOffset   = showing ? centerOffset : anchorOffset;
         var fromSize = showing ? touchSize : menuSize;
-        var toSize = showing ? menuSize : touchSize;
+        var toSize   = showing ? menuSize  : touchSize;
         var fakeTouchFromOpacity = showing ? 1f : 0f;
-        var fakeTouchToOpacity = showing ? 0f : 1f;
+        var fakeTouchToOpacity   = showing ? 0f : 1f;
         var touchVisual = ElementCompositionPreview.GetElementVisual(TouchGlyph);
 
-        MenuBackgroundVisual.Offset = toOffset;
+        // TouchGlyph 在动画结束时位于菜单正中心，而不是左上角
+        var touchCenterInMenu = new Vector3(
+            (float)(Shared.MenuSize - Shared.TouchSize) / 2,
+            (float)(Shared.MenuSize - Shared.TouchSize) / 2,
+            0f);
+        var touchFromOffset = showing ? anchorOffset : centerOffset + touchCenterInMenu;
+        var touchToOffset   = showing ? centerOffset + touchCenterInMenu : anchorOffset;
+
+        MenuBackgroundVisual.Offset = shellToOffset;
         MenuBackgroundVisual.Size = toSize;
         MenuBackgroundCornerShape.Size = toSize;
-        touchVisual.Offset = toOffset;
+        touchVisual.Offset  = touchToOffset;
         touchVisual.Opacity = fakeTouchToOpacity;
 
         var offsetAnimation = Compositor.CreateVector3KeyFrameAnimation();
         offsetAnimation.Duration = MenuTransitionDuration;
-        offsetAnimation.InsertKeyFrame(0f, fromOffset);
-        offsetAnimation.InsertKeyFrame(1f, toOffset, MenuEasing);
+        offsetAnimation.InsertKeyFrame(0f, shellFromOffset);
+        offsetAnimation.InsertKeyFrame(1f, shellToOffset, MenuEasing);
 
         var visualSizeAnimation = Compositor.CreateVector2KeyFrameAnimation();
         visualSizeAnimation.Duration = MenuTransitionDuration;
@@ -105,8 +118,8 @@ public partial class MenuControl
 
         var touchOffsetAnimation = Compositor.CreateVector3KeyFrameAnimation();
         touchOffsetAnimation.Duration = MenuTransitionDuration;
-        touchOffsetAnimation.InsertKeyFrame(0f, fromOffset);
-        touchOffsetAnimation.InsertKeyFrame(1f, toOffset, MenuEasing);
+        touchOffsetAnimation.InsertKeyFrame(0f, touchFromOffset);
+        touchOffsetAnimation.InsertKeyFrame(1f, touchToOffset, MenuEasing);
 
         var touchOpacityAnimation = Compositor.CreateScalarKeyFrameAnimation();
         touchOpacityAnimation.Duration = MenuTransitionDuration;
@@ -125,32 +138,84 @@ public partial class MenuControl
         return taskCompletionSource.Task;
     }
 
-    private Task PlayMenuContentTranslationAnimationAsync(bool showing = true)
+    /// <summary>
+    /// 同步缩放并平移 MenuBorder，使菜单内容像嵌入壳里一样随壳整体运动。
+    /// 位移使用 Translation（叠加在 XAML layout Offset 之上），不受 XAML layout 覆写。
+    /// </summary>
+    private Task PlayMenuContentScaleTranslationAnimationAsync(bool showing = true)
     {
         var taskCompletionSource = new TaskCompletionSource();
         var batch = Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
 
         var anchorOffset = AnchorPoint(_lastTouchDockAnchor, ContainerSize).ToVector3();
         var centerOffset = CenterPosition.ToVector3();
-        var travelOffset = anchorOffset - centerOffset;
-        var fromOffset = showing ? travelOffset : Vector3.Zero;
-        var toOffset = showing ? Vector3.Zero : travelOffset;
-        var visual = ElementCompositionPreview.GetElementVisual(MenuContentRoot);
 
-        visual.StopAnimation(nameof(Visual.Offset));
-        visual.Offset = toOffset;
+        // Translation 叠加在 XAML layout Offset (= centerOffset) 之上，不受 XAML layout 覆写。
+        // 期望起始有效位置 = startOffset = anchorOffset + (TouchSize/2 - MenuSize/2)
+        // => 起始 Translation = startOffset - centerOffset
+        var halfDelta = (float)(Shared.TouchSize - Shared.MenuSize) / 2;
+        var startTranslation = anchorOffset + new Vector3(halfDelta, halfDelta, 0f) - centerOffset;
 
-        var offsetAnimation = Compositor.CreateVector3KeyFrameAnimation();
-        offsetAnimation.Duration = MenuTransitionDuration;
-        offsetAnimation.InsertKeyFrame(0f, fromOffset);
-        offsetAnimation.InsertKeyFrame(1f, toOffset, MenuEasing);
+        var fromTranslation = showing ? startTranslation : Vector3.Zero;
+        var toTranslation   = showing ? Vector3.Zero : startTranslation;
 
-        visual.StartAnimation(nameof(Visual.Offset), offsetAnimation);
+        var scaleRatio = (float)(Shared.TouchSize / Shared.MenuSize);
+        var fromScale  = new Vector3(showing ? scaleRatio : 1f, showing ? scaleRatio : 1f, 1f);
+        var toScale    = new Vector3(showing ? 1f : scaleRatio, showing ? 1f : scaleRatio, 1f);
+
+        // 透明度与 TouchGlyph 反向：展开时 0→1，收起时 1→0，参数保持一致
+        var fromOpacity = showing ? 0f : 1f;
+        var toOpacity   = showing ? 1f : 0f;
+
+        var visual = ElementCompositionPreview.GetElementVisual(MenuBorder);
+        visual.StopAnimation("Translation");
+        visual.StopAnimation(nameof(Visual.Scale));
+        visual.StopAnimation(nameof(Visual.Opacity));
+        // 缩放锚点设在 MenuBorder 自身中心
+        visual.CenterPoint = new Vector3((float)Shared.MenuSize / 2, (float)Shared.MenuSize / 2, 0f);
+        // 静态预设为 FROM 值：Translation 不受 XAML 覆写，确保任何间隙帧显示正确起始状态
+        visual.Properties.InsertVector3("Translation", fromTranslation);
+        visual.Scale   = fromScale;
+        visual.Opacity = fromOpacity;
+
+        var translationAnimation = Compositor.CreateVector3KeyFrameAnimation();
+        translationAnimation.Duration = MenuTransitionDuration;
+        translationAnimation.InsertKeyFrame(0f, fromTranslation);
+        translationAnimation.InsertKeyFrame(1f, toTranslation, MenuEasing);
+
+        var scaleAnimation = Compositor.CreateVector3KeyFrameAnimation();
+        scaleAnimation.Duration = MenuTransitionDuration;
+        scaleAnimation.InsertKeyFrame(0f, fromScale);
+        scaleAnimation.InsertKeyFrame(1f, toScale, MenuEasing);
+
+        var opacityAnimation = Compositor.CreateScalarKeyFrameAnimation();
+        opacityAnimation.Duration = MenuTransitionDuration;
+        opacityAnimation.InsertKeyFrame(0f, fromOpacity);
+        opacityAnimation.InsertKeyFrame(1f, toOpacity, MenuEasing);
+
+        visual.StartAnimation("Translation", translationAnimation);
+        visual.StartAnimation(nameof(Visual.Scale), scaleAnimation);
+        visual.StartAnimation(nameof(Visual.Opacity), opacityAnimation);
 
         batch.Completed += (_, _) => taskCompletionSource.TrySetResult();
         batch.End();
 
         return taskCompletionSource.Task;
+    }
+
+    /// <summary>
+    /// 动画结束后重置 MenuBorder 的 Composition 变换，还给 XAML 布局管理，
+    /// 同时确保窗口缩放时 MenuBorder 位置能跟随 XAML 布局重算。
+    /// </summary>
+    private void ResetMenuContentVisual()
+    {
+        var visual = ElementCompositionPreview.GetElementVisual(MenuBorder);
+        visual.StopAnimation("Translation");
+        visual.StopAnimation(nameof(Visual.Scale));
+        visual.StopAnimation(nameof(Visual.Opacity));
+        visual.Properties.InsertVector3("Translation", Vector3.Zero);
+        visual.Scale   = Vector3.One;
+        visual.Opacity = 1f;
     }
 
     /// <summary>
