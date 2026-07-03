@@ -1,6 +1,10 @@
-﻿##### Compile
+﻿##### Coding Style
 
-- `TouchChanX.UWP` need to be compiled with the VS MSBuild
+- AOT compatible code for all projects.
+
+##### Compile
+
+- `TouchChanX.UWP` need to be compiled with the VS MSBuild.
 
 ##### Interaction
 
