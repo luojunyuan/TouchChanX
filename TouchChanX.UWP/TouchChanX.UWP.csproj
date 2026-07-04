@@ -10,6 +10,7 @@
     <PublishAot>true</PublishAot>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <EnableMsixTooling>true</EnableMsixTooling>
     <!-- 忽视隐式继承警告 -->
     <NoWarn>$(NoWarn);NETSDK1023</NoWarn>
@@ -25,9 +26,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
   
-  <ItemGroup>
-    <ProjectReference Include="..\TouchChanX.Win32\TouchChanX.Win32.csproj" />
-  </ItemGroup>
 </Project>

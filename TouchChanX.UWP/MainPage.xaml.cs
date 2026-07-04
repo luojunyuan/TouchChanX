@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
-using TouchChanX.Win32;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
@@ -212,9 +211,13 @@ namespace TouchChanX.UWP
                 return false;
             }
 
-            var result = GameStartup.PrepareValidGamePath(path);
-            if (result.IsFailure(out _, out var resolvedPath))
+            var resolvedPath = ShellLinkResolver.ResolveIfShortcut(path);
+            if (string.IsNullOrWhiteSpace(resolvedPath) ||
+                !File.Exists(resolvedPath) ||
+                !Path.GetExtension(resolvedPath).Equals(".exe", StringComparison.OrdinalIgnoreCase))
+            {
                 return false;
+            }
 
             gamePath = resolvedPath;
             return true;
