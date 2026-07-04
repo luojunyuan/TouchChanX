@@ -120,37 +120,54 @@
                                     <TextBlock
                                         HorizontalAlignment="Center"
                                         Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                        Text="添加后会显示为横向图标列表。"
+                                        Text="添加后会显示为竖向游戏列表。"
                                         TextAlignment="Center" />
                                 </StackPanel>
 
                                 <Grid RowSpacing="16">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="*" />
                                         <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
 
-                                    <ListView x:Name="GameList"
-                                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                                        ScrollViewer.HorizontalScrollMode="Enabled"
-                                        ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                        ScrollViewer.VerticalScrollMode="Disabled"
+                                    <CommandBar x:Name="SelectedGameActions"
+                                        Background="Transparent"
+                                        DefaultLabelPosition="Right"
+                                        Visibility="Collapsed">
+                                        <CommandBar.Content>
+                                            <TextBlock x:Name="SelectedGameName"
+                                                VerticalAlignment="Center"
+                                                TextTrimming="CharacterEllipsis" />
+                                        </CommandBar.Content>
+                                        <AppBarButton Icon="Play" Label="启动" Click="LaunchSelectedGame_Click" />
+                                        <AppBarButton Icon="Edit" Label="重命名" Click="RenameSelectedGame_Click" />
+                                        <AppBarButton Icon="Delete" Label="移除" Click="RemoveSelectedGame_Click" />
+                                    </CommandBar>
+
+                                    <GridView x:Name="GameList"
+                                        Grid.Row="1"
+                                        MaxHeight="520"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                        ScrollViewer.HorizontalScrollMode="Disabled"
+                                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                        ScrollViewer.VerticalScrollMode="Enabled"
                                         SelectionChanged="GameList_SelectionChanged"
                                         SelectionMode="Single"
                                         Visibility="Collapsed">
-                                        <ListView.ItemsPanel>
+                                        <GridView.ItemsPanel>
                                             <ItemsPanelTemplate>
-                                                <ItemsStackPanel Orientation="Horizontal" />
+                                                <ItemsWrapGrid Orientation="Horizontal" />
                                             </ItemsPanelTemplate>
-                                        </ListView.ItemsPanel>
-                                        <ListView.ItemContainerStyle>
-                                            <Style TargetType="ListViewItem">
-                                                <Setter Property="Margin" Value="0 0 12 0" />
+                                        </GridView.ItemsPanel>
+                                        <GridView.ItemContainerStyle>
+                                            <Style TargetType="GridViewItem">
+                                                <Setter Property="Margin" Value="0 0 12 12" />
                                                 <Setter Property="Padding" Value="0" />
                                                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                <Setter Property="VerticalContentAlignment" Value="Stretch" />
                                             </Style>
-                                        </ListView.ItemContainerStyle>
-                                        <ListView.ItemTemplate>
+                                        </GridView.ItemContainerStyle>
+                                        <GridView.ItemTemplate>
                                             <DataTemplate x:DataType="local:GameEntry">
                                                 <Border
                                                     Width="152"
@@ -204,23 +221,8 @@
                                                     </StackPanel>
                                                 </Border>
                                             </DataTemplate>
-                                        </ListView.ItemTemplate>
-                                    </ListView>
-
-                                    <CommandBar x:Name="SelectedGameActions"
-                                        Grid.Row="1"
-                                        Background="Transparent"
-                                        DefaultLabelPosition="Right"
-                                        Visibility="Collapsed">
-                                        <CommandBar.Content>
-                                            <TextBlock x:Name="SelectedGameName"
-                                                VerticalAlignment="Center"
-                                                TextTrimming="CharacterEllipsis" />
-                                        </CommandBar.Content>
-                                        <AppBarButton Icon="Play" Label="启动" Click="LaunchSelectedGame_Click" />
-                                        <AppBarButton Icon="Edit" Label="重命名" Click="RenameSelectedGame_Click" />
-                                        <AppBarButton Icon="Delete" Label="移除" Click="RemoveSelectedGame_Click" />
-                                    </CommandBar>
+                                        </GridView.ItemTemplate>
+                                    </GridView>
                                 </Grid>
                             </Grid>
                         </Border>

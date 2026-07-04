@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -33,7 +33,7 @@
     <Application Id="App"
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$"
-	  uap10:TrustLevel="mediumIL">
+      uap10:TrustLevel="mediumIL">
       <uap:VisualElements
         DisplayName="TouchChanX.Package"
         Description="TouchChanX.Package"
