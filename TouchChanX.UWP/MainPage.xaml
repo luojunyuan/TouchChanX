@@ -169,16 +169,12 @@
                                         </GridView.ItemContainerStyle>
                                         <GridView.ItemTemplate>
                                             <DataTemplate x:DataType="local:GameEntry">
-                                                <Border
+                                                <Grid
                                                     Width="152"
                                                     Height="136"
-                                                    Padding="12"
-                                                    Background="{ThemeResource TouchChanTileBackgroundBrush}"
-                                                    BorderThickness="0"
-                                                    CornerRadius="0"
                                                     DoubleTapped="GameItem_DoubleTapped"
                                                     ToolTipService.ToolTip="{x:Bind Path}">
-                                                    <Border.ContextFlyout>
+                                                    <Grid.ContextFlyout>
                                                         <MenuFlyout>
                                                             <MenuFlyoutItem Click="LaunchGame_Click" Tag="{x:Bind}" Text="启动">
                                                                 <MenuFlyoutItem.Icon>
@@ -196,8 +192,13 @@
                                                                 </MenuFlyoutItem.Icon>
                                                             </MenuFlyoutItem>
                                                         </MenuFlyout>
-                                                    </Border.ContextFlyout>
-                                                    <Grid>
+                                                    </Grid.ContextFlyout>
+
+                                                    <Border
+                                                        Padding="12"
+                                                        Background="{ThemeResource TouchChanTileBackgroundBrush}"
+                                                        BorderThickness="0"
+                                                        CornerRadius="4">
                                                         <StackPanel VerticalAlignment="Center" Spacing="10">
                                                             <Grid Width="48" Height="48" HorizontalAlignment="Center">
                                                                 <Image
@@ -221,8 +222,16 @@
                                                                 TextTrimming="CharacterEllipsis"
                                                                 TextWrapping="WrapWholeWords" />
                                                         </StackPanel>
-                                                    </Grid>
-                                                </Border>
+                                                    </Border>
+
+                                                    <Border
+                                                        BorderBrush="{ThemeResource SystemControlHighlightAccentBrush}"
+                                                        BorderThickness="2"
+                                                        CornerRadius="4"
+                                                        IsHitTestVisible="False"
+                                                        Opacity="0.55"
+                                                        Visibility="{x:Bind SelectedVisualVisibility, Mode=OneWay}" />
+                                                </Grid>
                                             </DataTemplate>
                                         </GridView.ItemTemplate>
                                     </GridView>

@@ -376,7 +376,13 @@ public sealed partial class MainPage : Page
 
     private void UpdateSelectedGameState()
     {
-        if (GetSelectedGame() is not { } game)
+        var selectedGame = GetSelectedGame();
+        foreach (var gameEntry in Games)
+        {
+            gameEntry.IsSelected = ReferenceEquals(gameEntry, selectedGame);
+        }
+
+        if (selectedGame is not { } game)
         {
             SelectedGameActions.Visibility = Visibility.Collapsed;
             SelectedGameName.Text = string.Empty;
@@ -489,6 +495,7 @@ public sealed partial class MainPage : Page
 public sealed partial class GameEntry : INotifyPropertyChanged
 {
     private ImageSource? icon;
+    private bool isSelected;
     private string name = string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -506,12 +513,12 @@ public sealed partial class GameEntry : INotifyPropertyChanged
         }
     }
 
-        public string Path { get; set; } = string.Empty;
+    public string Path { get; set; } = string.Empty;
 
-        public long LastLaunchedTicks { get; set; }
+    public long LastLaunchedTicks { get; set; }
 
     public ImageSource? Icon
-        {
+    {
         get => icon;
         set
         {
@@ -527,7 +534,23 @@ public sealed partial class GameEntry : INotifyPropertyChanged
 
     public Visibility IconVisibility => Icon is null ? Visibility.Collapsed : Visibility.Visible;
 
-        public Visibility FallbackIconVisibility => Icon is null ? Visibility.Visible : Visibility.Collapsed;
+    public bool IsSelected
+    {
+        get => isSelected;
+        set
+        {
+            if (isSelected == value)
+                return;
+
+            isSelected = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(SelectedVisualVisibility));
+        }
+    }
+
+    public Visibility SelectedVisualVisibility => IsSelected ? Visibility.Visible : Visibility.Collapsed;
+
+    public Visibility FallbackIconVisibility => Icon is null ? Visibility.Visible : Visibility.Collapsed;
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
