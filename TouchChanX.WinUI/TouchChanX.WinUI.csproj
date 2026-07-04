@@ -11,6 +11,8 @@
     <PackageReference Include="CommunityToolkit.WinUI.Animations" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
     <PackageReference Include="Microsoft.WindowsAppSDK" />
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning" ExcludeAssets="All" />
+    <PackageReference Include="Microsoft.Web.WebView2" ExcludeAssets="All" />
     <PackageReference Include="R3" />
     <PackageReference Include="R3Extensions.ObservableEvents.SourceGenerator" />
   </ItemGroup>
