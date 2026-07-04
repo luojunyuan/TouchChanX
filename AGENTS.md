@@ -1,6 +1,7 @@
 ﻿##### Coding Style
 
 - AOT compatible code for all projects.
+- Always use CRLF as line endings after modified. 
 
 ##### Compile
 

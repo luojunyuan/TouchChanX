@@ -223,7 +223,7 @@ public sealed partial class MenuControl : UserControl
 
             var button = new MenuButton
             {
-                Glyph = item.Glyph,
+                Symbol = item.Symbol,
                 Text = item.Text,
                 IsToggle = item.Kind == TouchMenuItemKind.Toggle,
                 IsOn = _toggleStates.TryGetValue(item.Id, out var isOn) ? isOn : item.IsOn,

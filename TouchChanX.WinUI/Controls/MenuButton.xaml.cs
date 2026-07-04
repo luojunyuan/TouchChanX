@@ -8,12 +8,12 @@ namespace TouchChanX.WinUI.Controls;
 
 public sealed partial class MenuButton : UserControl
 {
-    public static readonly DependencyProperty GlyphProperty =
+    public static readonly DependencyProperty SymbolProperty =
         DependencyProperty.Register(
-            nameof(Glyph),
-            typeof(string),
+            nameof(Symbol),
+            typeof(Symbol),
             typeof(MenuButton),
-            new PropertyMetadata("\uE11D"));
+            new PropertyMetadata(Symbol.Placeholder));
 
     public static readonly DependencyProperty TextProperty =
         DependencyProperty.Register(
@@ -39,10 +39,10 @@ public sealed partial class MenuButton : UserControl
     private readonly Subject<Unit> _clicked = new();
     private bool _isPointerDown;
 
-    public string Glyph
+    public Symbol Symbol
     {
-        get => (string)GetValue(GlyphProperty);
-        set => SetValue(GlyphProperty, value);
+        get => (Symbol)GetValue(SymbolProperty);
+        set => SetValue(SymbolProperty, value);
     }
 
     public string Text

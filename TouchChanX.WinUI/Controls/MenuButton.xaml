@@ -22,10 +22,9 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Spacing="5">
-            <FontIcon x:Name="ItemIcon"
-                FontFamily="Segoe MDL2 Assets"
-                FontSize="28"
-                Glyph="{x:Bind Glyph, Mode=OneWay}" />
+            <Viewbox Width="28" Height="28">
+                <SymbolIcon x:Name="ItemIcon" Symbol="{x:Bind Symbol, Mode=OneWay}" />
+            </Viewbox>
 
             <TextBlock x:Name="ItemText"
                 HorizontalAlignment="Center"

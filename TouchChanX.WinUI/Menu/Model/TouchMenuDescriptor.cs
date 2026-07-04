@@ -1,3 +1,5 @@
+﻿using Microsoft.UI.Xaml.Controls;
+
 namespace TouchChanX.WinUI.Menu.Model;
 
 internal enum TouchMenuPageId
@@ -24,7 +26,7 @@ internal readonly record struct MenuCell(int Row, int Column)
 internal sealed record TouchMenuItemDescriptor(
     string Id,
     string Text,
-    string Glyph,
+    Symbol Symbol,
     MenuCell Cell,
     TouchMenuItemKind Kind = TouchMenuItemKind.Command,
     TouchMenuPageId? TargetPage = null,
