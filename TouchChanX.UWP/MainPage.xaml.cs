@@ -405,7 +405,7 @@ namespace TouchChanX.UWP
             (sender as FrameworkElement)?.Tag as GameEntry;
     }
 
-    public sealed class GameEntry : INotifyPropertyChanged
+    public sealed partial class GameEntry : INotifyPropertyChanged
     {
         private ImageSource? icon;
         private string name = string.Empty;
