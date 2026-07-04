@@ -4,12 +4,17 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <!--  Packages that excluded  -->
+    <GlobalPackageReference Include="Microsoft.Web.WebView2" Version="1.0.4022.49" ExcludeAssets="All" />
+    <GlobalPackageReference Include="Microsoft.Windows.AI.MachineLearning" Version="2.1.71" ExcludeAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageVersion Include="CalcBinding" Version="2.5.2" />
     <PackageVersion Include="CommunityToolkit.WinUI.Animations" Version="8.2.251219" />
     <PackageVersion Include="CommunityToolkit.Uwp.Controls.SettingsControls" Version="8.2.251219" />
     <PackageVersion Include="DotnetRuntimeBootstrapper" Version="2.5.4" />
     <PackageVersion Include="Islands.UI.Xaml" Version="0.1.2" />
-    <PackageVersion Include="Kumo.Uwp.NavigationView.RailStyle" Version="1.1.2" />
+    <PackageVersion Include="Kumo.Uwp.NavigationView.RailStyle" Version="1.1.3" />
     <PackageVersion Include="LightResults" Version="10.0.4" />
     <PackageVersion Include="Microsoft.UI.Xaml" Version="2.8.7" />
     <PackageVersion Include="Microsoft.Windows.CsWin32" Version="0.3.298" />
