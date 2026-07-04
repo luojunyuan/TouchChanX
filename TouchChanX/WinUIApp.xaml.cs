@@ -57,7 +57,13 @@ public static class WinUIApplication
         if (!succeed)
             return;
 
-        Application.Start(p => _ = new WinUIApp(gameWindowHandle));
+        Application.Start(p =>
+        {
+            var app = new WinUIApp(gameWindowHandle);
+            // NOTE: 在 TouchChanX.UWP App.xaml 中引用 RailNavigationViewResources 后
+            // 我们这里必须要在 OnLaunched 前调用 InitializeComponent()，否则会报错
+            app.InitializeComponent();
+        });
     }
 }
 

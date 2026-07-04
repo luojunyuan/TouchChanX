@@ -7,9 +7,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-                <ResourceDictionary Source="ms-appx:///Kumo.Uwp.NavigationView.RailStyle/Styles/CustomNavigationViewStyle.xaml" />
-                <!--RailNavigationViewResources 同包内的 WinUI 项目似乎会读取这个资源字典生成的文件导致编译错误-->
-                <!--<RailNavigationViewResources xmlns="using:Kumo.WinUI.NavigationView.RailStyle" />-->
+                <RailNavigationViewResources xmlns="using:Kumo.WinUI.NavigationView.RailStyle" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

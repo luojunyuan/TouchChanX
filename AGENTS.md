@@ -4,8 +4,8 @@
 
 ##### Compile
 
-- `TouchChanX.UWP` need to be compiled with the VS MSBuild.
+- `TouchChanX.UWP` need to be compiled with the VS MSBuild. Other is fine with dotnet CLI.
 
-##### Interaction
+##### UI/UX
 
 - The application's interactions should prioritize tablet touch devices.
