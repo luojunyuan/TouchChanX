@@ -8,8 +8,8 @@ using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Services.Store;
 using Windows.Storage;
-using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -75,7 +75,6 @@ namespace TouchChanX.UWP
         {
             var picker = new FileOpenPicker();
             picker.FileTypeFilter.Add(".exe");
-            picker.FileTypeFilter.Add(".lnk");
 
             var file = await picker.PickSingleFileAsync();
             if (file is not null)
@@ -338,17 +337,21 @@ namespace TouchChanX.UWP
         {
             try
             {
-                var file = await StorageFile.GetFileFromPathAsync(path);
-                using var thumbnail = await file.GetThumbnailAsync(
-                    ThumbnailMode.SingleItem,
-                    96,
-                    ThumbnailOptions.UseCurrentScale);
-
-                if (thumbnail.Size == 0)
+                var iconBytes = await Task.Run(() => GameIconExtractor.TryExtractBestPng(path));
+                if (iconBytes is null || iconBytes.Length == 0)
                     return null;
 
+                using var stream = new InMemoryRandomAccessStream();
+                using (var writer = new DataWriter(stream.GetOutputStreamAt(0)))
+                {
+                    writer.WriteBytes(iconBytes);
+                    await writer.StoreAsync();
+                    await writer.FlushAsync();
+                }
+
+                stream.Seek(0);
                 var image = new BitmapImage();
-                await image.SetSourceAsync(thumbnail);
+                await image.SetSourceAsync(stream);
                 return image;
             }
             catch (Exception ex)
