@@ -90,6 +90,7 @@ public static partial class GameStartup // Win32
             }
             catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException)
             {
+                Debug.WriteLine($"Failed to get current process image path: {ex}");
                 return null;
             }
         }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TouchChanX.Win32;
@@ -301,8 +302,9 @@ namespace TouchChanX.UWP
             {
                 return Encoding.UTF8.GetString(Convert.FromBase64String(value));
             }
-            catch (FormatException)
+            catch (FormatException ex)
             {
+                Debug.WriteLine(ex);
                 return string.Empty;
             }
         }
@@ -349,8 +351,9 @@ namespace TouchChanX.UWP
                 await image.SetSourceAsync(thumbnail);
                 return image;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine(ex);
                 return null;
             }
         }

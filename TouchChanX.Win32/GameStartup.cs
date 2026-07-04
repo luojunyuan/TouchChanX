@@ -32,9 +32,8 @@ public static partial class GameStartup
         {
             resolvedPath = WindowsShortcut.Load(path).Path;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Trace.WriteLine(ex);
             return Result.Failure<string>($"Failed when resolve \"{path}\", please try start from game folder.");
         }
 
