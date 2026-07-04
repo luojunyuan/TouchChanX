@@ -1,8 +1,7 @@
-﻿##### Coding Style
+##### Coding Style
 
 - AOT compatible code for all projects.
-- Always use CRLF as line endings after modified. 
-- Treat `TouchChanX.UWP` as a full-trust .NET project (net10.0-windows10.0.26100.0): retain all UWP features but operate with zero sandbox restrictions.
+- Treat `TouchChanX.UWP` as a normal .NET project: retain all UWP features but operate with zero sandbox restrictions.
 
 ##### Compile
 
