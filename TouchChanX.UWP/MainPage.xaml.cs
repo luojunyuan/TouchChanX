@@ -506,12 +506,12 @@ public sealed partial class GameEntry : INotifyPropertyChanged
         }
     }
 
-    public string Path { get; set; } = string.Empty;
+        public string Path { get; set; } = string.Empty;
 
-    public long LastLaunchedTicks { get; set; }
+        public long LastLaunchedTicks { get; set; }
 
     public ImageSource? Icon
-    {
+        {
         get => icon;
         set
         {
@@ -527,7 +527,7 @@ public sealed partial class GameEntry : INotifyPropertyChanged
 
     public Visibility IconVisibility => Icon is null ? Visibility.Collapsed : Visibility.Visible;
 
-    public Visibility FallbackIconVisibility => Icon is null ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility FallbackIconVisibility => Icon is null ? Visibility.Visible : Visibility.Collapsed;
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
