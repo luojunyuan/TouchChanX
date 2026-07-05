@@ -16,7 +16,7 @@
     Version="3.0.1.0" />
 
   <Properties>
-    <DisplayName>TachiChan</DisplayName>
+    <DisplayName>ms-resource:DisplayName</DisplayName>
     <PublisherDisplayName>k1mlka</PublisherDisplayName>
     <Logo>Images\StoreLogo.png</Logo>
   </Properties>
@@ -35,8 +35,8 @@
       EntryPoint="$targetentrypoint$"
       uap10:TrustLevel="mediumIL">
       <uap:VisualElements
-        DisplayName="TouchChanX.Package"
-        Description="TouchChanX.Package"
+        DisplayName="ms-resource:DisplayName"
+        Description="ms-resource:Description"
         BackgroundColor="transparent"
         Square150x150Logo="Images\Square150x150Logo.png"
         Square44x44Logo="Images\Square44x44Logo.png">
