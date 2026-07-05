@@ -1,8 +1,8 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using R3;
+using R3.ObservableEvents;
 
 namespace TouchChanX.WinUI.Controls;
 
@@ -36,9 +36,6 @@ public sealed partial class MenuButton : UserControl
             typeof(MenuButton),
             new PropertyMetadata(false, OnVisualStatePropertyChanged));
 
-    private readonly Subject<Unit> _clicked = new();
-    private bool _isPressed;
-
     public Symbol Symbol
     {
         get => (Symbol)GetValue(SymbolProperty);
@@ -63,58 +60,41 @@ public sealed partial class MenuButton : UserControl
         set => SetValue(IsOnProperty, value);
     }
 
-    public Observable<Unit> Clicked => _clicked;
+    public Observable<Unit> Clicked { get; }
 
     public MenuButton()
     {
         InitializeComponent();
+
+        var pointerReleased = this.Events().PointerReleased.Share();
+        var pointerExited = this.Events().PointerExited.Share();
+        var pointerPressed =
+            this.Events().PointerPressed
+            .Where(_ => IsEnabled)
+            .Merge(
+                this.Events().PointerEntered
+                .Where(e => IsEnabled && e.GetCurrentPoint(this).Properties.IsLeftButtonPressed))
+            .Share();
+
+        Clicked =
+            pointerPressed
+            .SelectMany(_ =>
+                pointerReleased
+                .Take(1)
+                .TakeUntil(pointerExited))
+            .Where(_ => IsEnabled)
+            .Do(_ => ToggleIfNeeded())
+            .AsUnitObservable()
+            .Share();
+
+        pointerPressed
+            .Subscribe(_ => RefreshVisualState(isPressed: true));
+        pointerReleased
+            .Merge(pointerExited)
+            .Subscribe(_ => RefreshVisualState());
+
         RegisterPropertyChangedCallback(IsEnabledProperty, (_, _) => RefreshVisualState());
         RefreshTextVisibility();
-        RefreshVisualState();
-    }
-
-    protected override void OnPointerPressed(PointerRoutedEventArgs e)
-    {
-        base.OnPointerPressed(e);
-
-        if (!IsEnabled)
-            return;
-
-        _isPressed = true;
-        RefreshVisualState();
-    }
-
-    protected override void OnPointerReleased(PointerRoutedEventArgs e)
-    {
-        base.OnPointerReleased(e);
-
-        if (!IsEnabled || !_isPressed)
-            return;
-
-        _isPressed = false;
-        if (IsToggle)
-            IsOn = !IsOn;
-
-        RefreshVisualState();
-        _clicked.OnNext(Unit.Default);
-    }
-
-    protected override void OnPointerEntered(PointerRoutedEventArgs e)
-    {
-        base.OnPointerEntered(e);
-
-        if (!IsEnabled || !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            return;
-
-        _isPressed = true;
-        RefreshVisualState();
-    }
-
-    protected override void OnPointerExited(PointerRoutedEventArgs e)
-    {
-        base.OnPointerExited(e);
-
-        _isPressed = false;
         RefreshVisualState();
     }
 
@@ -134,23 +114,29 @@ public sealed partial class MenuButton : UserControl
             : Visibility.Visible;
     }
 
-    private void RefreshVisualState()
+    private void ToggleIfNeeded()
+    {
+        if (IsToggle)
+            IsOn = !IsOn;
+    }
+
+    private void RefreshVisualState(bool isPressed = false)
     {
         if (ItemIcon is null || ItemText is null)
             return;
 
-        var brush = SelectForegroundBrush();
+        var brush = SelectForegroundBrush(isPressed);
         Foreground = brush;
         ItemIcon.Foreground = brush;
         ItemText.Foreground = brush;
     }
 
-    private Brush SelectForegroundBrush()
+    private Brush SelectForegroundBrush(bool isPressed)
     {
         if (!IsEnabled)
             return (Brush)Resources["DisabledBrush"];
 
-        if (_isPressed)
+        if (isPressed)
             return (Brush)Resources["PressedBrush"];
 
         if (IsToggle && IsOn)
