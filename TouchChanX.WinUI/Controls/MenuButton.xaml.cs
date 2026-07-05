@@ -37,7 +37,7 @@ public sealed partial class MenuButton : UserControl
             new PropertyMetadata(false, OnVisualStatePropertyChanged));
 
     private readonly Subject<Unit> _clicked = new();
-    private bool _isPointerDown;
+    private bool _isPressed;
 
     public Symbol Symbol
     {
@@ -80,32 +80,41 @@ public sealed partial class MenuButton : UserControl
         if (!IsEnabled)
             return;
 
-        _isPointerDown = true;
+        _isPressed = true;
         RefreshVisualState();
-        e.Handled = true;
     }
 
     protected override void OnPointerReleased(PointerRoutedEventArgs e)
     {
         base.OnPointerReleased(e);
 
-        if (!IsEnabled || !_isPointerDown)
+        if (!IsEnabled || !_isPressed)
             return;
 
-        _isPointerDown = false;
+        _isPressed = false;
         if (IsToggle)
             IsOn = !IsOn;
 
         RefreshVisualState();
         _clicked.OnNext(Unit.Default);
-        e.Handled = true;
+    }
+
+    protected override void OnPointerEntered(PointerRoutedEventArgs e)
+    {
+        base.OnPointerEntered(e);
+
+        if (!IsEnabled || !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            return;
+
+        _isPressed = true;
+        RefreshVisualState();
     }
 
     protected override void OnPointerExited(PointerRoutedEventArgs e)
     {
         base.OnPointerExited(e);
 
-        _isPointerDown = false;
+        _isPressed = false;
         RefreshVisualState();
     }
 
@@ -141,7 +150,7 @@ public sealed partial class MenuButton : UserControl
         if (!IsEnabled)
             return (Brush)Resources["DisabledBrush"];
 
-        if (_isPointerDown)
+        if (_isPressed)
             return (Brush)Resources["PressedBrush"];
 
         if (IsToggle && IsOn)
