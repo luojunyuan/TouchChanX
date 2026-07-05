@@ -33,6 +33,7 @@ internal static class TouchMenuCatalog
         [
             Command("fullscreen", "Fullscreen", Symbol.FullScreen, new(0, 1)),
             Navigate("move-game", "Move", Symbol.Trim, new(0, 2), TouchMenuPageId.WinMove),
+            Toggle("stretch", "Stretch", ExtendedSymbol.AspectRatio, new(1, 0), isEnabled: false),
             Navigate("game-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
             Command("close-game", "Close", ExtendedSymbol.ChromeClose, new(1, 2)),
             Command("brightness-down", "Dim", ExtendedSymbol.KeyboardLowerBrightness, new(2, 0), isEnabled: false),
@@ -44,7 +45,6 @@ internal static class TouchMenuCatalog
         new(1, 2),
         [
             Toggle("keyboard", "Keyboard", ExtendedSymbol.KeyboardClassic, new(0, 0), isEnabled: false),
-            Toggle("stretch", "Stretch", ExtendedSymbol.AspectRatio, new(0, 2), isEnabled: false),
             Toggle("touch-to-mouse", "Tap Click", Symbol.TouchPointer, new(1, 0), toolTip: "When you tap, the previous tapped position will be clicked."),
             Navigate("function-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
             Toggle("battery", "Battery", ExtendedSymbol.VerticalBattery3, new(1, 2), isEnabled: false),
