@@ -13,11 +13,16 @@ namespace TouchChanX.WinUI.Menu;
 public partial class MenuControl
 {
     private static readonly Subject<string> CommandRequestedSubject = new();
+    private static readonly Subject<TouchMenuToggleChanged> ToggleChangedSubject = new();
 
     public static Observable<Unit> ObservableRegionResetRequested { get; private set; } = Observable.Empty<Unit>();
 
     public static Observable<string> ObservableCommandRequested => CommandRequestedSubject;
+
+    public static Observable<TouchMenuToggleChanged> ObservableToggleChanged => ToggleChangedSubject;
 }
+
+public sealed record TouchMenuToggleChanged(string Id, bool IsOn);
 
 public sealed partial class MenuControl : UserControl
 {
@@ -135,7 +140,10 @@ public sealed partial class MenuControl : UserControl
             return;
 
         if (item.Kind == TouchMenuItemKind.Toggle)
+        {
             _toggleStates[item.Id] = button.IsOn;
+            ToggleChangedSubject.OnNext(new(item.Id, button.IsOn));
+        }
 
         if (item.Kind == TouchMenuItemKind.Navigation && item.TargetPage is { } targetPage)
             await SwitchPageAsync(targetPage, item.Cell);

@@ -65,6 +65,19 @@ public static class TouchMenuCommandService
         }
     }
 
+    public static void SetToggleState(string toggleId, bool isOn, nint gameWindowHandle, nint touchWindowHandle)
+    {
+        switch (toggleId)
+        {
+            case "touch-to-mouse" when isOn && gameWindowHandle != nint.Zero && OsPlatformApi.IsWindow(gameWindowHandle):
+                TouchConversionHooker.Install(gameWindowHandle, touchWindowHandle);
+                break;
+            case "touch-to-mouse":
+                TouchConversionHooker.Uninstall();
+                break;
+        }
+    }
+
     private static void BringGameWindowToForeground(nint hwnd) =>
         PInvoke.SetForegroundWindow(new(hwnd));
 

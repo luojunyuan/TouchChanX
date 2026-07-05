@@ -43,11 +43,11 @@ internal static class TouchMenuCatalog
         TouchMenuPageId.Function,
         new(1, 2),
         [
-            Toggle("keyboard", "Keyboard", ExtendedSymbol.KeyboardClassic, new(0, 0)),
-            Toggle("stretch", "Stretch", ExtendedSymbol.AspectRatio, new(0, 2)),
+            Toggle("keyboard", "Keyboard", ExtendedSymbol.KeyboardClassic, new(0, 0), isEnabled: false),
+            Toggle("stretch", "Stretch", ExtendedSymbol.AspectRatio, new(0, 2), isEnabled: false),
             Toggle("touch-to-mouse", "Tap Click", Symbol.TouchPointer, new(1, 0)),
             Navigate("function-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
-            Toggle("battery", "Battery", ExtendedSymbol.VerticalBattery3, new(1, 2)),
+            Toggle("battery", "Battery", ExtendedSymbol.VerticalBattery3, new(1, 2), isEnabled: false),
             Command("gesture", "Gesture", ExtendedSymbol.FingerInking, new(2, 1), isEnabled: false),
             Command("game-handler", "Handler", ExtendedSymbol.Game, new(2, 2), isEnabled: false),
         ]);
@@ -93,8 +93,9 @@ internal static class TouchMenuCatalog
         string id,
         string text,
         Symbol symbol,
-        MenuCell cell) =>
-        new(id, text, symbol, cell, TouchMenuItemKind.Toggle);
+        MenuCell cell,
+        bool isEnabled = true) =>
+        new(id, text, symbol, cell, TouchMenuItemKind.Toggle, IsEnabled: isEnabled);
 }
 
 internal static class ExtendedSymbol

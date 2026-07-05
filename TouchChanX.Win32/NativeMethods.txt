@@ -32,13 +32,18 @@ GetConsoleWindow
 EnumChildWindows
 GetModuleHandle
 SetWindowsHookEx
+UnhookWindowsHookEx
 CallNextHookEx
+MSLLHOOKSTRUCT
 CWPSTRUCT
 SendMessage
 SetFocus
 IsWindow
+IsChild
 EnumWindows
 IsWindowVisible
+GetForegroundWindow
+WindowFromPoint
 OpenProcess
 CloseHandle
 QueryFullProcessImageName
@@ -49,3 +54,4 @@ GetWindowRect
 PostMessage
 SendInput
 MapVirtualKey
+SetCursorPos
