@@ -114,12 +114,14 @@ public partial class WinUIApp(nint gameWindowHandle)
             .Subscribe(toggle =>
                 TouchMenuCommandService.SetToggleState(toggle.Id, toggle.IsOn, gameWindowHandle, hwnd));
 
+        if (WinUI.TouchChanXSettings.LoadToggleState("touch-to-mouse"))
+            TouchMenuCommandService.SetToggleState("touch-to-mouse", true, gameWindowHandle, hwnd);
+
         // TODO: 监视父窗口销毁事件，把窗口设置到新的 gameWindowHandle 上
         GameWindowService.WindowDestroyed(gameWindowHandle).Subscribe(_ =>
         {
             // 会循环询找新的窗口，直到找到一个有效的窗口或者超时就直接退出程序
             gameWindowHandle = nint.Zero;
-            System.Diagnostics.Debug.WriteLine("Game window destroyed");
 
             OsPlatformApi.SetParentWindowQwQ(hwnd, gameWindowHandle);
             GameWindowService.ClientSizeChanged(gameWindowHandle)

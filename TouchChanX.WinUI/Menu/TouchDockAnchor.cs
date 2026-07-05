@@ -1,4 +1,4 @@
-﻿using Windows.Foundation;
+using Windows.Foundation;
 
 namespace TouchChanX.WinUI.Menu;
 
@@ -14,6 +14,42 @@ public abstract record TouchDockAnchor
     public record BottomRight : TouchDockAnchor;
 
     public static TouchDockAnchor Default { get; } = new Left(0.5);
+
+    public static Point ToTouchPosition(TouchDockAnchor anchor, Size containerSize) =>
+        ToTouchPosition(anchor, containerSize, new Size(Shared.TouchSize, Shared.TouchSize), Shared.TouchSpacing);
+
+    public static Point ToTouchPosition(TouchDockAnchor anchor, Size containerSize, Size touchSize, int spacing)
+    {
+        var width = containerSize.Width;
+        var height = containerSize.Height;
+        var alignRight = Math.Max(spacing, width - touchSize.Width - spacing);
+        var alignBottom = Math.Max(spacing, height - touchSize.Height - spacing);
+
+        return anchor switch
+        {
+            TopLeft => new Point(spacing, spacing),
+            TopRight => new Point(alignRight, spacing),
+            BottomLeft => new Point(spacing, alignBottom),
+            BottomRight => new Point(alignRight, alignBottom),
+            Left x => new Point(spacing, ScaleY(x.Scale)),
+            Top x => new Point(ScaleX(x.Scale), spacing),
+            Right x => new Point(alignRight, ScaleY(x.Scale)),
+            Bottom x => new Point(ScaleX(x.Scale), alignBottom),
+            _ => ToTouchPosition(Default, containerSize, touchSize, spacing),
+        };
+
+        double ScaleX(double scale) =>
+            Math.Clamp(
+                Math.Clamp(scale, 0.0, 1.0) * width - touchSize.Width / 2.0 - spacing,
+                spacing,
+                alignRight);
+
+        double ScaleY(double scale) =>
+            Math.Clamp(
+                Math.Clamp(scale, 0.0, 1.0) * height - touchSize.Height / 2.0 - spacing,
+                spacing,
+                alignBottom);
+    }
 
     /// <summary>
     /// 计算 Touch 在边缘时的停靠位置和比例。如果不在有效边缘范围内，则返回 Default。

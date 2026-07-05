@@ -142,6 +142,7 @@ public sealed partial class MenuControl : UserControl
         if (item.Kind == TouchMenuItemKind.Toggle)
         {
             _toggleStates[item.Id] = button.IsOn;
+            TouchChanXSettings.SaveToggleState(item.Id, button.IsOn);
             ToggleChangedSubject.OnNext(new(item.Id, button.IsOn));
         }
 
@@ -247,16 +248,25 @@ public sealed partial class MenuControl : UserControl
                 VerticalAlignment = VerticalAlignment.Stretch,
             };
 
+            var isOn = _toggleStates.TryGetValue(item.Id, out var toggleState)
+                ? toggleState
+                : item.Kind == TouchMenuItemKind.Toggle
+                    ? TouchChanXSettings.LoadToggleState(item.Id, item.IsOn)
+                    : item.IsOn;
+
             var button = new MenuButton
             {
                 Symbol = item.Symbol,
                 Text = item.Text,
                 IsToggle = item.Kind == TouchMenuItemKind.Toggle,
-                IsOn = _toggleStates.TryGetValue(item.Id, out var isOn) ? isOn : item.IsOn,
+                IsOn = isOn,
                 IsEnabled = item.IsEnabled,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
             };
+
+            if (!string.IsNullOrWhiteSpace(item.ToolTip))
+                ToolTipService.SetToolTip(button, item.ToolTip);
 
             Grid.SetRow(cellHost, item.Cell.Row);
             Grid.SetColumn(cellHost, item.Cell.Column);

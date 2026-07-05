@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls;
 
 namespace TouchChanX.WinUI.Menu.Model;
 
@@ -31,7 +31,8 @@ internal sealed record TouchMenuItemDescriptor(
     TouchMenuItemKind Kind = TouchMenuItemKind.Command,
     TouchMenuPageId? TargetPage = null,
     bool IsEnabled = true,
-    bool IsOn = false);
+    bool IsOn = false,
+    string? ToolTip = null);
 
 internal sealed record TouchMenuPageDescriptor(
     TouchMenuPageId Id,

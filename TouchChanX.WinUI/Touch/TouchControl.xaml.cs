@@ -1,10 +1,11 @@
-﻿using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI;
 using CommunityToolkit.WinUI.Animations;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using R3;
 using R3.ObservableEvents;
 using System.Numerics;
+using TouchDockAnchor = TouchChanX.WinUI.Menu.TouchDockAnchor;
 using Windows.Foundation;
 
 namespace TouchChanX.WinUI.Touch;
@@ -24,12 +25,19 @@ public sealed partial class TouchControl : UserControl
 
     private Size ContainerSize => new(ActualWidth, ActualHeight);
 
-    private Rect TouchRect => new(TouchBorder.Translation.X, TouchBorder.Translation.Y, TouchBorder.ActualWidth, TouchBorder.ActualHeight);
+    private Rect TouchRect => new(
+        TouchBorder.Translation.X,
+        TouchBorder.Translation.Y,
+        TouchBorder.ActualWidth > 0 ? TouchBorder.ActualWidth : Shared.TouchSize,
+        TouchBorder.ActualHeight > 0 ? TouchBorder.ActualHeight : Shared.TouchSize);
+
+    public Rect CurrentRect => TouchRect;
 
     public TouchControl()
     {
         InitializeComponent();
         TouchBorder.Translation = new(Shared.TouchSpacing, Shared.TouchSpacing, 0);
+        var initialDockAnchor = TouchChanXSettings.LoadTouchDockAnchor();
 
         var pressed = TouchBorder.Events().PointerPressed.Share();
         var dragStarted = TouchBorder.Events().ManipulationStarted.Share();
@@ -38,6 +46,10 @@ public sealed partial class TouchControl : UserControl
         var containerSizeChanged = this.Events().SizeChanged.Share();
         var visibled = this.IsVisibleChanged.Where(visible => visible).AsUnitObservable().Share();
         var touchDocked = new Subject<Unit>();
+        var touchPositionRestored = new Subject<Unit>();
+        var initialPositionRestored = false;
+
+        this.Events().Loaded.Subscribe(_ => TryRestoreInitialPosition());
 
         // 订阅拖动事件，更新位置
         draggingStream
@@ -66,20 +78,33 @@ public sealed partial class TouchControl : UserControl
                     .StartAsync(TouchBorder, CancellationToken.None);
                 this.IsHitTestVisible = true;
 
+                SaveCurrentDockAnchor();
                 touchDocked.OnNext(Unit.Default);
             });
 
         // 订阅容器大小变化事件，动态调整触控位置以保持相对位置不变
         containerSizeChanged
-            .Select(sizeEvent => PositionCalculator.CalculateNewDockedPosition(
-                sizeEvent.PreviousSize, TouchRect, sizeEvent.NewSize, Shared.TouchSpacing))
-            .Subscribe(rect =>
-                 TouchBorder.Translation = new Point(rect.X, rect.Y).ToVector3());
+            .Subscribe(sizeEvent =>
+            {
+                if (!initialPositionRestored)
+                {
+                    TryRestoreInitialPosition();
+                    return;
+                }
+
+                var rect = PositionCalculator.CalculateNewDockedPosition(
+                    sizeEvent.PreviousSize,
+                    TouchRect,
+                    sizeEvent.NewSize,
+                    Shared.TouchSpacing);
+                TouchBorder.Translation = new Point(rect.X, rect.Y).ToVector3();
+            });
 
         // 订阅透明度VSM状态变化事件
         this.Events().Loaded.AsUnitObservable()
             .Merge(visibled)
             .Merge(touchDocked)
+            .Merge(touchPositionRestored)
             .Subscribe(_ => VisualStateManager.GoToState(this, "Faded", true));
         pressed
             .Subscribe(_ => VisualStateManager.GoToState(this, "Normal", true));
@@ -99,7 +124,35 @@ public sealed partial class TouchControl : UserControl
             Observable.Merge(
                 containerSizeChanged.AsUnitObservable(),
                 touchDocked,
-                visibled)
+                visibled,
+                touchPositionRestored)
             .Select(_ => TouchRect);
+
+        void TryRestoreInitialPosition()
+        {
+            if (initialPositionRestored || !IsContainerReady())
+                return;
+
+            ApplyDockAnchor(initialDockAnchor);
+            initialPositionRestored = true;
+            touchPositionRestored.OnNext(Unit.Default);
+        }
     }
+
+    private void ApplyDockAnchor(TouchDockAnchor anchor)
+    {
+        var touchSize = new Size(Shared.TouchSize, Shared.TouchSize);
+        var point = TouchDockAnchor.ToTouchPosition(anchor, ContainerSize, touchSize, Shared.TouchSpacing);
+        TouchBorder.Translation = point.ToVector3();
+    }
+
+    private void SaveCurrentDockAnchor()
+    {
+        var anchor = TouchDockAnchor.SnapFromRect(ContainerSize, TouchRect);
+        TouchChanXSettings.SaveTouchDockAnchor(anchor);
+    }
+
+    private bool IsContainerReady() =>
+        ActualWidth >= Shared.TouchSize + Shared.TouchSpacing * 2 &&
+        ActualHeight >= Shared.TouchSize + Shared.TouchSpacing * 2;
 }
