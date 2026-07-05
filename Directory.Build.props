@@ -1,8 +1,8 @@
-﻿<Project>
+<Project>
   <PropertyGroup>
     <ImplicitUsings>true</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <WarningsAsErrors>$(WarningsAsErrors);CsWinRT1028</WarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);CsWinRT1028;CsWinRT1030</WarningsAsErrors>
     <!-- 这个会引入 Microsoft.NET.ILLink.Tasks 依赖 -->
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>

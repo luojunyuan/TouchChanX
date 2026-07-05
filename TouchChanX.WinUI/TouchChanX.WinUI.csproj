@@ -5,6 +5,7 @@
     <Platforms>x86;x64;ARM64</Platforms>
     <!-- 确保在类库项目 xaml 文件修改后重新编译 -->
     <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
