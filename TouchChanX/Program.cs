@@ -1,4 +1,4 @@
-﻿using TouchChanX.Win32;
+using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
 
 if (args.Length == 0)
@@ -41,10 +41,9 @@ if (handleResult.IsFailure(out var error, out var gameWindowHandle))
     }
 }
 
+OsPlatformApi.ActivateWindow(gameWindowHandle);
+
 if (GameStartup.HasAttachedCurrentTouchChanX(gameWindowHandle))
-{
-    OsPlatformApi.ActivateWindow(gameWindowHandle);
     return;
-}
 
 TouchChanX.WinUIApplication.RunWithGameWindow(gameWindowHandle);
