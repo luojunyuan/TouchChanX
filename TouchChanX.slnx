@@ -13,6 +13,7 @@
     <Project Path="TouchChanX.Entry.Wpf/TouchChanX.Entry.Wpf.csproj" Id="9cfbef3f-446c-40d5-b0dc-3d1f9f2a5d8d" />
   </Folder>
   <Folder Name="/SolutionFolder/">
+    <File Path=".editorconfig" />
     <File Path=".gitignore" />
     <File Path="AGENTS.md" />
     <File Path="app.manifest" />
