@@ -10,6 +10,7 @@ namespace TouchChanX.Win32.Menu;
 
 internal static class TouchConversionHooker
 {
+    private const int MouseClickDelay = 10;
     private const uint WM_LBUTTONUP = 0x0202;
     private const uint WM_RBUTTONUP = 0x0205;
     private const ulong MOUSEEVENTF_FROMTOUCH = 0xFF515700;
@@ -73,6 +74,10 @@ internal static class TouchConversionHooker
         if ((extraInfo & MOUSEEVENTF_FROMTOUCH) != MOUSEEVENTF_FROMTOUCH)
             return;
 
+        var message = (uint)wParam.Value;
+        if (message is not (WM_LBUTTONUP or WM_RBUTTONUP))
+            return;
+
         nint gameWindowHandle;
         nint touchWindowHandle;
         lock (SyncRoot)
@@ -87,7 +92,7 @@ internal static class TouchConversionHooker
         if (IsPointInsideTouchWindow(info.pt, touchWindowHandle))
             return;
 
-        switch ((uint)wParam.Value)
+        switch (message)
         {
             case WM_LBUTTONUP:
                 PInvoke.SetCursorPos(info.pt.X, info.pt.Y);
@@ -108,18 +113,20 @@ internal static class TouchConversionHooker
         return hitWindow == new HWND(touchWindowHandle) || PInvoke.IsChild(new HWND(touchWindowHandle), hitWindow);
     }
 
-    private static unsafe void SendMouseClick(MOUSE_EVENT_FLAGS downFlag, MOUSE_EVENT_FLAGS upFlag)
+    private static void SendMouseClick(MOUSE_EVENT_FLAGS downFlag, MOUSE_EVENT_FLAGS upFlag)
     {
-        Span<INPUT> inputs =
-        [
-            CreateMouseInput(downFlag),
-            CreateMouseInput(upFlag),
-        ];
-
-        fixed (INPUT* input = inputs)
+        _ = Task.Run(async () =>
         {
-            _ = PInvoke.SendInput((uint)inputs.Length, input, Marshal.SizeOf<INPUT>());
-        }
+            SendMouseInput(downFlag);
+            await Task.Delay(MouseClickDelay);
+            SendMouseInput(upFlag);
+        });
+    }
+
+    private static unsafe void SendMouseInput(MOUSE_EVENT_FLAGS flags)
+    {
+        var input = CreateMouseInput(flags);
+        _ = PInvoke.SendInput(1, &input, Marshal.SizeOf<INPUT>());
     }
 
     private static INPUT CreateMouseInput(MOUSE_EVENT_FLAGS flags) => new()
