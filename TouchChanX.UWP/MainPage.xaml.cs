@@ -31,7 +31,10 @@ public sealed partial class MainPage : Page
     private const string GamesSettingVersion2Prefix = "v2\n";
     private const char GameEntrySeparator = '\u001e';
     private const char GamePathSeparator = '\u001f';
+    private const int LaunchCooldownMilliseconds = 3000;
     private const string OpenSourceUrl = "https://github.com/luojunyuan/TachiChanX";
+
+    private bool _isLaunchCooldownActive;
 
     private List<GameEntry> Games { get; } = [];
 
@@ -117,19 +120,19 @@ public sealed partial class MainPage : Page
             return;
 
         GameList.SelectedItem = game;
-        await LaunchGameAsync(game);
+        await TryLaunchGameAsync(game);
     }
 
     private async void LaunchGame_Click(object sender, RoutedEventArgs e)
     {
         if (GetGameFromSender(sender) is { } game)
-            await LaunchGameAsync(game);
+            await TryLaunchGameAsync(game);
     }
 
     private async void LaunchSelectedGame_Click(object sender, RoutedEventArgs e)
     {
         if (GetSelectedGame() is { } game)
-            await LaunchGameAsync(game);
+            await TryLaunchGameAsync(game);
     }
 
     private async void RenameGame_Click(object sender, RoutedEventArgs e)
@@ -154,6 +157,30 @@ public sealed partial class MainPage : Page
     {
         if (GetSelectedGame() is { } game)
             RemoveGame(game);
+    }
+
+    private async Task TryLaunchGameAsync(GameEntry game)
+    {
+        if (_isLaunchCooldownActive)
+            return;
+
+        StartLaunchCooldown();
+        await LaunchGameAsync(game);
+    }
+
+    private void StartLaunchCooldown()
+    {
+        _isLaunchCooldownActive = true;
+        UpdateSelectedGameState();
+        _ = CompleteLaunchCooldownAsync();
+    }
+
+    private async Task CompleteLaunchCooldownAsync()
+    {
+        await Task.Delay(LaunchCooldownMilliseconds);
+
+        _isLaunchCooldownActive = false;
+        UpdateSelectedGameState();
     }
 
     private async Task LaunchGameAsync(GameEntry game)
@@ -391,6 +418,7 @@ public sealed partial class MainPage : Page
 
         SelectedGameActions.Visibility = Visibility.Visible;
         SelectedGameName.Text = game.Name;
+        LaunchSelectedGameButton.IsEnabled = !_isLaunchCooldownActive;
     }
 
     private async Task LoadGameIconAsync(GameEntry game)

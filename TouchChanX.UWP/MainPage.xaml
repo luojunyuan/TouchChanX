@@ -139,7 +139,7 @@
                                                 VerticalAlignment="Center"
                                                 TextTrimming="CharacterEllipsis" />
                                         </CommandBar.Content>
-                                        <AppBarButton Icon="Play" Label="启动" Click="LaunchSelectedGame_Click" />
+                                        <AppBarButton x:Name="LaunchSelectedGameButton" Icon="Play" Label="启动" Click="LaunchSelectedGame_Click" />
                                         <AppBarButton Icon="Edit" Label="重命名" Click="RenameSelectedGame_Click" />
                                         <AppBarButton Icon="Delete" Label="移除" Click="RemoveSelectedGame_Click" />
                                     </CommandBar>
