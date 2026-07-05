@@ -248,6 +248,13 @@
                             </ct:SettingsCard.HeaderIcon>
                             <ToggleSwitch IsOn="True" OffContent="关闭" OnContent="开启" />
                         </ct:SettingsCard>
+
+                        <ct:SettingsCard Description="仅占位 UI，计划在游戏画面顶部保留数像素触摸缓冲区。" Header="顶部边缘防误触">
+                            <ct:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE7C9;" />
+                            </ct:SettingsCard.HeaderIcon>
+                            <ToggleSwitch OffContent="关闭" OnContent="开启" />
+                        </ct:SettingsCard>
                     </StackPanel>
 
                     <StackPanel Visibility="Collapsed" x:Name="AboutPage"  Spacing="16">
