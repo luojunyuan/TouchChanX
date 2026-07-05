@@ -8,7 +8,14 @@ public static class TouchChanXSettings
 {
     private const string TouchDockAnchorKey = "TouchDockAnchor";
     private const string TogglePrefix = "Toggle.";
-    private static ApplicationDataContainer LocalSettings => ApplicationData.Current.LocalSettings;
+    private static Func<string, object?> ReadValueCore { get; set; } = ReadLocalValue;
+    private static Action<string, object> WriteValueCore { get; set; } = WriteLocalValue;
+
+    public static void ConfigureStorage(Func<string, object?> readValue, Action<string, object> writeValue)
+    {
+        ReadValueCore = readValue;
+        WriteValueCore = writeValue;
+    }
 
     public static TouchDockAnchor LoadTouchDockAnchor()
     {
@@ -19,20 +26,35 @@ public static class TouchChanXSettings
     }
 
     public static void SaveTouchDockAnchor(TouchDockAnchor anchor) =>
-        LocalSettings.Values[TouchDockAnchorKey] = FormatTouchDockAnchor(anchor);
+        WriteValue(TouchDockAnchorKey, FormatTouchDockAnchor(anchor));
 
     public static bool LoadToggleState(string id, bool defaultValue = false)
     {
-        return LocalSettings.Values[TogglePrefix + id] is bool isOn
-            ? isOn
-            : defaultValue;
+        return ReadValue(TogglePrefix + id) switch
+        {
+            bool isOn => isOn,
+            string value when bool.TryParse(value, out var isOn) => isOn,
+            _ => defaultValue,
+        };
     }
 
     public static void SaveToggleState(string id, bool isOn) =>
-        LocalSettings.Values[TogglePrefix + id] = isOn;
+        WriteValue(TogglePrefix + id, isOn);
+
+    private static object? ReadValue(string key) =>
+        ReadValueCore(key);
+
+    private static void WriteValue(string key, object value) =>
+        WriteValueCore(key, value);
+
+    private static object? ReadLocalValue(string key) =>
+        ApplicationData.Current.LocalSettings.Values[key];
+
+    private static void WriteLocalValue(string key, object value) =>
+        ApplicationData.Current.LocalSettings.Values[key] = value;
 
     private static string? ReadString(string key) =>
-        LocalSettings.Values[key] as string;
+        ReadValue(key) as string;
 
     private static string FormatTouchDockAnchor(TouchDockAnchor anchor) =>
         anchor switch
