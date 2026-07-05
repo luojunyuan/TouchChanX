@@ -14,6 +14,9 @@ public static partial class GameStartup // Win32
 {
     private const int GoodWindowWidth = 320;
     private const int GoodWindowHeight = 240;
+    private const int TouchChanXCloseTimeout = 1500;
+    private const int TouchChanXKillTimeout = 500;
+    private const uint WmClose = 0x0010;
 
     /// <summary>
     /// 查找合适的窗口句柄，这里需要等待是因为超时处理
@@ -60,22 +63,42 @@ public static partial class GameStartup // Win32
     /// </summary>
     public static bool HasAttachedCurrentTouchChanX(nint gameWindowHandle)
     {
-        var currentImagePath = GetCurrentProcessImagePath();
-        if (currentImagePath is null)
+        var attachedProcesses = GetAttachedCurrentTouchChanXProcesses(gameWindowHandle);
+        try
+        {
+            return attachedProcesses.Count > 0;
+        }
+        finally
+        {
+            foreach (var attachedProcess in attachedProcesses)
+                attachedProcess.Process.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// 请求关闭已经挂载在指定游戏窗口下的旧 TouchChanX 实例。
+    /// </summary>
+    public static async Task<bool> CloseAttachedCurrentTouchChanXAsync(nint gameWindowHandle)
+    {
+        var attachedProcesses = GetAttachedCurrentTouchChanXProcesses(gameWindowHandle);
+        if (attachedProcesses.Count == 0)
             return false;
 
-        foreach (var childWindow in GetChildWindows(gameWindowHandle))
+        try
         {
-            _ = PInvoke.GetWindowThreadProcessId(childWindow, out var processId);
-            if (processId == 0 || processId == Environment.ProcessId)
-                continue;
+            foreach (var attachedProcess in attachedProcesses)
+                RequestCloseTouchChanXWindow(attachedProcess.WindowHandle);
 
-            var imagePath = GetProcessImagePath(processId);
-            if (string.Equals(imagePath, currentImagePath, StringComparison.OrdinalIgnoreCase))
-                return true;
+            foreach (var attachedProcess in attachedProcesses)
+                await WaitForTouchChanXExitAsync(attachedProcess.Process).ConfigureAwait(false);
+        }
+        finally
+        {
+            foreach (var attachedProcess in attachedProcesses)
+                attachedProcess.Process.Dispose();
         }
 
-        return false;
+        return true;
     }
 
     private static string? GetCurrentProcessImagePath()
@@ -98,6 +121,97 @@ public static partial class GameStartup // Win32
         return string.IsNullOrWhiteSpace(path)
             ? null
             : NormalizeExecutablePath(path);
+    }
+
+    private sealed class AttachedTouchChanXProcess(nint windowHandle, Process process)
+    {
+        public nint WindowHandle { get; } = windowHandle;
+
+        public Process Process { get; } = process;
+    }
+
+    private static List<AttachedTouchChanXProcess> GetAttachedCurrentTouchChanXProcesses(nint gameWindowHandle)
+    {
+        var currentImagePath = GetCurrentProcessImagePath();
+        if (currentImagePath is null)
+            return [];
+
+        var attachedProcesses = new Dictionary<uint, AttachedTouchChanXProcess>();
+        foreach (var childWindow in GetChildWindows(gameWindowHandle))
+        {
+            _ = PInvoke.GetWindowThreadProcessId(childWindow, out var processId);
+            if (processId == 0 ||
+                processId == Environment.ProcessId ||
+                attachedProcesses.ContainsKey(processId))
+            {
+                continue;
+            }
+
+            var imagePath = GetProcessImagePath(processId);
+            if (!string.Equals(imagePath, currentImagePath, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            try
+            {
+                var process = Process.GetProcessById((int)processId);
+                process.Refresh();
+
+                if (!process.HasExited)
+                    attachedProcesses.Add(processId, new((nint)childWindow, process));
+                else
+                    process.Dispose();
+            }
+            catch (ArgumentException)
+            {
+                // Process exited after EnumChildWindows/GetWindowThreadProcessId.
+            }
+            catch (InvalidOperationException)
+            {
+                // Process exited while creating or refreshing the managed Process wrapper.
+            }
+        }
+
+        return [.. attachedProcesses.Values];
+    }
+
+    private static void RequestCloseTouchChanXWindow(nint windowHandle) =>
+        PInvoke.PostMessage(new(windowHandle), WmClose, 0, 0);
+
+    private static async Task WaitForTouchChanXExitAsync(Process process)
+    {
+        try
+        {
+            if (process.HasExited)
+                return;
+
+            using var closeTimeout = new CancellationTokenSource(TouchChanXCloseTimeout);
+            await process.WaitForExitAsync(closeTimeout.Token).ConfigureAwait(false);
+            return;
+        }
+        catch (OperationCanceledException)
+        {
+            // Fall back to ending the old TouchChanX process only.
+        }
+        catch (InvalidOperationException)
+        {
+            return;
+        }
+
+        try
+        {
+            process.Refresh();
+            if (process.HasExited)
+                return;
+
+            process.Kill();
+
+            using var killTimeout = new CancellationTokenSource(TouchChanXKillTimeout);
+            await process.WaitForExitAsync(killTimeout.Token).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or System.ComponentModel.Win32Exception or OperationCanceledException)
+        {
+            Debug.WriteLine($"Failed to end old TouchChanX process: {ex}");
+        }
     }
 
     private unsafe struct EnumState

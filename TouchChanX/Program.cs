@@ -41,10 +41,8 @@ if (handleResult.IsFailure(out var error, out var gameWindowHandle))
     }
 }
 
-if (GameStartup.HasAttachedCurrentTouchChanX(gameWindowHandle))
-{
-    OsPlatformApi.ActivateWindow(gameWindowHandle);
-    return;
-}
+_ = GameStartup.CloseAttachedCurrentTouchChanXAsync(gameWindowHandle).GetAwaiter().GetResult();
+
+OsPlatformApi.ActivateWindow(gameWindowHandle);
 
 TouchChanX.WinUIApplication.RunWithGameWindow(gameWindowHandle);
