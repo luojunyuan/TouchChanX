@@ -8,14 +8,6 @@ public static class TouchChanXSettings
 {
     private const string TouchDockAnchorKey = "TouchDockAnchor";
     private const string TogglePrefix = "Toggle.";
-    private static Func<string, object?> ReadValueCore { get; set; } = ReadLocalValue;
-    private static Action<string, object> WriteValueCore { get; set; } = WriteLocalValue;
-
-    public static void ConfigureStorage(Func<string, object?> readValue, Action<string, object> writeValue)
-    {
-        ReadValueCore = readValue;
-        WriteValueCore = writeValue;
-    }
 
     public static TouchDockAnchor LoadTouchDockAnchor()
     {
@@ -42,16 +34,25 @@ public static class TouchChanXSettings
         WriteValue(TogglePrefix + id, isOn);
 
     private static object? ReadValue(string key) =>
-        ReadValueCore(key);
+        TryGetLocalSettings()?.Values[key];
 
-    private static void WriteValue(string key, object value) =>
-        WriteValueCore(key, value);
+    private static void WriteValue(string key, object value)
+    {
+        if (TryGetLocalSettings() is { } localSettings)
+            localSettings.Values[key] = value;
+    }
 
-    private static object? ReadLocalValue(string key) =>
-        ApplicationData.Current.LocalSettings.Values[key];
-
-    private static void WriteLocalValue(string key, object value) =>
-        ApplicationData.Current.LocalSettings.Values[key] = value;
+    private static ApplicationDataContainer? TryGetLocalSettings()
+    {
+        try
+        {
+            return ApplicationData.Current.LocalSettings;
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
 
     private static string? ReadString(string key) =>
         ReadValue(key) as string;
