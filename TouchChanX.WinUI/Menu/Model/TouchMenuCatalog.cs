@@ -49,6 +49,7 @@ internal static class TouchMenuCatalog
             Toggle("touch-to-mouse", "Tap Click", Symbol.TouchPointer, new(1, 0), toolTip: "When you tap, the previous tapped position will be clicked."),
             Navigate("function-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
             Toggle("battery", "Battery", ExtendedSymbol.VerticalBattery3, new(1, 2), isEnabled: false),
+            Command("text-magnifier", "Text Magnifier", ExtendedSymbol.TextSelect, new(2, 0), isEnabled: false),
             Command("gesture", "Gesture", ExtendedSymbol.FingerInking, new(2, 1), isEnabled: false),
             Command("game-handler", "Handler", ExtendedSymbol.Game, new(2, 2), isEnabled: false),
         ]);
@@ -117,4 +118,5 @@ internal static class ExtendedSymbol
     public const Symbol Touchpad = (Symbol)0xEFA5;
     public const Symbol StaplingLandscapeBottomRight = (Symbol)0xF5A4;
     public const Symbol VerticalBattery3 = (Symbol)0xF5F5;
+    public const Symbol TextSelect = (Symbol)0xF683;
 }
