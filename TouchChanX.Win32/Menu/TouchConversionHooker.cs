@@ -92,6 +92,9 @@ internal static class TouchConversionHooker
         if (IsPointInsideTouchWindow(info.pt, touchWindowHandle))
             return;
 
+        if (!IsPointInsideGameClientArea(info.pt, gameWindowHandle))
+            return;
+
         switch (message)
         {
             case WM_LBUTTONUP:
@@ -111,6 +114,21 @@ internal static class TouchConversionHooker
 
         var hitWindow = PInvoke.WindowFromPoint(point);
         return hitWindow == new HWND(touchWindowHandle) || PInvoke.IsChild(new HWND(touchWindowHandle), hitWindow);
+    }
+
+    private static bool IsPointInsideGameClientArea(Point screenPoint, nint gameWindowHandle)
+    {
+        var clientOrigin = new Point();
+        if (!PInvoke.ClientToScreen(new(gameWindowHandle), ref clientOrigin) ||
+            !PInvoke.GetClientRect(new(gameWindowHandle), out var clientRect))
+        {
+            return false;
+        }
+
+        return screenPoint.X >= clientOrigin.X &&
+            screenPoint.X < clientOrigin.X + clientRect.Width &&
+            screenPoint.Y >= clientOrigin.Y &&
+            screenPoint.Y < clientOrigin.Y + clientRect.Height;
     }
 
     private static void SendMouseClick(MOUSE_EVENT_FLAGS downFlag, MOUSE_EVENT_FLAGS upFlag)
