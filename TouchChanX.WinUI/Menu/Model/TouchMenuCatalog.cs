@@ -35,8 +35,8 @@ internal static class TouchMenuCatalog
             Navigate("move-game", "Move", Symbol.Trim, new(0, 2), TouchMenuPageId.WinMove),
             Navigate("game-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
             Command("close-game", "Close", ExtendedSymbol.ChromeClose, new(1, 2)),
-            Command("brightness-down", "Dim", ExtendedSymbol.KeyboardLowerBrightness, new(2, 0)),
-            Command("brightness-up", "Restore", ExtendedSymbol.KeyboardBrightness, new(2, 1)),
+            Command("brightness-down", "Dim", ExtendedSymbol.KeyboardLowerBrightness, new(2, 0), isEnabled: false),
+            Command("brightness-up", "Restore", ExtendedSymbol.KeyboardBrightness, new(2, 1), isEnabled: false),
         ]);
 
     public static TouchMenuPageDescriptor Function { get; } = new(

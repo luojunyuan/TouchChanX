@@ -43,3 +43,9 @@ OpenProcess
 CloseHandle
 QueryFullProcessImageName
 PROCESS_ACCESS_RIGHTS
+
+// ---- 菜单命令相关 ----
+GetWindowRect
+PostMessage
+SendInput
+MapVirtualKey

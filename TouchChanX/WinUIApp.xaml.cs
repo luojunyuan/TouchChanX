@@ -1,8 +1,11 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Microsoft.UI.Xaml;
 using R3;
+using R3.ObservableEvents;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
+using TouchChanX.Win32.Menu;
+using TouchChanX.WinUI.Menu;
 using Windows.ApplicationModel;
 using Windows.System;
 using WinRT;
@@ -100,6 +103,11 @@ public partial class WinUIApp(nint gameWindowHandle)
         WinUI.Touch.TouchControl.ObservableTouchRegionChanged
             .Select(touchRect => touchRect.Scale(window.Dpi).ToGdiRect())
             .Subscribe(rect => OsPlatformApi.SetWindowObservableRegion(hwnd, rect));
+
+        MenuControl.ObservableCommandRequested
+            .TakeUntil(window.Events().Closed)
+            .SubscribeAwait(async (commandId, _) =>
+                await TouchMenuCommandService.ExecuteAsync(commandId, gameWindowHandle));
 
         // TODO: 监视父窗口销毁事件，把窗口设置到新的 gameWindowHandle 上
         GameWindowService.WindowDestroyed(gameWindowHandle).Subscribe(_ =>

@@ -12,7 +12,11 @@ namespace TouchChanX.WinUI.Menu;
 
 public partial class MenuControl
 {
+    private static readonly Subject<string> CommandRequestedSubject = new();
+
     public static Observable<Unit> ObservableRegionResetRequested { get; private set; } = Observable.Empty<Unit>();
+
+    public static Observable<string> ObservableCommandRequested => CommandRequestedSubject;
 }
 
 public sealed partial class MenuControl : UserControl
@@ -135,7 +139,21 @@ public sealed partial class MenuControl : UserControl
 
         if (item.Kind == TouchMenuItemKind.Navigation && item.TargetPage is { } targetPage)
             await SwitchPageAsync(targetPage, item.Cell);
+
+        if (item.Kind == TouchMenuItemKind.Command)
+            await HandleCommandAsync(item.Id);
     }
+
+    private async Task HandleCommandAsync(string commandId)
+    {
+        if (ShouldCloseBeforeCommand(commandId))
+            await CloseMenuAsync();
+
+        CommandRequestedSubject.OnNext(commandId);
+    }
+
+    private static bool ShouldCloseBeforeCommand(string commandId) =>
+        commandId is "screenshot" or "close-game";
 
     private async Task SwitchPageAsync(TouchMenuPageId targetPageId, MenuCell origin)
     {
