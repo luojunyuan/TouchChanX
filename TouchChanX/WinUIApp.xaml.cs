@@ -116,6 +116,8 @@ public partial class WinUIApp(nint gameWindowHandle)
 
         if (WinUI.TouchChanXSettings.LoadToggleState("touch-to-mouse"))
             TouchMenuCommandService.SetToggleState("touch-to-mouse", true, gameWindowHandle, hwnd);
+        if (WinUI.TouchChanXSettings.LoadToggleState("gesture"))
+            TouchMenuCommandService.SetToggleState("gesture", true, gameWindowHandle, hwnd);
 
         // TODO: 监视父窗口销毁事件，把窗口设置到新的 gameWindowHandle 上
         GameWindowService.WindowDestroyed(gameWindowHandle).Subscribe(_ =>

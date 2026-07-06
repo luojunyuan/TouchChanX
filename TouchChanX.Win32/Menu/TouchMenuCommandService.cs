@@ -8,6 +8,7 @@ public static class TouchMenuCommandService
     private const int CloseGameDelay = 200;
     private const int ScreenshotDelay = 500;
     private const int MoveStep = 1;
+    private static GestureRecognitionService? _gestureRecognitionService;
 
     public static async Task ExecuteAsync(string commandId, nint gameWindowHandle)
     {
@@ -74,6 +75,20 @@ public static class TouchMenuCommandService
                 break;
             case "touch-to-mouse":
                 TouchConversionHooker.Uninstall();
+                break;
+            case "gesture" when isOn && touchWindowHandle != nint.Zero && OsPlatformApi.IsWindow(touchWindowHandle):
+                if (!OperatingSystem.IsWindowsVersionAtLeast(8))
+                    return;
+
+                _gestureRecognitionService ??= new GestureRecognitionService(touchWindowHandle);
+                _gestureRecognitionService.IsEnabled = true;
+                break;
+            case "gesture":
+                if (!OperatingSystem.IsWindowsVersionAtLeast(8))
+                    return;
+
+                _gestureRecognitionService?.Dispose();
+                _gestureRecognitionService = null;
                 break;
         }
     }

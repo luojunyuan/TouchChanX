@@ -50,7 +50,7 @@ internal static class TouchMenuCatalog
             Navigate("function-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
             Toggle("battery", "Battery", ExtendedSymbol.VerticalBattery3, new(1, 2), isEnabled: false),
             Command("text-magnifier", "Text Magnifier", ExtendedSymbol.TextSelect, new(2, 0), isEnabled: false),
-            Command("gesture", "Gesture", ExtendedSymbol.FingerInking, new(2, 1), isEnabled: false),
+            Toggle("gesture", "Gesture", ExtendedSymbol.FingerInking, new(2, 1)),
             Command("game-handler", "Handler", ExtendedSymbol.Game, new(2, 2), isEnabled: false),
         ]);
 

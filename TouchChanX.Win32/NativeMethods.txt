@@ -1,4 +1,4 @@
-﻿// ---- 窗口同步 Hook 相关 ----
+// ---- 窗口同步 Hook 相关 ----
 SetParent
 GetClientRect
 ClientToScreen
@@ -55,3 +55,22 @@ PostMessage
 SendInput
 MapVirtualKey
 SetCursorPos
+GetPointerInfo
+CallWindowProc
+RegisterRawInputDevices
+GetRawInputData
+GetRawInputDeviceInfo
+GetSystemMetrics
+RAWINPUTDEVICE
+RAWINPUT
+RAWINPUTHEADER
+RAWHID
+RID_DEVICE_INFO
+HidP_GetUsageValue
+HidP_GetScaledUsageValue
+HidP_GetUsages
+HidP_GetLinkCollectionNodes
+HidP_GetSpecificValueCaps
+HIDP_LINK_COLLECTION_NODE
+HIDP_VALUE_CAPS
+HIDP_REPORT_TYPE
