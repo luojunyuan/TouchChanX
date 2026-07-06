@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
@@ -43,7 +43,29 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
-        _window = new MainWindow();
+        var mainWindow = new MainWindow();
+        AttachMessageFlyoutTestButton(mainWindow);
+        _window = mainWindow;
         _window.Activate();
+    }
+
+    private static void AttachMessageFlyoutTestButton(MainWindow window)
+    {
+        if (window.Content is not Grid root)
+            return;
+
+        var button = new Button
+        {
+            Content = "发送消息",
+            MinWidth = 120,
+            MinHeight = 44,
+            Margin = new Thickness(0, 0, 24, 24),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Bottom,
+        };
+
+        button.PointerPressed += (_, e) => e.Handled = true;
+        button.Click += (_, _) => window.ShowMessage("鼠标点击");
+        root.Children.Add(button);
     }
 }

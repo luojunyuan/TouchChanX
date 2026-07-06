@@ -18,6 +18,8 @@ public sealed partial class MainWindow : Window
             .Subscribe(MenuTouch.ShowAt);
     }
 
+    public void ShowMessage(string message) => MessageFlyout.ShowMessage(message);
+
     /// <summary>
     /// 手动激活 window 的 xbind，用于设置为子窗口后，Activated 事件不触发的情景
     /// </summary>
