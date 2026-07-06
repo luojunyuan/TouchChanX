@@ -227,7 +227,7 @@
                                                     <Border
                                                         BorderBrush="{ThemeResource SystemControlHighlightAccentBrush}"
                                                         BorderThickness="2"
-                                                        CornerRadius="4"
+                                                        CornerRadius="0"
                                                         IsHitTestVisible="False"
                                                         Opacity="0.55"
                                                         Visibility="{x:Bind SelectedVisualVisibility, Mode=OneWay}" />
