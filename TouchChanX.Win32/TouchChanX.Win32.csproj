@@ -18,8 +18,4 @@
     <PackageReference Include="WindowsShortcutFactory" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\TouchChanX.SplashScreenGdiPlus\TouchChanX.SplashScreenGdiPlus.csproj" />
-  </ItemGroup>
-
 </Project>

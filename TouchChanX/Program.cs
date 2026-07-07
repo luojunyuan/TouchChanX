@@ -1,3 +1,4 @@
+using TouchChanX.SplashScreenGdiPlus;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
 
@@ -16,9 +17,14 @@ if (gamePathResult.IsFailure(out var pathError, out var gamePath))
 
 await using var fileStream = TouchChanX.AssetLoader.AppSplashIcon;
 
-var processResult = GameStartup.GetOrLaunchGameWithSplashAsync(gamePath, fileStream).GetAwaiter().GetResult();
+// 创建并显示启动画面，持续到 WinUI 窗口完成初始化
+var splash = SplashScreen.Create(fileStream);
+splash.Show();
+
+var processResult = GameStartup.GetOrLaunchGameAsync(gamePath).GetAwaiter().GetResult();
 if (processResult.IsFailure(out var processError, out var process))
 {
+    splash.Dispose();
     OsPlatformApi.MessageBox.Show(processError.Message);
     return;
 }
@@ -30,6 +36,7 @@ process.Exited += (_, _) => Environment.Exit(0);
 var handleResult = GameStartup.FindGoodWindowHandleAsync(process).GetAwaiter().GetResult();
 if (handleResult.IsFailure(out var error, out var gameWindowHandle))
 {
+    splash.Dispose();
     switch (error)
     {
         case WindowHandleNotFoundError:
@@ -44,6 +51,10 @@ if (handleResult.IsFailure(out var error, out var gameWindowHandle))
 OsPlatformApi.ActivateWindow(gameWindowHandle);
 
 if (GameStartup.HasAttachedCurrentTouchChanX(gameWindowHandle))
+{
+    splash.Dispose();
     return;
+}
 
-TouchChanX.WinUIApplication.RunWithGameWindow(gameWindowHandle);
+// NOTE: splash 由 WinUIApp.OnLaunched 在 window.Activate() 之后释放
+TouchChanX.WinUIApplication.RunWithGameWindow(gameWindowHandle, splash);

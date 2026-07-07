@@ -52,17 +52,20 @@ public static class WinUIApplication
         return true;
     }
 
-    public static void RunWithGameWindow(nint gameWindowHandle)
+    public static void RunWithGameWindow(nint gameWindowHandle, IDisposable? splash = null)
     {
         bool succeed = PrepareMsixDependency();
         if (!succeed)
+        {
+            splash?.Dispose();
             return;
+        }
 
         ComWrappersSupport.InitializeComWrappers();
 
         Application.Start(p =>
         {
-            var app = new WinUIApp(gameWindowHandle);
+            var app = new WinUIApp(gameWindowHandle, splash);
             // NOTE: 在 TouchChanX.UWP App.xaml 中引用 RailNavigationViewResources 后
             // 我们这里必须要在 OnLaunched 前调用 InitializeComponent()，否则会报错
             app.InitializeComponent();
@@ -70,7 +73,7 @@ public static class WinUIApplication
     }
 }
 
-public partial class WinUIApp(nint gameWindowHandle)
+public partial class WinUIApp(nint gameWindowHandle, IDisposable? splash = null)
 {
     private partial class TransparentBackdrop : Microsoft.UI.Xaml.Media.SystemBackdrop { }
 
@@ -143,6 +146,8 @@ public partial class WinUIApp(nint gameWindowHandle)
 
         window.InitializeBindings();
         window.Activate();
+
+        splash?.Dispose();
     }
 
     private static string GetGestureMessage(RecognizedGesture gesture) =>

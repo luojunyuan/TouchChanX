@@ -1,6 +1,5 @@
-﻿using LightResults;
+using LightResults;
 using Microsoft.Win32.SafeHandles;
-using TouchChanX.SplashScreenGdiPlus;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Threading;
@@ -81,7 +80,10 @@ public static partial class GameStartup
         return null;
     }
 
-    public static async Task<Result<Process>> GetOrLaunchGameWithSplashAsync(string path, Stream fileStream)
+    /// <summary>
+    /// 获取或启动游戏进程
+    /// </summary>
+    public static async Task<Result<Process>> GetOrLaunchGameAsync(string path)
     {
         var process = await GetWindowProcessByPathAsync(path);
         if (process is not null)
@@ -90,8 +92,6 @@ public static partial class GameStartup
             return process;
         }
 
-        using var splash = SplashScreen.Create(fileStream);
-        splash.Show();
         return await LaunchGameQwQ(path);
     }
 
