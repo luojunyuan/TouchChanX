@@ -1,7 +1,7 @@
-using System.Diagnostics;
 using Microsoft.UI.Xaml;
 using R3;
 using R3.ObservableEvents;
+using System.Diagnostics;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
 using TouchChanX.Win32.Menu;
@@ -62,10 +62,6 @@ public static class WinUIApplication
 
         Application.Start(p =>
         {
-            // 为了让 ObserveOnCurrentSynchronizationContext 调度回来，并不是为了 await 后台线程
-            var context = new Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
-            SynchronizationContext.SetSynchronizationContext(context);
-
             var app = new WinUIApp(gameWindowHandle);
             // NOTE: 在 TouchChanX.UWP App.xaml 中引用 RailNavigationViewResources 后
             // 我们这里必须要在 OnLaunched 前调用 InitializeComponent()，否则会报错
@@ -84,6 +80,8 @@ public partial class WinUIApp(nint gameWindowHandle)
     /// <remarks>QwQ: 耗时方法</remarks>
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        // 不使用 UI Context，使用 TimeProvider 让基于时间的运算符正确回调
+        WinUI.MainWindow.InitilizeTimeProvider();
         var window = new WinUI.MainWindow()
         {
             SystemBackdrop = new TransparentBackdrop()
@@ -121,7 +119,6 @@ public partial class WinUIApp(nint gameWindowHandle)
         TouchMenuCommandService.ObservableGestureRecognized
             .TakeUntil(window.Events().Closed)
             .Select(GetGestureMessage)
-            .ObserveOnCurrentSynchronizationContext()
             .Subscribe(window.ShowMessage);
 
         if (WinUI.TouchChanXSettings.LoadToggleState("touch-to-mouse"))
