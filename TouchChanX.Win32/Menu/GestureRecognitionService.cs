@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using R3;
 using Windows.Win32;
 using Windows.Win32.Devices.HumanInterfaceDevice;
 using Windows.Win32.Foundation;
@@ -7,6 +8,14 @@ using Windows.Win32.UI.Input;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace TouchChanX.Win32.Menu;
+
+public enum RecognizedGesture
+{
+    ThreeFingerTap,
+    TwoFingerTap,
+    TwoFingerSwipeUp,
+    TwoFingerSwipeDown,
+}
 
 public sealed class GestureRecognitionService : IDisposable
 {
@@ -34,6 +43,7 @@ public sealed class GestureRecognitionService : IDisposable
     private readonly Dictionary<nint, ushort> _validRawInputDevices = [];
     private readonly List<PointerStroke> _completedStrokes = [];
     private readonly List<RawContact> _rawContacts = [];
+    private readonly Subject<RecognizedGesture> _gestureRecognized = new();
     private DateTimeOffset _captureStartedAt;
     private nint _previousWndProc;
     private nint _hwnd;
@@ -41,6 +51,8 @@ public sealed class GestureRecognitionService : IDisposable
     private int _requiredRawContactCount;
     private bool _disposed;
     private bool _isEnabled;
+
+    public Observable<RecognizedGesture> ObservableGestureRecognized => _gestureRecognized;
 
     public GestureRecognitionService(nint hwnd)
     {
@@ -515,14 +527,14 @@ public sealed class GestureRecognitionService : IDisposable
 
     private readonly List<GestureDefinition> _gestures =
     [
-        new("ThreeFingerTap", ctx => ctx.MaxContactCount >= 3
+        new(RecognizedGesture.ThreeFingerTap, ctx => ctx.MaxContactCount >= 3
             && ctx.Duration <= TapDurationThreshold
             && ctx.MaxMovement <= TapMovementThreshold),
-        new("TwoFingerTap",  ctx => ctx.MaxContactCount == 2
+        new(RecognizedGesture.TwoFingerTap,  ctx => ctx.MaxContactCount == 2
             && ctx.Duration <= TapDurationThreshold
             && ctx.MaxMovement <= TapMovementThreshold),
-        new("TwoFingerSwipeUp",   ctx => IsVerticalSwipe(ctx) && ctx.DominantStroke!.Delta.Y < 0),
-        new("TwoFingerSwipeDown", ctx => IsVerticalSwipe(ctx) && ctx.DominantStroke!.Delta.Y > 0),
+        new(RecognizedGesture.TwoFingerSwipeUp,   ctx => IsVerticalSwipe(ctx) && ctx.DominantStroke!.Delta.Y < 0),
+        new(RecognizedGesture.TwoFingerSwipeDown, ctx => IsVerticalSwipe(ctx) && ctx.DominantStroke!.Delta.Y > 0),
     ];
 
     private static bool IsVerticalSwipe(GestureContext ctx) =>
@@ -534,20 +546,23 @@ public sealed class GestureRecognitionService : IDisposable
 
     private void CompleteCapture()
     {
-        string? gestureName = RecognizeGesture();
-        if (gestureName is not null)
-            Debug.WriteLine($"Gesture recognized: {gestureName}");
+        RecognizedGesture? gesture = RecognizeGesture();
+        if (gesture is not null)
+        {
+            Debug.WriteLine($"Gesture recognized: {gesture}");
+            _gestureRecognized.OnNext(gesture.Value);
+        }
 
         ResetCapture();
     }
 
-    private string? RecognizeGesture()
+    private RecognizedGesture? RecognizeGesture()
     {
         if (_completedStrokes.Count == 0)
             return null;
 
         var ctx = BuildGestureContext();
-        return _gestures.FirstOrDefault(g => g.Matches(ctx))?.Name;
+        return _gestures.FirstOrDefault(g => g.Matches(ctx))?.Gesture;
     }
 
     private GestureContext BuildGestureContext() => new(
@@ -642,7 +657,7 @@ public sealed class GestureRecognitionService : IDisposable
         double MaxMovement,
         PointerStroke? DominantStroke);
 
-    private sealed record GestureDefinition(string Name, Func<GestureContext, bool> Matches);
+    private sealed record GestureDefinition(RecognizedGesture Gesture, Func<GestureContext, bool> Matches);
 
     private delegate nint WndProcDelegate(nint hWnd, uint msg, nuint wParam, nint lParam);
 }

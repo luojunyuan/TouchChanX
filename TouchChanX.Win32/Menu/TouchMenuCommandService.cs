@@ -1,4 +1,5 @@
 using TouchChanX.Win32.Interop;
+using R3;
 using Windows.Win32;
 
 namespace TouchChanX.Win32.Menu;
@@ -8,7 +9,10 @@ public static class TouchMenuCommandService
     private const int CloseGameDelay = 200;
     private const int ScreenshotDelay = 500;
     private const int MoveStep = 1;
-    private static GestureRecognitionService? _gestureRecognitionService;
+    private static readonly Subject<RecognizedGesture> GestureRecognizedSubject = new();
+    private static readonly SerialDisposable GestureRecognitionSession = new();
+
+    public static Observable<RecognizedGesture> ObservableGestureRecognized => GestureRecognizedSubject;
 
     public static async Task ExecuteAsync(string commandId, nint gameWindowHandle)
     {
@@ -80,18 +84,34 @@ public static class TouchMenuCommandService
                 if (!OperatingSystem.IsWindowsVersionAtLeast(8))
                     return;
 
-                _gestureRecognitionService ??= new GestureRecognitionService(touchWindowHandle);
-                _gestureRecognitionService.IsEnabled = true;
+                GestureRecognitionSession.Disposable =
+                    ObserveGestureRecognition(touchWindowHandle)
+                    .Subscribe(GestureRecognizedSubject.OnNext);
                 break;
             case "gesture":
                 if (!OperatingSystem.IsWindowsVersionAtLeast(8))
                     return;
 
-                _gestureRecognitionService?.Dispose();
-                _gestureRecognitionService = null;
+                GestureRecognitionSession.Disposable = Disposable.Empty;
                 break;
         }
     }
+
+    private static Observable<RecognizedGesture> ObserveGestureRecognition(nint touchWindowHandle) =>
+        Observable.Create<RecognizedGesture>(observer =>
+        {
+            var service = new GestureRecognitionService(touchWindowHandle)
+            {
+                IsEnabled = true,
+            };
+            var subscription = service.ObservableGestureRecognized.Subscribe(observer.OnNext);
+
+            return Disposable.Create(() =>
+            {
+                subscription.Dispose();
+                service.Dispose();
+            });
+        });
 
     private static void BringGameWindowToForeground(nint hwnd) =>
         PInvoke.SetForegroundWindow(new(hwnd));

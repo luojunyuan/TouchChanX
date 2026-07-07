@@ -16,8 +16,6 @@ public static class WinUIApplication
 {
     private static bool PrepareMsixDependency()
     {
-        ComWrappersSupport.InitializeComWrappers();
-
         try
         {
             // 使用 MSIX 动态依赖包 API，强行修改静态包图的依赖顺序，注册 WindowsAppRuntime 依赖包到当前进程中
@@ -60,8 +58,13 @@ public static class WinUIApplication
         if (!succeed)
             return;
 
+        ComWrappersSupport.InitializeComWrappers();
+
         Application.Start(p =>
         {
+            var context = new Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
+            SynchronizationContext.SetSynchronizationContext(context);
+
             var app = new WinUIApp(gameWindowHandle);
             // NOTE: 在 TouchChanX.UWP App.xaml 中引用 RailNavigationViewResources 后
             // 我们这里必须要在 OnLaunched 前调用 InitializeComponent()，否则会报错
@@ -114,6 +117,12 @@ public partial class WinUIApp(nint gameWindowHandle)
             .Subscribe(toggle =>
                 TouchMenuCommandService.SetToggleState(toggle.Id, toggle.IsOn, gameWindowHandle, hwnd));
 
+        TouchMenuCommandService.ObservableGestureRecognized
+            .TakeUntil(window.Events().Closed)
+            .Select(GetGestureMessage)
+            .SubscribeOnCurrentSynchronizationContext()
+            .Subscribe(window.ShowMessage);
+
         if (WinUI.TouchChanXSettings.LoadToggleState("touch-to-mouse"))
             TouchMenuCommandService.SetToggleState("touch-to-mouse", true, gameWindowHandle, hwnd);
         if (WinUI.TouchChanXSettings.LoadToggleState("gesture"))
@@ -133,6 +142,16 @@ public partial class WinUIApp(nint gameWindowHandle)
         window.InitializeBindings();
         window.Activate();
     }
+
+    private static string GetGestureMessage(RecognizedGesture gesture) =>
+        gesture switch
+        {
+            RecognizedGesture.ThreeFingerTap => "三指点击",
+            RecognizedGesture.TwoFingerTap => "双指点击",
+            RecognizedGesture.TwoFingerSwipeUp => "双指上滑",
+            RecognizedGesture.TwoFingerSwipeDown => "双指下滑",
+            _ => gesture.ToString(),
+        };
 }
 
 public static class WinUIExtension
