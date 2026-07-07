@@ -14,7 +14,7 @@ if (gamePathResult.IsFailure(out var pathError, out var gamePath))
     return;
 }
 
-await using var fileStream = TouchChanX.AssetLoader.KleeHires;
+await using var fileStream = TouchChanX.AssetLoader.AppSplashIcon;
 
 var processResult = GameStartup.GetOrLaunchGameWithSplashAsync(gamePath, fileStream).GetAwaiter().GetResult();
 if (processResult.IsFailure(out var processError, out var process))

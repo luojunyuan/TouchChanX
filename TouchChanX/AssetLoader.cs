@@ -1,4 +1,4 @@
-﻿namespace TouchChanX;
+namespace TouchChanX;
 
 internal static class AssetLoader
 {
@@ -11,5 +11,5 @@ internal static class AssetLoader
         return stream ?? throw new FileNotFoundException(resourcePath);
     }
 
-    public static Stream KleeHires => GetImageStream("klee_hires.png");
+    public static Stream AppSplashIcon => GetImageStream("touchchan_hires.png");
 }
