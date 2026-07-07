@@ -1,13 +1,16 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using R3;
-using R3.ObservableEvents;
 
 namespace TouchChanX.WinUI.Controls;
 
 public sealed partial class MenuButton : UserControl
 {
+    private uint? _activePointerId;
+    private readonly Subject<Unit> _clickedSubject = new();
+
     public static readonly DependencyProperty SymbolProperty =
         DependencyProperty.Register(
             nameof(Symbol),
@@ -66,32 +69,18 @@ public sealed partial class MenuButton : UserControl
     {
         InitializeComponent();
 
-        var pointerReleased = this.Events().PointerReleased.Share();
-        var pointerExited = this.Events().PointerExited.Share();
-        var pointerPressed =
-            this.Events().PointerPressed
-            .Where(_ => IsEnabled)
-            .Merge(
-                this.Events().PointerEntered
-                .Where(e => IsEnabled && e.GetCurrentPoint(this).Properties.IsLeftButtonPressed))
-            .Share();
-
         Clicked =
-            pointerPressed
-            .SelectMany(_ =>
-                pointerReleased
-                .Take(1)
-                .TakeUntil(pointerExited))
+            _clickedSubject
             .Where(_ => IsEnabled)
             .Do(_ => ToggleIfNeeded())
             .AsUnitObservable()
             .Share();
 
-        pointerPressed
-            .Subscribe(_ => RefreshVisualState(isPressed: true));
-        pointerReleased
-            .Merge(pointerExited)
-            .Subscribe(_ => RefreshVisualState());
+        AddHandler(PointerPressedEvent, new PointerEventHandler(OnPointerPressed), true);
+        AddHandler(PointerEnteredEvent, new PointerEventHandler(OnPointerEntered), true);
+        AddHandler(PointerExitedEvent, new PointerEventHandler(OnPointerExited), true);
+        AddHandler(PointerReleasedEvent, new PointerEventHandler(OnPointerReleased), true);
+        AddHandler(PointerCanceledEvent, new PointerEventHandler(OnPointerCanceled), true);
 
         RegisterPropertyChangedCallback(IsEnabledProperty, (_, _) => RefreshVisualState());
         RefreshTextVisibility();
@@ -129,6 +118,78 @@ public sealed partial class MenuButton : UserControl
         Foreground = brush;
         ItemIcon.Foreground = brush;
         ItemText.Foreground = brush;
+    }
+
+    private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (!IsEnabled)
+            return;
+
+        StartPointerPress(e);
+    }
+
+    private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        if (!IsEnabled || !IsPointerInContact(e))
+            return;
+
+        StartPointerPress(e);
+    }
+
+    private void OnPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (_activePointerId != e.Pointer.PointerId)
+            return;
+
+        EndPointerPress(e);
+    }
+
+    private void OnPointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (_activePointerId != e.Pointer.PointerId)
+            return;
+
+        EndPointerPress(e);
+
+        if (IsEnabled && IsPointerInside(e))
+            _clickedSubject.OnNext(Unit.Default);
+    }
+
+    private void OnPointerCanceled(object sender, PointerRoutedEventArgs e)
+    {
+        if (_activePointerId != e.Pointer.PointerId)
+            return;
+
+        EndPointerPress(e);
+    }
+
+    private void StartPointerPress(PointerRoutedEventArgs e)
+    {
+        _activePointerId = e.Pointer.PointerId;
+        RefreshVisualState(isPressed: true);
+        e.Handled = true;
+    }
+
+    private void EndPointerPress(PointerRoutedEventArgs e)
+    {
+        _activePointerId = null;
+        RefreshVisualState();
+        e.Handled = true;
+    }
+
+    private bool IsPointerInContact(PointerRoutedEventArgs e)
+    {
+        var point = e.GetCurrentPoint(this);
+        return point.IsInContact || point.Properties.IsLeftButtonPressed;
+    }
+
+    private bool IsPointerInside(PointerRoutedEventArgs e)
+    {
+        var position = e.GetCurrentPoint(this).Position;
+        return position.X >= 0
+            && position.Y >= 0
+            && position.X <= ActualWidth
+            && position.Y <= ActualHeight;
     }
 
     private Brush SelectForegroundBrush(bool isPressed)
