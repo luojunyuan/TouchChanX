@@ -457,6 +457,24 @@ public sealed class GestureRecognitionService : IDisposable
 
         if (_activeStrokes.Count == 0 && _completedStrokes.Count > 0)
             CompleteCapture();
+        else if (ShouldTriggerEarlySwipe())
+            CompleteCapture();
+    }
+
+    // Trigger early when one finger lifts with a swipe and the remaining fingers are stationary (held).
+    private bool ShouldTriggerEarlySwipe()
+    {
+        if (_completedStrokes.Count == 0 || _activeStrokes.Count == 0)
+            return false;
+
+        bool anyCompletedSwipe = _completedStrokes.Any(
+            s => Math.Abs(s.Delta.Y) >= SwipeDistanceThreshold &&
+                 Math.Abs(s.Delta.Y) > Math.Abs(s.Delta.X) * 1.3);
+
+        bool allActiveStationary = _activeStrokes.Values.All(
+            s => s.Movement <= TapMovementThreshold);
+
+        return anyCompletedSwipe && allActiveStationary;
     }
 
     private void HandlePointerDown(int pointerId, PointerPoint? point)
@@ -512,6 +530,7 @@ public sealed class GestureRecognitionService : IDisposable
         ctx.DominantStroke is not null &&
         Math.Abs(ctx.DominantStroke.Delta.Y) >= SwipeDistanceThreshold &&
         Math.Abs(ctx.DominantStroke.Delta.Y) > Math.Abs(ctx.DominantStroke.Delta.X) * 1.3;
+
 
     private void CompleteCapture()
     {
