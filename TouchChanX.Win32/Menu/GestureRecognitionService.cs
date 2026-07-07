@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using R3;
+using TouchChanX.Win32.Interop;
 using Windows.Win32;
 using Windows.Win32.Devices.HumanInterfaceDevice;
 using Windows.Win32.Foundation;
@@ -71,6 +72,9 @@ public sealed class GestureRecognitionService : IDisposable
 
         RegisterRawTouchInput();
     }
+
+    public nint GameWindowHandle { get; set; }
+    public nint TouchWindowHandle { get; set; }
 
     public bool IsEnabled
     {
@@ -498,10 +502,27 @@ public sealed class GestureRecognitionService : IDisposable
         {
             _completedStrokes.Clear();
             _captureStartedAt = DateTimeOffset.Now;
+
+            // Filter: only start tracking if point is in valid area
+            if (!IsValidGestureStartPoint(value))
+                return;
         }
 
         _activeStrokes[pointerId] = new PointerStroke(value);
         _maxContactCount = Math.Max(_maxContactCount, (uint)_activeStrokes.Count);
+    }
+
+    private bool IsValidGestureStartPoint(PointerPoint point)
+    {
+        var screenPoint = new System.Drawing.Point(point.X, point.Y);
+
+        if (GameWindowHandle != nint.Zero && !OsPlatformApi.IsPointInsideClientArea(screenPoint, GameWindowHandle))
+            return false;
+
+        if (TouchWindowHandle != nint.Zero && OsPlatformApi.IsPointInsideWindowOrChild(screenPoint, TouchWindowHandle))
+            return false;
+
+        return true;
     }
 
     private void HandlePointerUpdate(int pointerId, PointerPoint? point)

@@ -85,7 +85,7 @@ public static class TouchMenuCommandService
                     return;
 
                 GestureRecognitionSession.Disposable =
-                    ObserveGestureRecognition(touchWindowHandle)
+                    ObserveGestureRecognition(touchWindowHandle, gameWindowHandle)
                     .Subscribe(GestureRecognizedSubject.OnNext);
                 break;
             case "gesture":
@@ -97,12 +97,14 @@ public static class TouchMenuCommandService
         }
     }
 
-    private static Observable<RecognizedGesture> ObserveGestureRecognition(nint touchWindowHandle) =>
+    private static Observable<RecognizedGesture> ObserveGestureRecognition(nint touchWindowHandle, nint gameWindowHandle) =>
         Observable.Create<RecognizedGesture>(observer =>
         {
             var service = new GestureRecognitionService(touchWindowHandle)
             {
                 IsEnabled = true,
+                GameWindowHandle = gameWindowHandle,
+                TouchWindowHandle = touchWindowHandle,
             };
             var subscription = service.ObservableGestureRecognized.Subscribe(observer.OnNext);
 

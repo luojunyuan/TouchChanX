@@ -1,6 +1,6 @@
 using System.ComponentModel;
-using System.Drawing;
 using System.Runtime.InteropServices;
+using TouchChanX.Win32.Interop;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
@@ -89,10 +89,10 @@ internal static class TouchConversionHooker
         if (gameWindowHandle == nint.Zero || PInvoke.GetForegroundWindow() != new HWND(gameWindowHandle))
             return;
 
-        if (IsPointInsideTouchWindow(info.pt, touchWindowHandle))
+        if (OsPlatformApi.IsPointInsideWindowOrChild(info.pt, touchWindowHandle))
             return;
 
-        if (!IsPointInsideGameClientArea(info.pt, gameWindowHandle))
+        if (!OsPlatformApi.IsPointInsideClientArea(info.pt, gameWindowHandle))
             return;
 
         switch (message)
@@ -105,30 +105,6 @@ internal static class TouchConversionHooker
                 SendMouseClick(MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN, MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP);
                 break;
         }
-    }
-
-    private static bool IsPointInsideTouchWindow(Point point, nint touchWindowHandle)
-    {
-        if (touchWindowHandle == nint.Zero)
-            return false;
-
-        var hitWindow = PInvoke.WindowFromPoint(point);
-        return hitWindow == new HWND(touchWindowHandle) || PInvoke.IsChild(new HWND(touchWindowHandle), hitWindow);
-    }
-
-    private static bool IsPointInsideGameClientArea(Point screenPoint, nint gameWindowHandle)
-    {
-        var clientOrigin = new Point();
-        if (!PInvoke.ClientToScreen(new(gameWindowHandle), ref clientOrigin) ||
-            !PInvoke.GetClientRect(new(gameWindowHandle), out var clientRect))
-        {
-            return false;
-        }
-
-        return screenPoint.X >= clientOrigin.X &&
-            screenPoint.X < clientOrigin.X + clientRect.Width &&
-            screenPoint.Y >= clientOrigin.Y &&
-            screenPoint.Y < clientOrigin.Y + clientRect.Height;
     }
 
     private static void SendMouseClick(MOUSE_EVENT_FLAGS downFlag, MOUSE_EVENT_FLAGS upFlag)

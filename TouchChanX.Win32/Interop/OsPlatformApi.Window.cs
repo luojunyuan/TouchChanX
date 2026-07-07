@@ -43,6 +43,36 @@ public static partial class OsPlatformApi // Window
     }
 
     /// <summary>
+    /// 判断屏幕坐标是否命中 Touch 窗口或其子窗口
+    /// </summary>
+    public static bool IsPointInsideWindowOrChild(Point point, nint windowHandle)
+    {
+        if (windowHandle == nint.Zero)
+            return false;
+
+        var hitWindow = PInvoke.WindowFromPoint(point);
+        return hitWindow == new HWND(windowHandle) || PInvoke.IsChild(new HWND(windowHandle), hitWindow);
+    }
+
+    /// <summary>
+    /// 判断屏幕坐标是否位于窗口客户区内
+    /// </summary>
+    public static bool IsPointInsideClientArea(Point screenPoint, nint windowHandle)
+    {
+        var clientOrigin = new Point();
+        if (!PInvoke.ClientToScreen(new(windowHandle), ref clientOrigin) ||
+            !PInvoke.GetClientRect(new(windowHandle), out var clientRect))
+        {
+            return false;
+        }
+
+        return screenPoint.X >= clientOrigin.X &&
+            screenPoint.X < clientOrigin.X + clientRect.Width &&
+            screenPoint.Y >= clientOrigin.Y &&
+            screenPoint.Y < clientOrigin.Y + clientRect.Height;
+    }
+
+    /// <summary>
     /// 调整客户区窗口大小
     /// </summary>
     /// <remarks>
