@@ -495,6 +495,24 @@ public sealed class GestureRecognitionService : IDisposable
         }
     }
 
+    private readonly List<GestureDefinition> _gestures =
+    [
+        new("ThreeFingerTap", ctx => ctx.MaxContactCount >= 3
+            && ctx.Duration <= TapDurationThreshold
+            && ctx.MaxMovement <= TapMovementThreshold),
+        new("TwoFingerTap",  ctx => ctx.MaxContactCount == 2
+            && ctx.Duration <= TapDurationThreshold
+            && ctx.MaxMovement <= TapMovementThreshold),
+        new("TwoFingerSwipeUp",   ctx => IsVerticalSwipe(ctx) && ctx.DominantStroke!.Delta.Y < 0),
+        new("TwoFingerSwipeDown", ctx => IsVerticalSwipe(ctx) && ctx.DominantStroke!.Delta.Y > 0),
+    ];
+
+    private static bool IsVerticalSwipe(GestureContext ctx) =>
+        ctx.MaxContactCount >= 2 &&
+        ctx.DominantStroke is not null &&
+        Math.Abs(ctx.DominantStroke.Delta.Y) >= SwipeDistanceThreshold &&
+        Math.Abs(ctx.DominantStroke.Delta.Y) > Math.Abs(ctx.DominantStroke.Delta.X) * 1.3;
+
     private void CompleteCapture()
     {
         string? gestureName = RecognizeGesture();
@@ -509,27 +527,16 @@ public sealed class GestureRecognitionService : IDisposable
         if (_completedStrokes.Count == 0)
             return null;
 
-        TimeSpan duration = DateTimeOffset.Now - _captureStartedAt;
-        double maxMovement = _completedStrokes.Max(static stroke => stroke.Movement);
-        Vector2 averageDelta = _completedStrokes
-            .Select(static stroke => stroke.Delta)
-            .Aggregate(Vector2.Zero, static (sum, delta) => sum + delta) / _completedStrokes.Count;
-
-        if (_maxContactCount >= 3 && duration <= TapDurationThreshold && maxMovement <= TapMovementThreshold)
-            return "ThreeFingerTap";
-
-        if (_maxContactCount == 2 && duration <= TapDurationThreshold && maxMovement <= TapMovementThreshold)
-            return "TwoFingerTap";
-
-        if (_maxContactCount >= 2 &&
-            Math.Abs(averageDelta.Y) >= SwipeDistanceThreshold &&
-            Math.Abs(averageDelta.Y) > Math.Abs(averageDelta.X) * 1.3)
-        {
-            return averageDelta.Y > 0 ? "PointDown" : "PointUp";
-        }
-
-        return null;
+        var ctx = BuildGestureContext();
+        return _gestures.FirstOrDefault(g => g.Matches(ctx))?.Name;
     }
+
+    private GestureContext BuildGestureContext() => new(
+        MaxContactCount: (int)_maxContactCount,
+        Duration: DateTimeOffset.Now - _captureStartedAt,
+        MaxMovement: _completedStrokes.Max(static s => s.Movement),
+        DominantStroke: _completedStrokes.MaxBy(static s => Math.Abs(s.Delta.Y))
+    );
 
     private void ResetCapture()
     {
@@ -609,6 +616,14 @@ public sealed class GestureRecognitionService : IDisposable
         public void Dispose() =>
             Marshal.FreeHGlobal(Handle.Value);
     }
+
+    private sealed record GestureContext(
+        int MaxContactCount,
+        TimeSpan Duration,
+        double MaxMovement,
+        PointerStroke? DominantStroke);
+
+    private sealed record GestureDefinition(string Name, Func<GestureContext, bool> Matches);
 
     private delegate nint WndProcDelegate(nint hWnd, uint msg, nuint wParam, nint lParam);
 }
