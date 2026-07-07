@@ -62,6 +62,7 @@ public static class WinUIApplication
 
         Application.Start(p =>
         {
+            // 为了让 ObserveOnCurrentSynchronizationContext 调度回来，并不是为了 await 后台线程
             var context = new Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
             SynchronizationContext.SetSynchronizationContext(context);
 
@@ -120,7 +121,7 @@ public partial class WinUIApp(nint gameWindowHandle)
         TouchMenuCommandService.ObservableGestureRecognized
             .TakeUntil(window.Events().Closed)
             .Select(GetGestureMessage)
-            .SubscribeOnCurrentSynchronizationContext()
+            .ObserveOnCurrentSynchronizationContext()
             .Subscribe(window.ShowMessage);
 
         if (WinUI.TouchChanXSettings.LoadToggleState("touch-to-mouse"))
