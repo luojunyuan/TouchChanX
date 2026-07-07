@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using R3;
 using System.Diagnostics;
 using System.Numerics;
+using Windows.Foundation;
 
 namespace TouchChanX.WinUI;
 
@@ -24,6 +25,8 @@ public sealed partial class MainWindow : Window
             .Select(rect => Menu.TouchDockAnchor.SnapFromRect(this.Content.ActualSize.ToSize(), rect))
             .Subscribe(MenuTouch.ShowAt);
     }
+
+    public Observable<Rect?> MessageFlyoutVisibleRegionChanged => MessageFlyout.VisibleRegionChanged;
 
     public void ShowMessage(string message) => MessageFlyout.ShowMessage(message);
 

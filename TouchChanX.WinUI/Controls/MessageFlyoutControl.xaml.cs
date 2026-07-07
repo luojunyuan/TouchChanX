@@ -1,8 +1,12 @@
 using Microsoft.UI.Composition;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Hosting;
+using Microsoft.UI.Xaml.Media;
 using R3;
+using R3.ObservableEvents;
 using System.Numerics;
+using Windows.Foundation;
 
 namespace TouchChanX.WinUI.Controls;
 
@@ -13,8 +17,10 @@ public sealed partial class MessageFlyoutControl : UserControl
     private static readonly TimeSpan HideDuration = TimeSpan.FromMilliseconds(220);
     private static readonly Vector3 VisibleTranslation = new(0f, 0f, 32f);
     private static readonly Vector3 HiddenTranslation = new(0f, -126f, 32f);
+    private const double VisibleRegionBottomPadding = 16.0;
 
     private readonly Subject<MessageFlyoutRequest> _messageRequested = new();
+    private readonly Subject<Rect?> _visibleRegionChanged = new();
     private Compositor? _compositor;
     private CompositionEasingFunction? _showEasing;
     private CompositionEasingFunction? _hideEasing;
@@ -35,6 +41,8 @@ public sealed partial class MessageFlyoutControl : UserControl
             new Vector2(0.7f, 0.0f),
             new Vector2(0.84f, 0.0f));
 
+    public Observable<Rect?> VisibleRegionChanged => _visibleRegionChanged;
+
     public MessageFlyoutControl()
     {
         InitializeComponent();
@@ -51,6 +59,12 @@ public sealed partial class MessageFlyoutControl : UserControl
         _messageRequested
             .Debounce(DisplayDuration)
             .SubscribeAwait(async (request, _) => await HideMessageAsync(request.Version));
+
+        this.Events().SizeChanged
+            .AsUnitObservable()
+            .Merge(FlyoutBorder.Events().SizeChanged.AsUnitObservable())
+            .Where(_ => _presentationState != FlyoutPresentationState.Hidden)
+            .Subscribe(_ => PublishVisibleRegion());
     }
 
     public void ShowMessage(string message)
@@ -64,16 +78,21 @@ public sealed partial class MessageFlyoutControl : UserControl
     private void ShowMessageCore(MessageFlyoutRequest request)
     {
         MessageText.Text = request.Message;
+        UpdateLayout();
+
         if (_presentationState is FlyoutPresentationState.Hidden or FlyoutPresentationState.Hiding)
         {
             _ = PlayShowAnimationAsync();
             return;
         }
+
+        PublishVisibleRegion();
     }
 
     private async Task PlayShowAnimationAsync()
     {
         _presentationState = FlyoutPresentationState.Showing;
+        PublishVisibleRegion();
 
         await PlayTransitionAsync(
             HiddenTranslation,
@@ -106,6 +125,27 @@ public sealed partial class MessageFlyoutControl : UserControl
             return;
 
         _presentationState = FlyoutPresentationState.Hidden;
+        _visibleRegionChanged.OnNext(null);
+    }
+
+    private void PublishVisibleRegion()
+    {
+        if (_presentationState == FlyoutPresentationState.Hidden)
+        {
+            _visibleRegionChanged.OnNext(null);
+            return;
+        }
+
+        var transform = FlyoutBorder.TransformToVisual(this);
+        var topLeft = transform.TransformPoint(new Point(0, 0));
+        double height = Math.Max(
+            1,
+            FlyoutBorder.Margin.Top + FlyoutBorder.ActualHeight + VisibleRegionBottomPadding);
+        _visibleRegionChanged.OnNext(new Rect(
+            topLeft.X,
+            0,
+            FlyoutBorder.ActualWidth,
+            height));
     }
 
     private Task PlayTransitionAsync(

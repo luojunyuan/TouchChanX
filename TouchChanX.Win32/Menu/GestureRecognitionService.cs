@@ -549,7 +549,6 @@ public sealed class GestureRecognitionService : IDisposable
         RecognizedGesture? gesture = RecognizeGesture();
         if (gesture is not null)
         {
-            Debug.WriteLine($"Gesture recognized: {gesture}");
             _gestureRecognized.OnNext(gesture.Value);
         }
 

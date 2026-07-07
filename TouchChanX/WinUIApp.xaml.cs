@@ -99,12 +99,16 @@ public partial class WinUIApp(nint gameWindowHandle)
         GameWindowService.ClientSizeChanged(gameWindowHandle)
             .Subscribe(size => OsPlatformApi.ResizeWindow(hwnd, size));
 
+        var observableRegions = new WindowObservableRegionSet(hwnd);
         WinUI.Touch.TouchControl.ObservableRegionResetRequested
             .Merge(WinUI.Menu.MenuControl.ObservableRegionResetRequested)
-            .Subscribe(_ => OsPlatformApi.ResetWindowOriginalObservableRegion(hwnd));
+            .Subscribe(_ => observableRegions.UseOriginalRegion());
         WinUI.Touch.TouchControl.ObservableTouchRegionChanged
             .Select(touchRect => touchRect.Scale(window.Dpi).ToGdiRect())
-            .Subscribe(rect => OsPlatformApi.SetWindowObservableRegion(hwnd, rect));
+            .Subscribe(observableRegions.SetBaseRegion);
+        window.MessageFlyoutVisibleRegionChanged
+            .Select(rect => rect?.Scale(window.Dpi).ToGdiRect())
+            .Subscribe(observableRegions.SetMessageFlyoutRegion);
 
         MenuControl.ObservableCommandRequested
             .TakeUntil(window.Events().Closed)

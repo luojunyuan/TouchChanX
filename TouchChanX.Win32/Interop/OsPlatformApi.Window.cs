@@ -103,10 +103,25 @@ public static partial class OsPlatformApi // Window
     /// <summary>
     /// 设置窗口可以被观测和点击的区域
     /// </summary>
-    public static void SetWindowObservableRegion(nint hwnd, Rectangle rect)
+    public static void SetWindowObservableRegion(nint hwnd, Rectangle rect) =>
+        SetWindowObservableRegions(hwnd, [rect]);
+
+    /// <summary>
+    /// 设置窗口可以被观测和点击的区域
+    /// </summary>
+    public static void SetWindowObservableRegions(nint hwnd, IReadOnlyCollection<Rectangle> rects)
     {
-        var hRgn = PInvoke.CreateRectRgn(rect.X, rect.Y, rect.Right, rect.Bottom);
-        _ = PInvoke.SetWindowRgn(new(hwnd), hRgn, true);
+        var combinedRegion = PInvoke.CreateRectRgn(0, 0, 0, 0);
+
+        foreach (var rect in rects.Where(static r => r.Width > 0 && r.Height > 0))
+        {
+            var rectRegion = PInvoke.CreateRectRgn(rect.X, rect.Y, rect.Right, rect.Bottom);
+            _ = PInvoke.CombineRgn(combinedRegion, combinedRegion, rectRegion, RGN_COMBINE_MODE.RGN_OR);
+            _ = PInvoke.DeleteObject((HGDIOBJ)rectRegion);
+        }
+
+        if (PInvoke.SetWindowRgn(new(hwnd), combinedRegion, true) == 0)
+            _ = PInvoke.DeleteObject((HGDIOBJ)combinedRegion);
     }
 }
 

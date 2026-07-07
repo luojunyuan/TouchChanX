@@ -4,6 +4,8 @@ GetClientRect
 ClientToScreen
 MoveWindow
 CreateRectRgn
+CombineRgn
+DeleteObject
 SetWindowRgn
 SetWinEventHook
 GetWindowThreadProcessId
