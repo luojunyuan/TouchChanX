@@ -255,6 +255,12 @@
                             </ct:SettingsCard.HeaderIcon>
                             <ToggleSwitch OffContent="关闭" OnContent="开启" />
                         </ct:SettingsCard>
+
+                        <muxc:InfoBar
+                            IsOpen="True"
+                            IsClosable="False"
+                            Severity="Informational"
+                            Message="选项修改后在主页再次点击启动即可生效哦～" />
                     </StackPanel>
 
                     <StackPanel Visibility="Collapsed" x:Name="AboutPage"  Spacing="16">
