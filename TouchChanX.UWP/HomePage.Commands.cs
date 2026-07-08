@@ -62,7 +62,7 @@ public sealed partial class HomePage
         }
 
         game.LastLaunchedTicks = DateTimeOffset.UtcNow.UtcTicks;
-        SortGamesByLastLaunch();
+        MoveGameToFront(game);
         SaveGames();
         UpdateGameListState();
     }

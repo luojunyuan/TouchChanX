@@ -104,6 +104,12 @@
                                 ScrollViewer.VerticalScrollMode="Enabled"
                                 SelectionMode="Single"
                                 Visibility="{x:Bind GameListVisibility.Value, Mode=OneWay}">
+                                <!--  保留增加删除动画的同时，移除重排动画，但我们不使用，保持默认  -->
+                                <!--<GridView.ItemContainerTransitions>
+                                    <TransitionCollection>
+                                        <AddDeleteThemeTransition />
+                                    </TransitionCollection>
+                                </GridView.ItemContainerTransitions>-->
                                 <GridView.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <ItemsWrapGrid Orientation="Horizontal" />

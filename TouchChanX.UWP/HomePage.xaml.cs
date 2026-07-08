@@ -1,9 +1,8 @@
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Text;
 using ObservableCollections;
 using R3;
 using R3.ObservableEvents;
+using System.Diagnostics;
+using System.Text;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -26,7 +25,7 @@ public sealed partial class HomePage : Page
 
     private ObservableList<GameEntry> Games { get; } = [];
 
-    public ObservableCollection<GameEntry> GameItems { get; } = [];
+    public ObservableListBindableView<GameEntry> GameItems => field ??= Games.ToBindableView();
 
     public BindableReactiveProperty<Visibility> EmptyStateVisibility { get; } = new(Visibility.Visible);
 
@@ -80,7 +79,6 @@ public sealed partial class HomePage : Page
         Games.ObserveChanged()
             .Subscribe(_ =>
             {
-                ResetGameItems();
                 UpdateGameListState();
             });
 
@@ -229,15 +227,6 @@ public sealed partial class HomePage : Page
         _ = LoadGameIconAsync(game);
     }
 
-    private void ResetGameItems()
-    {
-        GameItems.Clear();
-        foreach (var game in Games)
-        {
-            GameItems.Add(game);
-        }
-    }
-
     private void SaveGames()
     {
         ApplicationData.Current.LocalSettings.Values[GamesSettingKey] =
@@ -351,16 +340,13 @@ public sealed partial class HomePage : Page
         SaveGames();
     }
 
-    private void SortGamesByLastLaunch()
+    private void MoveGameToFront(GameEntry game)
     {
-        var orderedGames = Games
-            .OrderByDescending(game => game.LastLaunchedTicks)
-            .ToList();
-
-        if (orderedGames.SequenceEqual(Games))
-            return;
-
-        Games.Sort(Comparer<GameEntry>.Create((x, y) => y.LastLaunchedTicks.CompareTo(x.LastLaunchedTicks)));
+        var currentIndex = Games.IndexOf(game);
+        if (currentIndex > 0)
+        {
+            Games.Move(currentIndex, 0);
+        }
     }
 
     private GameEntry? GetSelectedGame() => GameList.SelectedItem as GameEntry;
