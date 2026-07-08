@@ -1,0 +1,37 @@
+<Page
+    x:Class="TouchChanX.UWP.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ct="using:CommunityToolkit.WinUI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d">
+
+    <ScrollViewer>
+        <Grid Margin="32 24 32 32">
+            <StackPanel Spacing="16">
+                <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="设置" />
+                <ct:SettingsCard Description="仅占位 UI，暂未连接 ShellMenuHandler 业务逻辑。" Header="在上下文菜单中显示 TouchChanX">
+                    <ct:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE8A5;" />
+                    </ct:SettingsCard.HeaderIcon>
+                    <ToggleSwitch IsOn="True" OffContent="关闭" OnContent="开启" />
+                </ct:SettingsCard>
+
+                <ct:SettingsCard Description="仅占位 UI，计划在游戏画面顶部保留数像素触摸缓冲区。" Header="顶部边缘防误触">
+                    <ct:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE7C9;" />
+                    </ct:SettingsCard.HeaderIcon>
+                    <ToggleSwitch OffContent="关闭" OnContent="开启" />
+                </ct:SettingsCard>
+
+                <muxc:InfoBar
+                    IsOpen="True"
+                    IsClosable="False"
+                    Severity="Informational"
+                    Message="选项修改后在主页再次点击启动即可生效哦～" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Page>
