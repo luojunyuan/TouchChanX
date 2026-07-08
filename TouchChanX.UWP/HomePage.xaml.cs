@@ -1,14 +1,10 @@
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text;
 using R3;
 using R3.ObservableEvents;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
-using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
-using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -26,38 +22,21 @@ public sealed partial class HomePage : Page
     private const char GamePathSeparator = '\u001f';
     private const int LaunchCooldownMilliseconds = 3000;
 
-    private bool _isLaunchCooldownActive;
-
     private List<GameEntry> Games { get; } = [];
 
-    public ReactiveCommand AddGameCommand => field ??= new ReactiveCommand(
-        async (_, _) => await AddGameFromPickerAsync());
+    public BindableReactiveProperty<Visibility> EmptyStateVisibility { get; } = new(Visibility.Visible);
 
-    public ReactiveCommand LaunchSelectedGameCommand => field ??= new ReactiveCommand(async (_, _) =>
-    {
-        if (GetSelectedGame() is { } game)
-            await TryLaunchGameAsync(game);
-    });
+    public BindableReactiveProperty<Visibility> GameListVisibility { get; } = new(Visibility.Collapsed);
 
-    public ReactiveCommand RenameSelectedGameCommand => field ??= new ReactiveCommand(async (_, _) =>
-    {
-        if (GetSelectedGame() is { } game)
-            await RenameGameAsync(game);
-    });
+    public BindableReactiveProperty<Visibility> SelectedGameActionsVisibility { get; } = new(Visibility.Collapsed);
 
-    public ReactiveCommand RemoveSelectedGameCommand => field ??= new ReactiveCommand(_ =>
-    {
-        if (GetSelectedGame() is { } game)
-            RemoveGame(game);
-    });
+    public BindableReactiveProperty<string> SelectedGameName { get; } = new(string.Empty);
 
-    public ReactiveCommand<GameEntry> LaunchGameCommand => field ??= new ReactiveCommand<GameEntry>(
-        async (game, _) => await TryLaunchGameAsync(game));
+    public BindableReactiveProperty<bool> CanLaunchSelectedGame { get; } = new(false);
 
-    public ReactiveCommand<GameEntry> RenameGameCommand => field ??= new ReactiveCommand<GameEntry>(
-        async (game, _) => await RenameGameAsync(game));
+    private ReactiveProperty<bool> IsLaunchCooldownActive { get; } = new(false);
 
-    public ReactiveCommand<GameEntry> RemoveGameCommand => field ??= new ReactiveCommand<GameEntry>(RemoveGame);
+    private BindableReactiveProperty<GameEntry?> SelectedGame { get; } = new(null);
 
     public HomePage()
     {
@@ -80,28 +59,25 @@ public sealed partial class HomePage : Page
 
         DropArea.Events().Drop
             .Where(e => e.DataView.Contains(StandardDataFormats.StorageItems))
-            .SubscribeAwait(async (e, _) => await AddDroppedGamesAsync(e));
+            .SubscribeAwait(AddDroppedGamesAsync);
 
         GameList.Events().SelectionChanged
-            .Subscribe(_ => UpdateSelectedGameState());
+            .Select(_ => GetSelectedGame())
+            .Subscribe(game =>
+            {
+                SelectedGame.Value = game;
+                UpdateSelectedGameState();
+            });
 
         GameList.Events().DoubleTapped
             .Select(GetGameFromDoubleTap)
             .WhereNotNull()
-            .SubscribeAwait(async (game, _) => await TryLaunchGameAsync(game));
+            .SubscribeAwait(TryLaunchGameAsync);
+
+        IsLaunchCooldownActive.Subscribe(_ => UpdateSelectedGameState());
     }
 
-    private async Task AddGameFromPickerAsync()
-    {
-        var picker = new FileOpenPicker();
-        picker.FileTypeFilter.Add(".exe");
-
-        var file = await picker.PickSingleFileAsync();
-        if (file is not null)
-            AddGame(file.Path);
-    }
-
-    private async Task AddDroppedGamesAsync(DragEventArgs e)
+    private async ValueTask AddDroppedGamesAsync(DragEventArgs e, CancellationToken token)
     {
         var items = await e.DataView.GetStorageItemsAsync();
         foreach (var file in items.OfType<StorageFile>())
@@ -110,19 +86,9 @@ public sealed partial class HomePage : Page
         }
     }
 
-    private async Task TryLaunchGameAsync(GameEntry game)
-    {
-        if (_isLaunchCooldownActive)
-            return;
-
-        StartLaunchCooldown();
-        await LaunchGameAsync(game);
-    }
-
     private void StartLaunchCooldown()
     {
-        _isLaunchCooldownActive = true;
-        UpdateSelectedGameState();
+        IsLaunchCooldownActive.Value = true;
         _ = CompleteLaunchCooldownAsync();
     }
 
@@ -130,29 +96,7 @@ public sealed partial class HomePage : Page
     {
         await Task.Delay(LaunchCooldownMilliseconds);
 
-        _isLaunchCooldownActive = false;
-        UpdateSelectedGameState();
-    }
-
-    private async Task LaunchGameAsync(GameEntry game)
-    {
-        var uri = new Uri($"touchchanx://launch/?path={Uri.EscapeDataString(game.Path)}");
-        var launched = await Launcher.LaunchUriAsync(uri);
-        if (!launched)
-        {
-            await new ContentDialog
-            {
-                Title = "启动失败",
-                Content = "无法调用 touchchanx 协议。",
-                CloseButtonText = "确定",
-            }.ShowAsync();
-            return;
-        }
-
-        game.LastLaunchedTicks = DateTimeOffset.UtcNow.UtcTicks;
-        SortGamesByLastLaunch();
-        SaveGames();
-        UpdateGameListState();
+        IsLaunchCooldownActive.Value = false;
     }
 
     private void AddGame(string path, string? name = null, long lastLaunchedTicks = 0, bool save = true)
@@ -201,12 +145,16 @@ public sealed partial class HomePage : Page
             extension.Equals(".lnk", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static GameEntry CreateGameEntry(string path, string? name = null, long lastLaunchedTicks = 0) => new()
+    private static GameEntry CreateGameEntry(string path, string? name = null, long lastLaunchedTicks = 0)
     {
-        Name = string.IsNullOrWhiteSpace(name) ? Path.GetFileNameWithoutExtension(path) : name,
-        Path = path,
-        LastLaunchedTicks = lastLaunchedTicks,
-    };
+        var game = new GameEntry
+        {
+            Path = path,
+            LastLaunchedTicks = lastLaunchedTicks,
+        };
+        game.Name.Value = string.IsNullOrWhiteSpace(name) ? Path.GetFileNameWithoutExtension(path) : name;
+        return game;
+    }
 
     private void LoadGames()
     {
@@ -286,7 +234,7 @@ public sealed partial class HomePage : Page
             string.Join(
                 GameEntrySeparator,
                 Games.Select(g =>
-                    $"{EncodeSettingValue(g.Name)}{GamePathSeparator}{EncodeSettingValue(g.Path)}{GamePathSeparator}{g.LastLaunchedTicks}"));
+                    $"{EncodeSettingValue(g.Name.Value)}{GamePathSeparator}{EncodeSettingValue(g.Path)}{GamePathSeparator}{g.LastLaunchedTicks}"));
     }
 
     private static string EncodeSettingValue(string value) =>
@@ -307,8 +255,8 @@ public sealed partial class HomePage : Page
 
     private void UpdateGameListState()
     {
-        EmptyState.Visibility = Games.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        GameList.Visibility = Games.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        EmptyStateVisibility.Value = Games.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        GameListVisibility.Value = Games.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         EnsureFirstGameSelected();
         UpdateSelectedGameState();
     }
@@ -318,6 +266,7 @@ public sealed partial class HomePage : Page
         if (Games.Count == 0)
         {
             GameList.SelectedItem = null;
+            SelectedGame.Value = null;
             return;
         }
 
@@ -330,27 +279,28 @@ public sealed partial class HomePage : Page
 
     private void UpdateSelectedGameState()
     {
-        var selectedGame = GetSelectedGame();
+        var selectedGame = SelectedGame.Value = GetSelectedGame();
         foreach (var gameEntry in Games)
         {
-            gameEntry.IsSelected = ReferenceEquals(gameEntry, selectedGame);
+            gameEntry.IsSelected.Value = ReferenceEquals(gameEntry, selectedGame);
         }
 
         if (selectedGame is not { } game)
         {
-            SelectedGameActions.Visibility = Visibility.Collapsed;
-            SelectedGameName.Text = string.Empty;
+            SelectedGameActionsVisibility.Value = Visibility.Collapsed;
+            SelectedGameName.Value = string.Empty;
+            CanLaunchSelectedGame.Value = false;
             return;
         }
 
-        SelectedGameActions.Visibility = Visibility.Visible;
-        SelectedGameName.Text = game.Name;
-        LaunchSelectedGameButton.IsEnabled = !_isLaunchCooldownActive;
+        SelectedGameActionsVisibility.Value = Visibility.Visible;
+        SelectedGameName.Value = game.Name.Value;
+        CanLaunchSelectedGame.Value = !IsLaunchCooldownActive.Value;
     }
 
     private async Task LoadGameIconAsync(GameEntry game)
     {
-        game.Icon = await TryLoadIconAsync(game.Path);
+        game.Icon.Value = await TryLoadIconAsync(game.Path);
     }
 
     private static async Task<ImageSource?> TryLoadIconAsync(string path)
@@ -379,36 +329,6 @@ public sealed partial class HomePage : Page
             Debug.WriteLine(ex);
             return null;
         }
-    }
-
-    private async Task RenameGameAsync(GameEntry game)
-    {
-        var nameBox = new TextBox
-        {
-            Header = "显示名称",
-            MaxLength = 80,
-            Text = game.Name,
-        };
-
-        var result = await new ContentDialog
-        {
-            Title = "重命名游戏",
-            Content = nameBox,
-            PrimaryButtonText = "保存",
-            SecondaryButtonText = "取消",
-            DefaultButton = ContentDialogButton.Primary,
-        }.ShowAsync();
-
-        if (result != ContentDialogResult.Primary)
-            return;
-
-        var newName = nameBox.Text.Trim();
-        if (string.IsNullOrWhiteSpace(newName))
-            return;
-
-        game.Name = newName;
-        SaveGames();
-        UpdateSelectedGameState();
     }
 
     private void RemoveGame(GameEntry game)
@@ -459,83 +379,4 @@ public sealed partial class HomePage : Page
 
         return GetSelectedGame();
     }
-}
-
-public sealed partial class GameEntry : INotifyPropertyChanged
-{
-    private ImageSource? icon;
-    private bool isSelected;
-    private string name = string.Empty;
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    public ReactiveCommand<GameEntry> LaunchCommand { get; set; } = null!;
-
-    public ReactiveCommand<GameEntry> RenameCommand { get; set; } = null!;
-
-    public ReactiveCommand<GameEntry> RemoveCommand { get; set; } = null!;
-
-    public string Name
-    {
-        get => name;
-        set
-        {
-            if (name == value)
-                return;
-
-            name = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public string Path { get; set; } = string.Empty;
-
-    public long LastLaunchedTicks { get; set; }
-
-    public ImageSource? Icon
-    {
-        get => icon;
-        set
-        {
-            if (icon == value)
-                return;
-
-            icon = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(IconVisibility));
-            OnPropertyChanged(nameof(FallbackIconVisibility));
-        }
-    }
-
-    public Visibility IconVisibility => Icon is null ? Visibility.Collapsed : Visibility.Visible;
-
-    public bool IsSelected
-    {
-        get => isSelected;
-        set
-        {
-            if (isSelected == value)
-                return;
-
-            isSelected = value;
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(SelectedVisualVisibility));
-        }
-    }
-
-    public Visibility SelectedVisualVisibility => IsSelected ? Visibility.Visible : Visibility.Collapsed;
-
-    public Visibility FallbackIconVisibility => Icon is null ? Visibility.Visible : Visibility.Collapsed;
-
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-}
-
-public sealed class StoredGameEntry
-{
-    public string Name { get; set; } = string.Empty;
-
-    public string Path { get; set; } = string.Empty;
-
-    public long LastLaunchedTicks { get; set; }
 }

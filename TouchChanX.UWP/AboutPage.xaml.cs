@@ -32,7 +32,7 @@ public sealed partial class AboutPage : Page
     });
 
     public ReactiveCommand OpenSourceCommand => field ??= new ReactiveCommand(
-        async (_, _) => await Launcher.LaunchUriAsync(new Uri(OpenSourceUrl)));
+        async (_, _) => { await Launcher.LaunchUriAsync(new Uri(OpenSourceUrl)); });
 
     private StoreContext StoreContext => field ??= new Func<StoreContext>(() =>
     {

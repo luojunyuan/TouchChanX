@@ -59,10 +59,11 @@
                     BorderThickness="1"
                     CornerRadius="8">
                     <Grid>
-                        <StackPanel x:Name="EmptyState"
+                        <StackPanel
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Spacing="12">
+                            Spacing="12"
+                            Visibility="{x:Bind EmptyStateVisibility.Value, Mode=OneWay}">
                             <FontIcon HorizontalAlignment="Center" FontSize="36" Glyph="&#xE7FC;" />
                             <TextBlock HorizontalAlignment="Center" Style="{ThemeResource SubtitleTextBlockStyle}" Text="拖入 .exe 或 .lnk 添加游戏" />
                             <TextBlock
@@ -78,16 +79,17 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
-                            <CommandBar x:Name="SelectedGameActions"
+                            <CommandBar
                                 Background="Transparent"
                                 DefaultLabelPosition="Right"
-                                Visibility="Collapsed">
+                                Visibility="{x:Bind SelectedGameActionsVisibility.Value, Mode=OneWay}">
                                 <CommandBar.Content>
-                                    <TextBlock x:Name="SelectedGameName"
+                                    <TextBlock
                                         VerticalAlignment="Center"
+                                        Text="{x:Bind SelectedGameName.Value, Mode=OneWay}"
                                         TextTrimming="CharacterEllipsis" />
                                 </CommandBar.Content>
-                                <AppBarButton x:Name="LaunchSelectedGameButton" Command="{x:Bind LaunchSelectedGameCommand}" Icon="Play" Label="启动" />
+                                <AppBarButton Command="{x:Bind LaunchSelectedGameCommand}" Icon="Play" IsEnabled="{x:Bind CanLaunchSelectedGame.Value, Mode=OneWay}" Label="启动" />
                                 <AppBarButton Command="{x:Bind RenameSelectedGameCommand}" Icon="Edit" Label="重命名" />
                                 <AppBarButton Command="{x:Bind RemoveSelectedGameCommand}" Icon="Delete" Label="移除" />
                             </CommandBar>
@@ -100,7 +102,7 @@
                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                                 ScrollViewer.VerticalScrollMode="Enabled"
                                 SelectionMode="Single"
-                                Visibility="Collapsed">
+                                Visibility="{x:Bind GameListVisibility.Value, Mode=OneWay}">
                                 <GridView.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <ItemsWrapGrid Orientation="Horizontal" />
@@ -150,20 +152,20 @@
                                                         <Image
                                                             Width="48"
                                                             Height="48"
-                                                            Source="{x:Bind Icon, Mode=OneWay}"
+                                                            Source="{x:Bind Icon.Value, Mode=OneWay}"
                                                             Stretch="Uniform"
-                                                            Visibility="{x:Bind IconVisibility, Mode=OneWay}" />
+                                                            Visibility="{x:Bind IconVisibility.Value, Mode=OneWay}" />
                                                         <FontIcon
                                                             HorizontalAlignment="Center"
                                                             VerticalAlignment="Center"
                                                             FontSize="32"
                                                             Glyph="&#xE7FC;"
-                                                            Visibility="{x:Bind FallbackIconVisibility, Mode=OneWay}" />
+                                                            Visibility="{x:Bind FallbackIconVisibility.Value, Mode=OneWay}" />
                                                     </Grid>
                                                     <TextBlock
                                                         HorizontalAlignment="Center"
                                                         MaxLines="2"
-                                                        Text="{x:Bind Name, Mode=OneWay}"
+                                                        Text="{x:Bind Name.Value, Mode=OneWay}"
                                                         TextAlignment="Center"
                                                         TextTrimming="CharacterEllipsis"
                                                         TextWrapping="WrapWholeWords" />
@@ -176,7 +178,7 @@
                                                 CornerRadius="0"
                                                 IsHitTestVisible="False"
                                                 Opacity="0.55"
-                                                Visibility="{x:Bind SelectedVisualVisibility, Mode=OneWay}" />
+                                                Visibility="{x:Bind SelectedVisualVisibility.Value, Mode=OneWay}" />
                                         </Grid>
                                     </DataTemplate>
                                 </GridView.ItemTemplate>
