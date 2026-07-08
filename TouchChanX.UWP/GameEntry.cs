@@ -26,7 +26,7 @@ public sealed partial class GameEntry
 
     public BindableReactiveProperty<bool> IsSelected { get; } = new(false);
 
-    public BindableReactiveProperty<Visibility> SelectedVisualVisibility => field ??= 
+    public BindableReactiveProperty<Visibility> SelectedVisualVisibility => field ??=
         IsSelected
         .Select(isSelected => isSelected ? Visibility.Visible : Visibility.Collapsed)
         .ToBindableReactiveProperty(Visibility.Collapsed);

@@ -28,6 +28,7 @@
     </PackageReference>
     <PackageReference Include="ObservableCollections.R3" />
     <PackageReference Include="R3" />
+    <PackageReference Include="R3Extensions.Interaction" />
     <PackageReference Include="R3Extensions.ObservableEvents.SourceGenerator" />
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
