@@ -35,10 +35,6 @@ public sealed partial class HomePage : Page
 
     public BindableReactiveProperty<string> SelectedGameName { get; } = new(string.Empty);
 
-    public BindableReactiveProperty<bool> CanLaunchSelectedGame { get; } = new(false);
-
-    private ReactiveProperty<bool> IsLaunchCooldownActive { get; } = new(false);
-
     private BindableReactiveProperty<GameEntry?> SelectedGame { get; } = new(null);
 
     public HomePage()
@@ -74,15 +70,13 @@ public sealed partial class HomePage : Page
         GameList.Events().DoubleTapped
             .Select(GetGameFromDoubleTap)
             .WhereNotNull()
-            .SubscribeAwait(TryLaunchGameAsync);
+            .InvokeCommand(LaunchSelectedGameCommand);
 
         Games.ObserveChanged()
             .Subscribe(_ =>
             {
                 UpdateGameListState();
             });
-
-        IsLaunchCooldownActive.Subscribe(_ => UpdateSelectedGameState());
     }
 
     private async ValueTask AddDroppedGamesAsync(DragEventArgs e, CancellationToken token)
@@ -92,19 +86,6 @@ public sealed partial class HomePage : Page
         {
             AddGame(file.Path);
         }
-    }
-
-    private void StartLaunchCooldown()
-    {
-        IsLaunchCooldownActive.Value = true;
-        _ = CompleteLaunchCooldownAsync();
-    }
-
-    private async Task CompleteLaunchCooldownAsync()
-    {
-        await Task.Delay(LaunchCooldownMilliseconds);
-
-        IsLaunchCooldownActive.Value = false;
     }
 
     private void AddGame(string path, string? name = null, long lastLaunchedTicks = 0, bool save = true)
@@ -289,13 +270,11 @@ public sealed partial class HomePage : Page
         {
             SelectedGameActionsVisibility.Value = Visibility.Collapsed;
             SelectedGameName.Value = string.Empty;
-            CanLaunchSelectedGame.Value = false;
             return;
         }
 
         SelectedGameActionsVisibility.Value = Visibility.Visible;
         SelectedGameName.Value = game.Name.Value;
-        CanLaunchSelectedGame.Value = !IsLaunchCooldownActive.Value;
     }
 
     private async Task LoadGameIconAsync(GameEntry game)

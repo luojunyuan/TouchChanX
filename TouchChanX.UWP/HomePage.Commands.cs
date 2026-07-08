@@ -1,4 +1,5 @@
 using R3;
+using System.Windows.Input;
 using Windows.Storage.Pickers;
 using Windows.System;
 using Windows.UI.Xaml.Controls;
@@ -7,21 +8,19 @@ namespace TouchChanX.UWP;
 
 public sealed partial class HomePage
 {
-    public ReactiveCommand AddGameCommand => field ??= new ReactiveCommand(AddGameFromPickerAsync);
+    public ReactiveCommand AddGameCommand => field ??= new(AddGameFromPickerAsync);
 
-    public ReactiveCommand LaunchSelectedGameCommand => field ??= new ReactiveCommand(async (_, token) =>
-    {
-        if (GetSelectedGame() is { } game)
-            await TryLaunchGameAsync(game, token);
-    });
+    public AsyncReactiveCommand LaunchSelectedGameCommand => field ??=
+        new(LaunchSelectedGameAsync, 
+            SelectedGame.Select(game => game is not null), initialCanExecute: false);
 
-    public ReactiveCommand RenameSelectedGameCommand => field ??= new ReactiveCommand(async (_, token) =>
+    public ReactiveCommand RenameSelectedGameCommand => field ??= new(async (_, token) =>
     {
         if (GetSelectedGame() is { } game)
             await RenameGameAsync(game, token);
     });
 
-    public ReactiveCommand RemoveSelectedGameCommand => field ??= new ReactiveCommand(_ =>
+    public ReactiveCommand RemoveSelectedGameCommand => field ??= new(_ =>
     {
         if (GetSelectedGame() is { } game)
             RemoveGame(game);
@@ -37,13 +36,14 @@ public sealed partial class HomePage
             AddGame(file.Path);
     }
 
-    private async ValueTask TryLaunchGameAsync(GameEntry game, CancellationToken token)
+    private async ValueTask LaunchSelectedGameAsync(CancellationToken token)
     {
-        if (IsLaunchCooldownActive.Value)
+        if (GetSelectedGame() is not { } game)
             return;
 
-        StartLaunchCooldown();
+        var cooldown = Task.Delay(LaunchCooldownMilliseconds, token);
         await LaunchGameAsync(game, token);
+        await cooldown;
     }
 
     private async ValueTask LaunchGameAsync(GameEntry game, CancellationToken token)

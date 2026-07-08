@@ -89,7 +89,7 @@
                                         Text="{x:Bind SelectedGameName.Value, Mode=OneWay}"
                                         TextTrimming="CharacterEllipsis" />
                                 </CommandBar.Content>
-                                <AppBarButton Command="{x:Bind LaunchSelectedGameCommand}" Icon="Play" IsEnabled="{x:Bind CanLaunchSelectedGame.Value, Mode=OneWay}" Label="启动" />
+                                <AppBarButton Command="{x:Bind LaunchSelectedGameCommand}" Icon="Play" Label="启动" />
                                 <AppBarButton Command="{x:Bind RenameSelectedGameCommand}" Icon="Edit" Label="重命名" />
                                 <AppBarButton Command="{x:Bind RemoveSelectedGameCommand}" Icon="Delete" Label="移除" />
                             </CommandBar>
