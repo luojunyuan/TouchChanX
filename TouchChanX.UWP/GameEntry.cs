@@ -14,40 +14,22 @@ public sealed partial class GameEntry
 
     public BindableReactiveProperty<ImageSource?> Icon { get; } = new(null);
 
-    public BindableReactiveProperty<Visibility> IconVisibility
-    {
-        get
-        {
-            field ??= Icon
-                .Select(icon => icon is null ? Visibility.Collapsed : Visibility.Visible)
-                .ToBindableReactiveProperty(Visibility.Collapsed);
-            return field;
-        }
-    }
+    public BindableReactiveProperty<Visibility> IconVisibility => field ??= 
+        Icon
+        .Select(icon => icon is null ? Visibility.Collapsed : Visibility.Visible)
+        .ToBindableReactiveProperty(Visibility.Collapsed);
 
-    public BindableReactiveProperty<Visibility> FallbackIconVisibility
-    {
-        get
-        {
-            field ??= Icon
-                .Select(icon => icon is null ? Visibility.Visible : Visibility.Collapsed)
-                .ToBindableReactiveProperty(Visibility.Visible);
-            return field;
-        }
-    }
+    public BindableReactiveProperty<Visibility> FallbackIconVisibility => field ??=
+        Icon
+        .Select(icon => icon is null ? Visibility.Visible : Visibility.Collapsed)
+        .ToBindableReactiveProperty(Visibility.Visible);
 
     public BindableReactiveProperty<bool> IsSelected { get; } = new(false);
 
-    public BindableReactiveProperty<Visibility> SelectedVisualVisibility
-    {
-        get
-        {
-            field ??= IsSelected
-                .Select(isSelected => isSelected ? Visibility.Visible : Visibility.Collapsed)
-                .ToBindableReactiveProperty(Visibility.Collapsed);
-            return field;
-        }
-    }
+    public BindableReactiveProperty<Visibility> SelectedVisualVisibility => field ??= 
+        IsSelected
+        .Select(isSelected => isSelected ? Visibility.Visible : Visibility.Collapsed)
+        .ToBindableReactiveProperty(Visibility.Collapsed);
 }
 
 public sealed class StoredGameEntry
