@@ -21,7 +21,6 @@ public sealed partial class HomePage : Page
     private const string GamesSettingVersion2Prefix = "v2\n";
     private const char GameEntrySeparator = '\u001e';
     private const char GamePathSeparator = '\u001f';
-    private const int LaunchCooldownMilliseconds = 3000;
 
     private ObservableList<GameEntry> Games { get; } = [];
 

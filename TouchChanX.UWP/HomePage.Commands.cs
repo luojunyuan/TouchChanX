@@ -8,11 +8,23 @@ namespace TouchChanX.UWP;
 
 public sealed partial class HomePage
 {
+    private static readonly TimeSpan LaunchCooldownMilliseconds = TimeSpan.FromMilliseconds(3000);
+    private readonly Subject<Unit> _launchRequested = new();
+
     public ReactiveCommand AddGameCommand => field ??= new(AddGameFromPickerAsync);
 
-    public AsyncReactiveCommand LaunchSelectedGameCommand => field ??=
-        new(LaunchSelectedGameAsync, 
-            SelectedGame.Select(game => game is not null), initialCanExecute: false);
+    private Observable<bool> CanLaunchSelectedGame => Observable.CombineLatest(
+        SelectedGame.Select(game => game is not null),
+        _launchRequested
+            .SelectMany(_ => Observable.Concat(
+                Observable.Return(false),
+                Observable.Timer(LaunchCooldownMilliseconds).Select(_ => true)))
+            .Prepend(true),
+        (hasGame, isReady) => hasGame && isReady);
+
+    public ReactiveCommand<Unit> LaunchSelectedGameCommand => field ??=
+        CanLaunchSelectedGame
+            .ToReactiveCommand<Unit>(LaunchSelectedGameAsync, awaitOperation: AwaitOperation.Drop);
 
     public ReactiveCommand RenameSelectedGameCommand => field ??= new(async (_, token) =>
     {
@@ -36,14 +48,13 @@ public sealed partial class HomePage
             AddGame(file.Path);
     }
 
-    private async ValueTask LaunchSelectedGameAsync(CancellationToken token)
+    private async ValueTask LaunchSelectedGameAsync(Unit unit, CancellationToken token)
     {
         if (GetSelectedGame() is not { } game)
             return;
 
-        var cooldown = Task.Delay(LaunchCooldownMilliseconds, token);
+        _launchRequested.OnNext(Unit.Default);
         await LaunchGameAsync(game, token);
-        await cooldown;
     }
 
     private async ValueTask LaunchGameAsync(GameEntry game, CancellationToken token)
@@ -95,5 +106,15 @@ public sealed partial class HomePage
         game.Name.Value = newName;
         SaveGames();
         UpdateSelectedGameState();
+    }
+}
+
+public static class R3CommandExtensions
+{
+    public static IDisposable InvokeCommand<T>(this Observable<T> source, ICommand command)
+    {
+        return source
+            .Where(command, static (v, cmd) => cmd.CanExecute(v))
+            .Subscribe(command, static (v, cmd) => cmd.Execute(v));
     }
 }
