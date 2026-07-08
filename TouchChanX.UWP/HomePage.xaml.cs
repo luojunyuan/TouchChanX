@@ -1,5 +1,7 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
+using ObservableCollections;
 using R3;
 using R3.ObservableEvents;
 using Windows.ApplicationModel.DataTransfer;
@@ -22,7 +24,9 @@ public sealed partial class HomePage : Page
     private const char GamePathSeparator = '\u001f';
     private const int LaunchCooldownMilliseconds = 3000;
 
-    private List<GameEntry> Games { get; } = [];
+    private ObservableList<GameEntry> Games { get; } = [];
+
+    public ObservableCollection<GameEntry> GameItems { get; } = [];
 
     public BindableReactiveProperty<Visibility> EmptyStateVisibility { get; } = new(Visibility.Visible);
 
@@ -43,7 +47,6 @@ public sealed partial class HomePage : Page
         InitializeComponent();
         BindReactiveInteractions();
         LoadGames();
-        UpdateGameListState();
     }
 
     private void BindReactiveInteractions()
@@ -73,6 +76,13 @@ public sealed partial class HomePage : Page
             .Select(GetGameFromDoubleTap)
             .WhereNotNull()
             .SubscribeAwait(TryLaunchGameAsync);
+
+        Games.ObserveChanged()
+            .Subscribe(_ =>
+            {
+                ResetGameItems();
+                UpdateGameListState();
+            });
 
         IsLaunchCooldownActive.Subscribe(_ => UpdateSelectedGameState());
     }
@@ -111,8 +121,6 @@ public sealed partial class HomePage : Page
 
         if (save)
             SaveGames();
-
-        UpdateGameListState();
     }
 
     private static bool TryResolveGamePath(string path, out string gamePath)
@@ -170,7 +178,6 @@ public sealed partial class HomePage : Page
         }
 
         SaveGames();
-        UpdateGameListState();
     }
 
     private static IEnumerable<StoredGameEntry> ReadStoredGames(string value)
@@ -219,8 +226,16 @@ public sealed partial class HomePage : Page
     private void AddGameEntry(GameEntry game)
     {
         Games.Add(game);
-        GameList.Items.Add(game);
         _ = LoadGameIconAsync(game);
+    }
+
+    private void ResetGameItems()
+    {
+        GameItems.Clear();
+        foreach (var game in Games)
+        {
+            GameItems.Add(game);
+        }
     }
 
     private void SaveGames()
@@ -333,9 +348,7 @@ public sealed partial class HomePage : Page
             GameList.SelectedItem = null;
 
         Games.Remove(game);
-        GameList.Items.Remove(game);
         SaveGames();
-        UpdateGameListState();
     }
 
     private void SortGamesByLastLaunch()
@@ -347,14 +360,7 @@ public sealed partial class HomePage : Page
         if (orderedGames.SequenceEqual(Games))
             return;
 
-        Games.Clear();
-        Games.AddRange(orderedGames);
-        GameList.Items.Clear();
-
-        foreach (var game in Games)
-        {
-            GameList.Items.Add(game);
-        }
+        Games.Sort(Comparer<GameEntry>.Create((x, y) => y.LastLaunchedTicks.CompareTo(x.LastLaunchedTicks)));
     }
 
     private GameEntry? GetSelectedGame() => GameList.SelectedItem as GameEntry;

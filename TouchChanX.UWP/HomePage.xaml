@@ -96,6 +96,7 @@
 
                             <GridView x:Name="GameList"
                                 Grid.Row="1"
+                                ItemsSource="{x:Bind GameItems}"
                                 MaxHeight="520"
                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                 ScrollViewer.HorizontalScrollMode="Disabled"
