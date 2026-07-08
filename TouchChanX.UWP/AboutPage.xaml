@@ -19,7 +19,7 @@
                 </StackPanel>
 
                 <ct:SettingsCard
-                    x:Name="RateInStoreCard"
+                    Command="{x:Bind RateInStoreCommand}"
                     Description="打开 Microsoft Store 评分入口。"
                     Header="为 TouchChanX 评分"
                     IsClickEnabled="True">
@@ -32,7 +32,7 @@
                 </ct:SettingsCard>
 
                 <ct:SettingsCard
-                    x:Name="OpenSourceCard"
+                    Command="{x:Bind OpenSourceCommand}"
                     Description="查看源码、许可和 issue。"
                     Header="开源项目"
                     IsClickEnabled="True">
