@@ -218,10 +218,6 @@ public sealed partial class HomePage : Page
 
     private void AddGameEntry(GameEntry game)
     {
-        game.LaunchCommand = LaunchGameCommand;
-        game.RenameCommand = RenameGameCommand;
-        game.RemoveCommand = RemoveGameCommand;
-
         Games.Add(game);
         GameList.Items.Add(game);
         _ = LoadGameIconAsync(game);

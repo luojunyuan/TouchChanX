@@ -122,26 +122,6 @@
                                             Width="152"
                                             Height="136"
                                             ToolTipService.ToolTip="{x:Bind Path}">
-                                            <Grid.ContextFlyout>
-                                                <MenuFlyout>
-                                                    <MenuFlyoutItem Command="{x:Bind LaunchCommand}" CommandParameter="{x:Bind}" Text="启动">
-                                                        <MenuFlyoutItem.Icon>
-                                                            <SymbolIcon Symbol="Play" />
-                                                        </MenuFlyoutItem.Icon>
-                                                    </MenuFlyoutItem>
-                                                    <MenuFlyoutItem Command="{x:Bind RenameCommand}" CommandParameter="{x:Bind}" Text="重命名">
-                                                        <MenuFlyoutItem.Icon>
-                                                            <SymbolIcon Symbol="Edit" />
-                                                        </MenuFlyoutItem.Icon>
-                                                    </MenuFlyoutItem>
-                                                    <MenuFlyoutItem Command="{x:Bind RemoveCommand}" CommandParameter="{x:Bind}" Text="移除">
-                                                        <MenuFlyoutItem.Icon>
-                                                            <SymbolIcon Symbol="Delete" />
-                                                        </MenuFlyoutItem.Icon>
-                                                    </MenuFlyoutItem>
-                                                </MenuFlyout>
-                                            </Grid.ContextFlyout>
-
                                             <Border
                                                 Padding="12"
                                                 Background="{ThemeResource TouchChanTileBackgroundBrush}"

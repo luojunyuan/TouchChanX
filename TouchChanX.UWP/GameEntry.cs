@@ -6,12 +6,6 @@ namespace TouchChanX.UWP;
 
 public sealed partial class GameEntry
 {
-    public ReactiveCommand<GameEntry> LaunchCommand { get; set; } = null!;
-
-    public ReactiveCommand<GameEntry> RenameCommand { get; set; } = null!;
-
-    public ReactiveCommand<GameEntry> RemoveCommand { get; set; } = null!;
-
     public BindableReactiveProperty<string> Name { get; } = new(string.Empty);
 
     public string Path { get; set; } = string.Empty;

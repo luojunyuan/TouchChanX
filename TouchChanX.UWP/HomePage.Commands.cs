@@ -27,12 +27,6 @@ public sealed partial class HomePage
             RemoveGame(game);
     });
 
-    public ReactiveCommand<GameEntry> LaunchGameCommand => field ??= new ReactiveCommand<GameEntry>(TryLaunchGameAsync);
-
-    public ReactiveCommand<GameEntry> RenameGameCommand => field ??= new ReactiveCommand<GameEntry>(RenameGameAsync);
-
-    public ReactiveCommand<GameEntry> RemoveGameCommand => field ??= new ReactiveCommand<GameEntry>(RemoveGame);
-
     private async ValueTask AddGameFromPickerAsync(Unit unit, CancellationToken token)
     {
         var picker = new FileOpenPicker();
