@@ -26,30 +26,38 @@ public sealed partial class HomePage : Page
     private const char GamePathSeparator = '\u001f';
     private const int LaunchCooldownMilliseconds = 3000;
 
-    private readonly Subject<Unit> _addGameRequested = new();
-    private readonly Subject<Unit> _launchSelectedGameRequested = new();
-    private readonly Subject<Unit> _renameSelectedGameRequested = new();
-    private readonly Subject<Unit> _removeSelectedGameRequested = new();
-    private readonly Subject<GameEntry> _launchGameRequested = new();
-    private readonly Subject<GameEntry> _renameGameRequested = new();
-    private readonly Subject<GameEntry> _removeGameRequested = new();
     private bool _isLaunchCooldownActive;
 
     private List<GameEntry> Games { get; } = [];
 
-    public ReactiveCommand AddGameCommand => field ??= new ReactiveCommand(_ => _addGameRequested.OnNext(Unit.Default));
+    public ReactiveCommand AddGameCommand => field ??= new ReactiveCommand(
+        async (_, _) => await AddGameFromPickerAsync());
 
-    public ReactiveCommand LaunchSelectedGameCommand => field ??= new ReactiveCommand(_ => _launchSelectedGameRequested.OnNext(Unit.Default));
+    public ReactiveCommand LaunchSelectedGameCommand => field ??= new ReactiveCommand(async (_, _) =>
+    {
+        if (GetSelectedGame() is { } game)
+            await TryLaunchGameAsync(game);
+    });
 
-    public ReactiveCommand RenameSelectedGameCommand => field ??= new ReactiveCommand(_ => _renameSelectedGameRequested.OnNext(Unit.Default));
+    public ReactiveCommand RenameSelectedGameCommand => field ??= new ReactiveCommand(async (_, _) =>
+    {
+        if (GetSelectedGame() is { } game)
+            await RenameGameAsync(game);
+    });
 
-    public ReactiveCommand RemoveSelectedGameCommand => field ??= new ReactiveCommand(_ => _removeSelectedGameRequested.OnNext(Unit.Default));
+    public ReactiveCommand RemoveSelectedGameCommand => field ??= new ReactiveCommand(_ =>
+    {
+        if (GetSelectedGame() is { } game)
+            RemoveGame(game);
+    });
 
-    public ReactiveCommand<GameEntry> LaunchGameCommand => field ??= new ReactiveCommand<GameEntry>(game => _launchGameRequested.OnNext(game));
+    public ReactiveCommand<GameEntry> LaunchGameCommand => field ??= new ReactiveCommand<GameEntry>(
+        async (game, _) => await TryLaunchGameAsync(game));
 
-    public ReactiveCommand<GameEntry> RenameGameCommand => field ??= new ReactiveCommand<GameEntry>(game => _renameGameRequested.OnNext(game));
+    public ReactiveCommand<GameEntry> RenameGameCommand => field ??= new ReactiveCommand<GameEntry>(
+        async (game, _) => await RenameGameAsync(game));
 
-    public ReactiveCommand<GameEntry> RemoveGameCommand => field ??= new ReactiveCommand<GameEntry>(game => _removeGameRequested.OnNext(game));
+    public ReactiveCommand<GameEntry> RemoveGameCommand => field ??= new ReactiveCommand<GameEntry>(RemoveGame);
 
     public HomePage()
     {
@@ -61,9 +69,6 @@ public sealed partial class HomePage : Page
 
     private void BindReactiveInteractions()
     {
-        _addGameRequested
-            .SubscribeAwait(async (_, _) => await AddGameFromPickerAsync());
-
         DropArea.Events().DragOver
             .Where(e => e.DataView.Contains(StandardDataFormats.StorageItems))
             .Subscribe(e =>
@@ -84,30 +89,6 @@ public sealed partial class HomePage : Page
             .Select(GetGameFromDoubleTap)
             .WhereNotNull()
             .SubscribeAwait(async (game, _) => await TryLaunchGameAsync(game));
-
-        _launchSelectedGameRequested
-            .Select(_ => GetSelectedGame())
-            .WhereNotNull()
-            .SubscribeAwait(async (game, _) => await TryLaunchGameAsync(game));
-
-        _renameSelectedGameRequested
-            .Select(_ => GetSelectedGame())
-            .WhereNotNull()
-            .SubscribeAwait(async (game, _) => await RenameGameAsync(game));
-
-        _removeSelectedGameRequested
-            .Select(_ => GetSelectedGame())
-            .WhereNotNull()
-            .Subscribe(RemoveGame);
-
-        _launchGameRequested
-            .SubscribeAwait(async (game, _) => await TryLaunchGameAsync(game));
-
-        _renameGameRequested
-            .SubscribeAwait(async (game, _) => await RenameGameAsync(game));
-
-        _removeGameRequested
-            .Subscribe(RemoveGame);
     }
 
     private async Task AddGameFromPickerAsync()
