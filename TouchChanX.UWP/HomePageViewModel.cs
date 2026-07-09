@@ -28,7 +28,6 @@ public sealed class HomePageViewModel
             .Subscribe(_ => EnsureSelection());
 
         LoadGames();
-        EnsureSelection();
     }
 
     public Interaction<Unit, string?> PickGamePathInteraction { get; } = new();
@@ -41,21 +40,20 @@ public sealed class HomePageViewModel
 
     public BindableReactiveProperty<GameEntry?> SelectedGame { get; } = new(null);
 
-    public BindableReactiveProperty<Visibility> EmptyStateVisibility => field ??=
+    private BindableReactiveProperty<bool> HasGames => field ??=
         _games.ObserveChanged()
-            .Select(_ => _games.Count == 0 ? Visibility.Visible : Visibility.Collapsed)
-            .Prepend(_games.Count == 0 ? Visibility.Visible : Visibility.Collapsed)
+            .Select(_ => _games.Count > 0)
+            .Prepend(_games.Count > 0)
+            .ToBindableReactiveProperty(_games.Count > 0);
+
+    public BindableReactiveProperty<Visibility> EmptyStateVisibility => field ??=
+        HasGames
+            .Select(hasGames => hasGames ? Visibility.Collapsed : Visibility.Visible)
             .ToBindableReactiveProperty(Visibility.Visible);
 
-    public BindableReactiveProperty<Visibility> GameListVisibility => field ??=
-        _games.ObserveChanged()
-            .Select(_ => _games.Count == 0 ? Visibility.Collapsed : Visibility.Visible)
-            .Prepend(_games.Count == 0 ? Visibility.Collapsed : Visibility.Visible)
-            .ToBindableReactiveProperty(Visibility.Collapsed);
-
-    public BindableReactiveProperty<Visibility> SelectedGameActionsVisibility => field ??=
-        SelectedGame
-            .Select(game => game is null ? Visibility.Collapsed : Visibility.Visible)
+    public BindableReactiveProperty<Visibility> GamesVisibility => field ??=
+        HasGames
+            .Select(hasGames => hasGames ? Visibility.Visible : Visibility.Collapsed)
             .ToBindableReactiveProperty(Visibility.Collapsed);
 
     public BindableReactiveProperty<string> SelectedGameName => field ??=
@@ -66,7 +64,7 @@ public sealed class HomePageViewModel
 
     public ReactiveCommand AddGameCommand => field ??= new(async (_, _) => await AddGameFromPickerAsync());
 
-    private Observable<bool> CanUseSelectedGame => SelectedGame.Select(game => game is not null);
+    private Observable<bool> CanUseSelectedGame => HasGames;
 
     private Observable<bool> CanLaunchSelectedGame => Observable.CombineLatest(
         CanUseSelectedGame,

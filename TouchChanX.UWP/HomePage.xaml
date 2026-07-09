@@ -73,7 +73,9 @@
                                 TextAlignment="Center" />
                         </StackPanel>
 
-                        <Grid RowSpacing="16">
+                        <Grid
+                            RowSpacing="16"
+                            Visibility="{x:Bind ViewModel.GamesVisibility.Value, Mode=OneWay}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
@@ -81,8 +83,7 @@
 
                             <CommandBar
                                 Background="Transparent"
-                                DefaultLabelPosition="Right"
-                                Visibility="{x:Bind ViewModel.SelectedGameActionsVisibility.Value, Mode=OneWay}">
+                                DefaultLabelPosition="Right">
                                 <CommandBar.Content>
                                     <TextBlock
                                         VerticalAlignment="Center"
@@ -103,8 +104,7 @@
                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                                 ScrollViewer.VerticalScrollMode="Enabled"
                                 SelectionMode="Single"
-                                SelectedItem="{x:Bind ViewModel.SelectedGame.Value, Mode=TwoWay}"
-                                Visibility="{x:Bind ViewModel.GameListVisibility.Value, Mode=OneWay}">
+                                SelectedItem="{x:Bind ViewModel.SelectedGame.Value, Mode=TwoWay}">
                                 <!--  保留增加删除动画的同时，移除重排动画，但我们不使用，保持默认  -->
                                 <!--<GridView.ItemContainerTransitions>
                                     <TransitionCollection>
