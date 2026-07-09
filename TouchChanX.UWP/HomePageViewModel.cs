@@ -21,7 +21,6 @@ public sealed class HomePageViewModel
     public HomePageViewModel(GameStorageService storage)
     {
         _storage = storage;
-        SelectedGame.Subscribe(UpdateSelectedGame);
         _games.ObserveChanged().Subscribe(_ => EnsureSelection());
 
         LoadGames();
@@ -183,9 +182,9 @@ public sealed class HomePageViewModel
             extension.Equals(".lnk", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static GameEntry CreateGameEntry(string path, string? name = null, long lastLaunchedTicks = 0)
+    private GameEntry CreateGameEntry(string path, string? name = null, long lastLaunchedTicks = 0)
     {
-        var game = new GameEntry
+        var game = new GameEntry(SelectedGame)
         {
             Path = path,
             LastLaunchedTicks = lastLaunchedTicks,
@@ -262,14 +261,6 @@ public sealed class HomePageViewModel
             !_games.Contains(selectedGame))
         {
             SelectedGame.Value = _games[0];
-        }
-    }
-
-    private void UpdateSelectedGame(GameEntry? selectedGame)
-    {
-        foreach (var game in _games)
-        {
-            game.IsSelected.Value = ReferenceEquals(game, selectedGame);
         }
     }
 }

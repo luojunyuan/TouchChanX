@@ -4,7 +4,7 @@ using Windows.UI.Xaml.Media;
 
 namespace TouchChanX.UWP;
 
-public sealed partial class GameEntry
+public sealed partial class GameEntry(Observable<GameEntry?> selectedGame)
 {
     public BindableReactiveProperty<string> Name { get; } = new(string.Empty);
 
@@ -24,11 +24,9 @@ public sealed partial class GameEntry
         .Select(icon => icon is null ? Visibility.Visible : Visibility.Collapsed)
         .ToBindableReactiveProperty(Visibility.Visible);
 
-    public BindableReactiveProperty<bool> IsSelected { get; } = new(false);
-
     public BindableReactiveProperty<Visibility> SelectedVisualVisibility => field ??=
-        IsSelected
-        .Select(isSelected => isSelected ? Visibility.Visible : Visibility.Collapsed)
+        selectedGame
+        .Select(game => ReferenceEquals(game, this) ? Visibility.Visible : Visibility.Collapsed)
         .ToBindableReactiveProperty(Visibility.Collapsed);
 }
 
