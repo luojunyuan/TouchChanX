@@ -13,6 +13,16 @@ public sealed partial class HomePage : Page
 {
     public HomePageViewModel ViewModel { get; }
 
+    public BindableReactiveProperty<Visibility> EmptyStateVisibility => field ??=
+        ViewModel.HasGames
+            .Select(hasGames => hasGames ? Visibility.Collapsed : Visibility.Visible)
+            .ToBindableReactiveProperty(Visibility.Visible);
+
+    public BindableReactiveProperty<Visibility> GamesVisibility => field ??=
+        ViewModel.HasGames
+            .Select(hasGames => hasGames ? Visibility.Visible : Visibility.Collapsed)
+            .ToBindableReactiveProperty(Visibility.Collapsed);
+
     public HomePage()
     {
         ViewModel = new HomePageViewModel(new AppSettings());

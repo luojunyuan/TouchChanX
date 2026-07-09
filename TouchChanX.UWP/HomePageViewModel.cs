@@ -5,7 +5,6 @@ using System.Diagnostics;
 using TouchChanX.Persistence;
 using Windows.Storage.Streams;
 using Windows.System;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -40,21 +39,11 @@ public sealed class HomePageViewModel
 
     public BindableReactiveProperty<GameEntry?> SelectedGame { get; } = new(null);
 
-    private BindableReactiveProperty<bool> HasGames => field ??=
+    public BindableReactiveProperty<bool> HasGames => field ??=
         _games.ObserveChanged()
             .Select(_ => _games.Count > 0)
             .Prepend(_games.Count > 0)
             .ToBindableReactiveProperty(_games.Count > 0);
-
-    public BindableReactiveProperty<Visibility> EmptyStateVisibility => field ??=
-        HasGames
-            .Select(hasGames => hasGames ? Visibility.Collapsed : Visibility.Visible)
-            .ToBindableReactiveProperty(Visibility.Visible);
-
-    public BindableReactiveProperty<Visibility> GamesVisibility => field ??=
-        HasGames
-            .Select(hasGames => hasGames ? Visibility.Visible : Visibility.Collapsed)
-            .ToBindableReactiveProperty(Visibility.Collapsed);
 
     public BindableReactiveProperty<string> SelectedGameName => field ??=
         SelectedGame
