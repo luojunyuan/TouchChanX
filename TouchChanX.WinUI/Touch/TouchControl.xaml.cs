@@ -4,7 +4,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using R3;
 using R3.ObservableEvents;
+using System.Diagnostics;
 using System.Numerics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using TouchChanX.Persistence;
 using TouchDockAnchor = TouchChanX.WinUI.Menu.TouchDockAnchor;
 using Windows.Foundation;
@@ -151,67 +154,40 @@ public sealed partial class TouchControl : UserControl
     private void SaveCurrentDockAnchor()
     {
         var anchor = TouchDockAnchor.SnapFromRect(ContainerSize, TouchRect);
-        _settings.TouchDockAnchor = FormatTouchDockAnchor(anchor);
+        _settings.TouchDockAnchor = JsonSerializer.Serialize(anchor, TouchDockAnchorJsonContext.Default.TouchDockAnchor);
     }
 
     private static TouchDockAnchor LoadTouchDockAnchor(AppSettings settings) =>
-        TryParseTouchDockAnchor(settings.TouchDockAnchor, out var anchor)
-            ? anchor
-            : TouchDockAnchor.Default;
+        DeserializeTouchDockAnchor(settings.TouchDockAnchor) ?? TouchDockAnchor.Default;
 
-    private static string FormatTouchDockAnchor(TouchDockAnchor anchor) =>
-        anchor switch
-        {
-            TouchDockAnchor.TopLeft => "TopLeft",
-            TouchDockAnchor.TopRight => "TopRight",
-            TouchDockAnchor.BottomLeft => "BottomLeft",
-            TouchDockAnchor.BottomRight => "BottomRight",
-            TouchDockAnchor.Left x => FormattableString.Invariant($"Left:{x.Scale}"),
-            TouchDockAnchor.Top x => FormattableString.Invariant($"Top:{x.Scale}"),
-            TouchDockAnchor.Right x => FormattableString.Invariant($"Right:{x.Scale}"),
-            TouchDockAnchor.Bottom x => FormattableString.Invariant($"Bottom:{x.Scale}"),
-            _ => FormatTouchDockAnchor(TouchDockAnchor.Default),
-        };
-
-    private static bool TryParseTouchDockAnchor(string? value, out TouchDockAnchor anchor)
+    private static TouchDockAnchor? DeserializeTouchDockAnchor(string value)
     {
-        anchor = TouchDockAnchor.Default;
         if (string.IsNullOrWhiteSpace(value))
-            return false;
+            return null;
 
-        anchor = value switch
+        try
         {
-            "TopLeft" => new TouchDockAnchor.TopLeft(),
-            "TopRight" => new TouchDockAnchor.TopRight(),
-            "BottomLeft" => new TouchDockAnchor.BottomLeft(),
-            "BottomRight" => new TouchDockAnchor.BottomRight(),
-            _ => anchor,
-        };
-
-        if (anchor != TouchDockAnchor.Default)
-            return true;
-
-        var parts = value.Split(':', 2);
-        if (parts.Length != 2 ||
-            !double.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var scale))
-        {
-            return false;
+            return JsonSerializer.Deserialize(value, TouchDockAnchorJsonContext.Default.TouchDockAnchor);
         }
-
-        scale = Math.Clamp(scale, 0.0, 1.0);
-        anchor = parts[0] switch
+        catch (JsonException ex)
         {
-            "Left" => new TouchDockAnchor.Left(scale),
-            "Top" => new TouchDockAnchor.Top(scale),
-            "Right" => new TouchDockAnchor.Right(scale),
-            "Bottom" => new TouchDockAnchor.Bottom(scale),
-            _ => TouchDockAnchor.Default,
-        };
-
-        return parts[0] is "Left" or "Top" or "Right" or "Bottom";
+            Debug.WriteLine(ex);
+            return null;
+        }
     }
 
     private bool IsContainerReady() =>
         ActualWidth >= Shared.TouchSize + Shared.TouchSpacing * 2 &&
         ActualHeight >= Shared.TouchSize + Shared.TouchSpacing * 2;
 }
+
+[JsonSerializable(typeof(TouchDockAnchor))]
+[JsonSerializable(typeof(TouchDockAnchor.Left))]
+[JsonSerializable(typeof(TouchDockAnchor.Top))]
+[JsonSerializable(typeof(TouchDockAnchor.Right))]
+[JsonSerializable(typeof(TouchDockAnchor.Bottom))]
+[JsonSerializable(typeof(TouchDockAnchor.TopLeft))]
+[JsonSerializable(typeof(TouchDockAnchor.TopRight))]
+[JsonSerializable(typeof(TouchDockAnchor.BottomLeft))]
+[JsonSerializable(typeof(TouchDockAnchor.BottomRight))]
+internal sealed partial class TouchDockAnchorJsonContext : JsonSerializerContext;

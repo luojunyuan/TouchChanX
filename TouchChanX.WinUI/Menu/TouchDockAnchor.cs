@@ -1,7 +1,17 @@
+using System.Text.Json.Serialization;
 using Windows.Foundation;
 
 namespace TouchChanX.WinUI.Menu;
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
+[JsonDerivedType(typeof(TouchDockAnchor.Left), "left")]
+[JsonDerivedType(typeof(TouchDockAnchor.Top), "top")]
+[JsonDerivedType(typeof(TouchDockAnchor.Right), "right")]
+[JsonDerivedType(typeof(TouchDockAnchor.Bottom), "bottom")]
+[JsonDerivedType(typeof(TouchDockAnchor.TopLeft), "topLeft")]
+[JsonDerivedType(typeof(TouchDockAnchor.TopRight), "topRight")]
+[JsonDerivedType(typeof(TouchDockAnchor.BottomLeft), "bottomLeft")]
+[JsonDerivedType(typeof(TouchDockAnchor.BottomRight), "bottomRight")]
 public abstract record TouchDockAnchor
 {
     public record Left(double Scale) : TouchDockAnchor;
