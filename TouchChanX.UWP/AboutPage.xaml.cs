@@ -14,11 +14,6 @@ public sealed partial class AboutPage : Page
 {
     private const string OpenSourceUrl = "https://github.com/luojunyuan/TachiChanX";
 
-    public AboutPage()
-    {
-        InitializeComponent();
-    }
-
     public ReactiveCommand RateInStoreCommand => field ??= new(async (_, _) =>
     {
         var result = await StoreContext.RequestRateAndReviewAppAsync();
@@ -31,8 +26,13 @@ public sealed partial class AboutPage : Page
         }
     });
 
-    public ReactiveCommand OpenSourceCommand => field ??= new(async (_, _) => 
+    public ReactiveCommand OpenSourceCommand => field ??= new(async (_, _) =>
         await Launcher.LaunchUriAsync(new Uri(OpenSourceUrl)));
+
+    public AboutPage()
+    {
+        InitializeComponent();
+    }
 
     private StoreContext StoreContext => field ??= new Func<StoreContext>(() =>
     {

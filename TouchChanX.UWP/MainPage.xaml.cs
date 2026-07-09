@@ -16,7 +16,7 @@ public sealed partial class MainPage : Page
     {
         InitializeComponent();
         SetupTitlebar();
-        BindReactiveInteractions();
+        BindReactiveEvents();
         Navigate("home");
     }
 
@@ -30,7 +30,7 @@ public sealed partial class MainPage : Page
         titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
     }
 
-    private void BindReactiveInteractions()
+    private void BindReactiveEvents()
     {
         AppNav.Events().SelectionChanged
             .Select(e => e.args.SelectedItemContainer?.Tag as string)
