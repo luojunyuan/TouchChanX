@@ -1,5 +1,6 @@
 using ObservableCollections;
 using R3;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using Windows.Storage.Streams;
 using Windows.System;
@@ -21,7 +22,9 @@ public sealed class HomePageViewModel
     public HomePageViewModel(GameStorageService storage)
     {
         _storage = storage;
-        _games.ObserveChanged().Subscribe(_ => EnsureSelection());
+        _games.ObserveChanged()
+            .Do(DisposeRemovedGames)
+            .Subscribe(_ => EnsureSelection());
 
         LoadGames();
         EnsureSelection();
@@ -261,6 +264,16 @@ public sealed class HomePageViewModel
             !_games.Contains(selectedGame))
         {
             SelectedGame.Value = _games[0];
+        }
+    }
+
+    private static void DisposeRemovedGames(CollectionChangedEvent<GameEntry> e)
+    {
+        if (e.Action is NotifyCollectionChangedAction.Remove 
+            or NotifyCollectionChangedAction.Replace 
+            or NotifyCollectionChangedAction.Reset)
+        {
+            e.OldItem.Dispose();
         }
     }
 }

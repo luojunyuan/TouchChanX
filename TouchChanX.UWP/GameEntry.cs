@@ -4,7 +4,7 @@ using Windows.UI.Xaml.Media;
 
 namespace TouchChanX.UWP;
 
-public sealed partial class GameEntry(Observable<GameEntry?> selectedGame)
+public sealed partial class GameEntry(Observable<GameEntry?> selectedGame) : IDisposable
 {
     public BindableReactiveProperty<string> Name { get; } = new(string.Empty);
 
@@ -28,6 +28,8 @@ public sealed partial class GameEntry(Observable<GameEntry?> selectedGame)
         selectedGame
         .Select(game => ReferenceEquals(game, this) ? Visibility.Visible : Visibility.Collapsed)
         .ToBindableReactiveProperty(Visibility.Collapsed);
+
+    public void Dispose() => SelectedVisualVisibility.Dispose();
 }
 
 public sealed class StoredGameEntry
