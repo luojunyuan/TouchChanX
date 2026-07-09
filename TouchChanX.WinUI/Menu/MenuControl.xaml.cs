@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 using R3;
 using R3.ObservableEvents;
+using TouchChanX.Persistence;
 using TouchChanX.WinUI.Controls;
 using TouchChanX.WinUI.Menu.Model;
 using Windows.UI;
@@ -28,6 +29,7 @@ public sealed partial class MenuControl : UserControl
 {
     private const double MenuPadding = 24.0;
 
+    private readonly AppSettings _settings = new();
     private readonly Dictionary<string, bool> _toggleStates = [];
     private Grid _activePageHost = null!;
     private Grid _inactivePageHost = null!;
@@ -142,7 +144,7 @@ public sealed partial class MenuControl : UserControl
         if (item.Kind == TouchMenuItemKind.Toggle)
         {
             _toggleStates[item.Id] = button.IsOn;
-            TouchChanXSettings.SaveToggleState(item.Id, button.IsOn);
+            SaveToggleState(item.Id, button.IsOn);
             ToggleChangedSubject.OnNext(new(item.Id, button.IsOn));
         }
 
@@ -251,7 +253,7 @@ public sealed partial class MenuControl : UserControl
             var isOn = _toggleStates.TryGetValue(item.Id, out var toggleState)
                 ? toggleState
                 : item.Kind == TouchMenuItemKind.Toggle
-                    ? TouchChanXSettings.LoadToggleState(item.Id, item.IsOn)
+                    ? LoadToggleState(item.Id, item.IsOn)
                     : item.IsOn;
 
             var button = new MenuButton
@@ -297,6 +299,43 @@ public sealed partial class MenuControl : UserControl
     private bool ShouldCloseFromPointerSource(object? originalSource) =>
         ReferenceEquals(originalSource, MenuBorder) ||
         ReferenceEquals(originalSource, BackgroundLayer);
+
+    private bool LoadToggleState(string id, bool defaultValue) =>
+        id switch
+        {
+            "stretch" => _settings.Stretch,
+            "touch-bar" => _settings.TouchBar,
+            "keyboard" => _settings.Keyboard,
+            "touch-to-mouse" => _settings.TouchToMouse,
+            "battery" => _settings.Battery,
+            "gesture" => _settings.Gesture,
+            _ => defaultValue,
+        };
+
+    private void SaveToggleState(string id, bool isOn)
+    {
+        switch (id)
+        {
+            case "stretch":
+                _settings.Stretch = isOn;
+                break;
+            case "touch-bar":
+                _settings.TouchBar = isOn;
+                break;
+            case "keyboard":
+                _settings.Keyboard = isOn;
+                break;
+            case "touch-to-mouse":
+                _settings.TouchToMouse = isOn;
+                break;
+            case "battery":
+                _settings.Battery = isOn;
+                break;
+            case "gesture":
+                _settings.Gesture = isOn;
+                break;
+        }
+    }
 
     /// <summary>
     /// 控制动画过渡层显隐，仅在动画前后调用。

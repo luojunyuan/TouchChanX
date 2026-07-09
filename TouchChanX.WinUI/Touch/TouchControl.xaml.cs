@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls;
 using R3;
 using R3.ObservableEvents;
 using System.Numerics;
+using TouchChanX.Persistence;
 using TouchDockAnchor = TouchChanX.WinUI.Menu.TouchDockAnchor;
 using Windows.Foundation;
 
@@ -20,6 +21,7 @@ public partial class TouchControl
 public sealed partial class TouchControl : UserControl
 {
     private static readonly TimeSpan ReleaseToEdgeDuration = TimeSpan.FromMilliseconds(200);
+    private readonly AppSettings _settings = new();
 
     public Observable<Rect> Clicked { get; }
 
@@ -37,7 +39,7 @@ public sealed partial class TouchControl : UserControl
     {
         InitializeComponent();
         TouchBorder.Translation = new(Shared.TouchSpacing, Shared.TouchSpacing, 0);
-        var initialDockAnchor = TouchChanXSettings.LoadTouchDockAnchor();
+        var initialDockAnchor = LoadTouchDockAnchor(_settings);
 
         var pressed = TouchBorder.Events().PointerPressed.Share();
         var dragStarted = TouchBorder.Events().ManipulationStarted.Share();
@@ -149,7 +151,64 @@ public sealed partial class TouchControl : UserControl
     private void SaveCurrentDockAnchor()
     {
         var anchor = TouchDockAnchor.SnapFromRect(ContainerSize, TouchRect);
-        TouchChanXSettings.SaveTouchDockAnchor(anchor);
+        _settings.TouchDockAnchor = FormatTouchDockAnchor(anchor);
+    }
+
+    private static TouchDockAnchor LoadTouchDockAnchor(AppSettings settings) =>
+        TryParseTouchDockAnchor(settings.TouchDockAnchor, out var anchor)
+            ? anchor
+            : TouchDockAnchor.Default;
+
+    private static string FormatTouchDockAnchor(TouchDockAnchor anchor) =>
+        anchor switch
+        {
+            TouchDockAnchor.TopLeft => "TopLeft",
+            TouchDockAnchor.TopRight => "TopRight",
+            TouchDockAnchor.BottomLeft => "BottomLeft",
+            TouchDockAnchor.BottomRight => "BottomRight",
+            TouchDockAnchor.Left x => FormattableString.Invariant($"Left:{x.Scale}"),
+            TouchDockAnchor.Top x => FormattableString.Invariant($"Top:{x.Scale}"),
+            TouchDockAnchor.Right x => FormattableString.Invariant($"Right:{x.Scale}"),
+            TouchDockAnchor.Bottom x => FormattableString.Invariant($"Bottom:{x.Scale}"),
+            _ => FormatTouchDockAnchor(TouchDockAnchor.Default),
+        };
+
+    private static bool TryParseTouchDockAnchor(string? value, out TouchDockAnchor anchor)
+    {
+        anchor = TouchDockAnchor.Default;
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        anchor = value switch
+        {
+            "TopLeft" => new TouchDockAnchor.TopLeft(),
+            "TopRight" => new TouchDockAnchor.TopRight(),
+            "BottomLeft" => new TouchDockAnchor.BottomLeft(),
+            "BottomRight" => new TouchDockAnchor.BottomRight(),
+            _ => anchor,
+        };
+
+        if (anchor != TouchDockAnchor.Default)
+            return true;
+
+        var parts = value.Split(':', 2);
+        if (parts.Length != 2 ||
+            !double.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var scale))
+        {
+            return false;
+        }
+
+        scale = Math.Clamp(scale, 0.0, 1.0);
+        anchor = parts[0] switch
+        {
+            "Left" => new TouchDockAnchor.Left(scale),
+            "Top" => new TouchDockAnchor.Top(scale),
+            "Right" => new TouchDockAnchor.Right(scale),
+            "Bottom" => new TouchDockAnchor.Bottom(scale),
+            _ => TouchDockAnchor.Default,
+        };
+
+        return parts[0] is "Left" or "Top" or "Right" or "Bottom";
     }
 
     private bool IsContainerReady() =>

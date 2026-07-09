@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using R3;
 using R3.ObservableEvents;
 using System.Diagnostics;
+using TouchChanX.Persistence;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
 using TouchChanX.Win32.Menu;
@@ -128,9 +129,10 @@ public partial class WinUIApp(nint gameWindowHandle, IDisposable? splash = null)
             .Select(GetGestureMessage)
             .Subscribe(window.ShowMessage);
 
-        if (WinUI.TouchChanXSettings.LoadToggleState("touch-to-mouse"))
+        var settings = new AppSettings();
+        if (settings.TouchToMouse)
             TouchMenuCommandService.SetToggleState("touch-to-mouse", true, gameWindowHandle, hwnd);
-        if (WinUI.TouchChanXSettings.LoadToggleState("gesture"))
+        if (settings.Gesture)
             TouchMenuCommandService.SetToggleState("gesture", true, gameWindowHandle, hwnd);
 
         // TODO: 监视父窗口销毁事件，把窗口设置到新的 gameWindowHandle 上

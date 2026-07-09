@@ -1,5 +1,6 @@
 using R3;
 using R3.ObservableEvents;
+using TouchChanX.Persistence;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
@@ -14,7 +15,7 @@ public sealed partial class HomePage : Page
 
     public HomePage()
     {
-        ViewModel = new(new GameStorageService());
+        ViewModel = new HomePageViewModel(new AppSettings());
 
         InitializeComponent();
         RegisterInteractions();

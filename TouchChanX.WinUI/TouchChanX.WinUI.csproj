@@ -19,4 +19,8 @@
     <PackageReference Include="R3Extensions.WinUI3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TouchChanX.Persistence\TouchChanX.Persistence.csproj" />
+  </ItemGroup>
+
 </Project>

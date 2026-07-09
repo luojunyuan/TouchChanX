@@ -2,6 +2,7 @@ using ObservableCollections;
 using R3;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using TouchChanX.Persistence;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -14,14 +15,14 @@ public sealed class HomePageViewModel
 {
     private static readonly TimeSpan LaunchCooldown = TimeSpan.FromSeconds(3);
 
-    private readonly GameStorageService _storage;
+    private readonly AppSettings _settings;
     private readonly Subject<Unit> _launchRequested = new();
 
     private readonly ObservableList<GameEntry> _games = [];
 
-    public HomePageViewModel(GameStorageService storage)
+    public HomePageViewModel(AppSettings settings)
     {
-        _storage = storage;
+        _settings = settings;
         _games.ObserveChanged()
             .Do(DisposeRemovedGames)
             .Subscribe(_ => EnsureSelection());
@@ -106,7 +107,7 @@ public sealed class HomePageViewModel
         _ = LoadGameIconAsync(game);
 
         if (save)
-            _storage.Save(_games);
+            SaveGames();
     }
 
     private async Task AddGameFromPickerAsync()
@@ -130,7 +131,7 @@ public sealed class HomePageViewModel
 
         game.LastLaunchedTicks = DateTimeOffset.UtcNow.UtcTicks;
         MoveGameToFront(game);
-        _storage.Save(_games);
+        SaveGames();
     }
 
     private async Task RenameSelectedGameAsync()
@@ -143,7 +144,7 @@ public sealed class HomePageViewModel
             return;
 
         game.Name.Value = newName;
-        _storage.Save(_games);
+        SaveGames();
     }
 
     private void RemoveSelectedGame()
@@ -152,7 +153,7 @@ public sealed class HomePageViewModel
             return;
 
         _games.Remove(game);
-        _storage.Save(_games);
+        SaveGames();
     }
 
     private static bool TryResolveGamePath(string path, out string gamePath)
@@ -198,11 +199,14 @@ public sealed class HomePageViewModel
 
     private void LoadGames()
     {
-        foreach (var game in _storage.Load().OrderByDescending(game => game.LastLaunchedTicks))
+        foreach (var game in _settings.Games.ToStoredGames().OrderByDescending(game => game.LastLaunchedTicks))
         {
             AddGame(game.Path, game.Name, game.LastLaunchedTicks, save: false);
         }
     }
+
+    private void SaveGames() =>
+        _settings.Games = _games.ToSerializeString();
 
     private async Task LoadGameIconAsync(GameEntry game)
     {
