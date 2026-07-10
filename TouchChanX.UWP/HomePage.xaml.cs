@@ -13,16 +13,6 @@ public sealed partial class HomePage : Page
 {
     public HomePageViewModel ViewModel { get; }
 
-    public BindableReactiveProperty<Visibility> EmptyStateVisibility => field ??=
-        ViewModel.HasGames
-            .Select(hasGames => hasGames ? Visibility.Collapsed : Visibility.Visible)
-            .ToBindableReactiveProperty(Visibility.Visible);
-
-    public BindableReactiveProperty<Visibility> GamesVisibility => field ??=
-        ViewModel.HasGames
-            .Select(hasGames => hasGames ? Visibility.Visible : Visibility.Collapsed)
-            .ToBindableReactiveProperty(Visibility.Collapsed);
-
     public HomePage()
     {
         ViewModel = new HomePageViewModel(new AppSettings());
@@ -99,12 +89,7 @@ public sealed partial class HomePage : Page
         DropArea.Events().Drop
             .Where(e => e.DataView.Contains(StandardDataFormats.StorageItems))
             .SelectAwait(async (e, _) => await e.DataView.GetStorageItemsAsync())
-            .Subscribe(items =>
-            {
-                foreach (var file in items.OfType<StorageFile>())
-                {
-                    ViewModel.AddGame(file.Path);
-                }
-            });
+            .Select(items => items.OfType<StorageFile>().Select(file => file.Path).ToArray())
+            .Subscribe(paths => ViewModel.Dispatch(new GameCommand.AddRange(paths)));
     }
 }

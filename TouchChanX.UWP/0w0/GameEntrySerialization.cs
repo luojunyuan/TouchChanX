@@ -7,23 +7,16 @@ namespace TouchChanX.UWP;
 public static class GameEntrySerialization
 {
     public static string ToSerializeString(this IEnumerable<GameEntry> games) =>
-        JsonSerializer.Serialize(
-            games.Select(game => new StoredGameEntry
-            {
-                Name = game.Name.Value,
-                Path = game.Path,
-                LastLaunchedTicks = game.LastLaunchedTicks,
-            }).ToArray(),
-            GameEntryJsonContext.Default.StoredGameEntryArray);
+        JsonSerializer.Serialize(games.ToArray(), GameEntryJsonContext.Default.GameEntryArray);
 
-    public static IEnumerable<StoredGameEntry> ToStoredGames(this string value)
+    public static IEnumerable<GameEntry> ToStoredGames(this string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             return [];
 
         try
         {
-            return JsonSerializer.Deserialize(value, GameEntryJsonContext.Default.StoredGameEntryArray)?
+            return JsonSerializer.Deserialize(value, GameEntryJsonContext.Default.GameEntryArray)?
                 .Where(game => !string.IsNullOrWhiteSpace(game.Path)) ?? [];
         }
         catch (JsonException ex)
@@ -35,5 +28,5 @@ public static class GameEntrySerialization
 }
 
 [JsonSourceGenerationOptions(WriteIndented = false)]
-[JsonSerializable(typeof(StoredGameEntry[]))]
+[JsonSerializable(typeof(GameEntry[]))]
 internal sealed partial class GameEntryJsonContext : JsonSerializerContext;

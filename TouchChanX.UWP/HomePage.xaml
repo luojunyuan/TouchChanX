@@ -63,7 +63,7 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Spacing="12"
-                            Visibility="{x:Bind EmptyStateVisibility.Value, Mode=OneWay}">
+                            Visibility="{x:Bind ViewModel.EmptyStateVisibility.Value, Mode=OneWay}">
                             <FontIcon HorizontalAlignment="Center" FontSize="36" Glyph="&#xE7FC;" />
                             <TextBlock HorizontalAlignment="Center" Style="{ThemeResource SubtitleTextBlockStyle}" Text="拖入 .exe 或 .lnk 添加游戏" />
                             <TextBlock
@@ -75,7 +75,7 @@
 
                         <Grid
                             RowSpacing="16"
-                            Visibility="{x:Bind GamesVisibility.Value, Mode=OneWay}">
+                            Visibility="{x:Bind ViewModel.GamesVisibility.Value, Mode=OneWay}">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
@@ -125,7 +125,7 @@
                                     </Style>
                                 </GridView.ItemContainerStyle>
                                 <GridView.ItemTemplate>
-                                    <DataTemplate x:DataType="local:GameEntry">
+                                    <DataTemplate x:DataType="local:GameEntryViewModel">
                                         <Grid
                                             Width="152"
                                             Height="136"
