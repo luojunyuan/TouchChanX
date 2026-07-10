@@ -1,4 +1,5 @@
 using R3;
+using R3.ObservableEvents;
 using TouchChanX.Persistence;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -15,26 +16,13 @@ public sealed class HomePageViewModel
     public HomePageViewModel(AppSettings settings)
     {
         _store = new HomePageGameStore(settings);
-        var gameItems = GameItems!;
-        gameItems.CollectionChanged += (_, _) => EnsureSelection();
-        GameEntryViewModel? selectedVisualGame = null;
-        SelectedGame.Subscribe(game =>
-        {
-            if (ReferenceEquals(selectedVisualGame, game))
-                return;
-
-            selectedVisualGame?.SetSelected(false);
-            selectedVisualGame = game;
-            selectedVisualGame?.SetSelected(true);
-        });
-        EnsureSelection();
     }
 
     public Interaction<Unit, string?> PickGamePathInteraction { get; } = new();
 
     public Interaction<Unit, Unit> ShowLaunchFailedInteraction { get; } = new();
 
-    public Interaction<GameEntryViewModel, string?> RenameGameInteraction { get; } = new();
+    public Interaction<string, string?> RenameGameInteraction { get; } = new();
 
     public ObservableListBindableView<GameEntryViewModel> GameItems => field ??=
         _store.Games.ToBindableView(game => new GameEntryViewModel(game));
@@ -101,42 +89,17 @@ public sealed class HomePageViewModel
         }
 
         _store.Dispatch(new GameCommand.MarkLaunched(game.Path, DateTimeOffset.UtcNow.UtcTicks));
-        SelectGameByPath(game.Path);
     }
 
     private async Task RenameSelectedGameAsync()
     {
         var game = SelectedGame.Value!;
 
-        var newName = (await RenameGameInteraction.Handle(game).FirstAsync())?.Trim();
+        var newName = (await RenameGameInteraction.Handle(game.Name.Value).FirstAsync())?.Trim();
         if (string.IsNullOrWhiteSpace(newName))
             return;
 
         _store.Dispatch(new GameCommand.Rename(game.Path, newName));
-        SelectGameByPath(game.Path);
-    }
-
-    private void EnsureSelection()
-    {
-        if (GameItems.Count == 0)
-        {
-            SelectedGame.Value = null;
-            return;
-        }
-
-        if (SelectedGame.Value is not { } selectedGame ||
-            !GameItems.Contains(selectedGame))
-        {
-            SelectedGame.Value = GameItems[0];
-        }
-    }
-
-    private void SelectGameByPath(string path)
-    {
-        var game = GameItems.FirstOrDefault(game =>
-            string.Equals(game.Path, path, StringComparison.OrdinalIgnoreCase));
-        if (game is not null)
-            SelectedGame.Value = game;
     }
 
     private static async Task<bool> LaunchGameAsync(GameEntryViewModel game)

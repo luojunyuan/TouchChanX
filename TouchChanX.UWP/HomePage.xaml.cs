@@ -48,13 +48,13 @@ public sealed partial class HomePage : Page
 
         ViewModel.RenameGameInteraction.RegisterHandler(async context =>
         {
-            var game = context.Input;
+            var gameName = context.Input;
 
             var nameBox = new TextBox
             {
                 Header = "显示名称",
                 MaxLength = 80,
-                Text = game.Name.Value,
+                Text = gameName,
             };
 
             var result = await new ContentDialog
