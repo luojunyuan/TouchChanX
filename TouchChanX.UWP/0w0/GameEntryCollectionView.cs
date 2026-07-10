@@ -8,20 +8,19 @@ namespace TouchChanX.UWP;
 
 // 自定义 INotifyCollectionChanged 集合跨 UWP ABI 发送 Add/Remove 时，
 // NotifyCollectionChangedEventArgs 会把项目包装成内部 ReadOnlyList，CsWinRT 无法将其投影为 IBindableVector。
-// ObservableCollection 有框架内建投影不会遇到该问题，但这里需要以 Path 维持字典项与 ViewModel 的稳定身份映射，
-// 因此直接实现 IBindableObservableVector：增删发送原生 VectorChanged，同 Path 的 record 替换只更新原 ViewModel。
+// ObservableCollection 有框架内建投影不会遇到该问题，因此这里直接实现 IBindableObservableVector。
+// 视图按 ObservableList 的索引同步；同 Path 的 record 替换只更新原 ViewModel，只有实体真的改变才替换 ViewModel。
 public sealed partial class GameEntryCollectionView : IBindableObservableVector, IDisposable
 {
-    private readonly ObservableDictionary<string, GameEntry> _source;
+    private readonly ObservableList<GameEntry> _source;
     private readonly List<GameEntryViewModel> _items = [];
-    private readonly Dictionary<string, GameEntryViewModel> _views = new(StringComparer.OrdinalIgnoreCase);
 
-    internal GameEntryCollectionView(ObservableDictionary<string, GameEntry> source)
+    internal GameEntryCollectionView(ObservableList<GameEntry> source)
     {
         _source = source;
         foreach (var game in source)
         {
-            AddView(game.Key, game.Value);
+            _items.Add(new GameEntryViewModel(game));
         }
 
         source.CollectionChanged += OnSourceCollectionChanged;
@@ -45,18 +44,21 @@ public sealed partial class GameEntryCollectionView : IBindableObservableVector,
         set => throw new NotSupportedException();
     }
 
-    private void OnSourceCollectionChanged(in NotifyCollectionChangedEventArgs<KeyValuePair<string, GameEntry>> args)
+    private void OnSourceCollectionChanged(in NotifyCollectionChangedEventArgs<GameEntry> args)
     {
         switch (args.Action)
         {
             case NotifyCollectionChangedAction.Add:
-                AddFromSource(args.NewItem.Key, args.NewItem.Value);
+                AddFromSource(args);
                 break;
             case NotifyCollectionChangedAction.Remove:
-                RemoveFromSource(args.OldItem.Key);
+                RemoveFromSource(args);
                 break;
             case NotifyCollectionChangedAction.Replace:
-                _views[args.OldItem.Key].Update(args.NewItem.Value);
+                ReplaceFromSource(args);
+                break;
+            case NotifyCollectionChangedAction.Move:
+                MoveFromSource(args.OldStartingIndex, args.NewStartingIndex);
                 break;
             default:
                 ResetFromSource();
@@ -64,36 +66,75 @@ public sealed partial class GameEntryCollectionView : IBindableObservableVector,
         }
     }
 
-    private void AddFromSource(string path, GameEntry game)
+    private void AddFromSource(in NotifyCollectionChangedEventArgs<GameEntry> args)
     {
-        var index = _items.Count;
-        AddView(path, game);
-        RaiseVectorChanged(CollectionChange.ItemInserted, index);
+        if (args.IsSingleItem)
+        {
+            _items.Insert(args.NewStartingIndex, new GameEntryViewModel(args.NewItem));
+            RaiseVectorChanged(CollectionChange.ItemInserted, args.NewStartingIndex);
+            return;
+        }
+
+        for (var offset = 0; offset < args.NewItems.Length; offset++)
+        {
+            var index = args.NewStartingIndex + offset;
+            _items.Insert(index, new GameEntryViewModel(args.NewItems[offset]));
+            RaiseVectorChanged(CollectionChange.ItemInserted, index);
+        }
     }
 
-    private void AddView(string path, GameEntry game)
+    private void RemoveFromSource(in NotifyCollectionChangedEventArgs<GameEntry> args)
     {
-        var view = new GameEntryViewModel(game);
-        _items.Add(view);
-        _views.Add(path, view);
+        var count = args.IsSingleItem ? 1 : args.OldItems.Length;
+        for (var offset = 0; offset < count; offset++)
+        {
+            _items.RemoveAt(args.OldStartingIndex);
+            RaiseVectorChanged(CollectionChange.ItemRemoved, args.OldStartingIndex);
+        }
     }
 
-    private void RemoveFromSource(string path)
+    private void ReplaceFromSource(in NotifyCollectionChangedEventArgs<GameEntry> args)
     {
-        var item = _views[path];
-        var index = _items.IndexOf(item);
-        _views.Remove(path);
-        _items.RemoveAt(index);
-        RaiseVectorChanged(CollectionChange.ItemRemoved, index);
+        if (!args.IsSingleItem)
+        {
+            ResetFromSource();
+            return;
+        }
+
+        var index = args.NewStartingIndex;
+        if (StringComparer.OrdinalIgnoreCase.Equals(args.OldItem.Path, args.NewItem.Path))
+        {
+            _items[index].Update(args.NewItem);
+            return;
+        }
+
+        _items[index] = new GameEntryViewModel(args.NewItem);
+        RaiseVectorChanged(CollectionChange.ItemChanged, index);
+    }
+
+    private void MoveFromSource(int oldIndex, int newIndex)
+    {
+        var item = _items[oldIndex];
+        _items.RemoveAt(oldIndex);
+        _items.Insert(newIndex, item);
+        RaiseVectorChanged(CollectionChange.Reset, 0);
     }
 
     private void ResetFromSource()
     {
+        var existingViews = _items.ToDictionary(item => item.Path, StringComparer.OrdinalIgnoreCase);
         _items.Clear();
-        _views.Clear();
         foreach (var game in _source)
         {
-            AddView(game.Key, game.Value);
+            if (existingViews.TryGetValue(game.Path, out var view))
+            {
+                view.Update(game);
+                _items.Add(view);
+            }
+            else
+            {
+                _items.Add(new GameEntryViewModel(game));
+            }
         }
 
         RaiseVectorChanged(CollectionChange.Reset, 0);
@@ -134,5 +175,5 @@ internal sealed partial class GameEntryVectorChangedEventArgs(CollectionChange c
 public static class GameEntryCollectionViewExtensions
 {
     public static GameEntryCollectionView ToNotifyCollectionChangedSlimCompact(
-        this ObservableDictionary<string, GameEntry> source) => new(source);
+        this ObservableList<GameEntry> source) => new(source);
 }
