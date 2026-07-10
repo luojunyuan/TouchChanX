@@ -7,7 +7,7 @@ namespace TouchChanX.UWP;
 public sealed class HomePageGameStore
 {
     private readonly AppSettings _settings;
-    private readonly ObservableList<GameEntry> _games = [];
+    private readonly ObservableDictionary<string, GameEntry> _games = new(StringComparer.OrdinalIgnoreCase);
     private bool _isLoadingGames;
     private bool _isDispatching;
     private bool _saveRequested;
@@ -22,7 +22,7 @@ public sealed class HomePageGameStore
         LoadGames();
     }
 
-    public ObservableList<GameEntry> Games => _games;
+    public ObservableDictionary<string, GameEntry> Games => _games;
 
     public Observable<bool> HasGames => field ??=
         _games.ObserveChanged()
@@ -100,13 +100,12 @@ public sealed class HomePageGameStore
 
     private bool TryAddGame(string path, string? name = null, long lastLaunchedTicks = 0)
     {
-        if (!TryResolveGamePath(path, out var gamePath) ||
-            _games.Any(g => string.Equals(g.Path, gamePath, StringComparison.OrdinalIgnoreCase)))
+        if (!TryResolveGamePath(path, out var gamePath) || _games.ContainsKey(gamePath))
         {
             return false;
         }
 
-        _games.Add(new GameEntry
+        _games.Add(gamePath, new GameEntry
         {
             Name = string.IsNullOrWhiteSpace(name) ? Path.GetFileNameWithoutExtension(gamePath) : name,
             Path = gamePath,
@@ -117,27 +116,20 @@ public sealed class HomePageGameStore
 
     private GameEntry? ReplaceGame(string path, string? name = null, long? lastLaunchedTicks = null)
     {
-        var index = IndexOfPath(path);
-        if (index < 0)
+        if (!_games.TryGetValue(path, out var game))
             return null;
 
-        var game = _games[index];
         var replacement = new GameEntry
         {
             Name = name ?? game.Name,
             Path = game.Path,
             LastLaunchedTicks = lastLaunchedTicks ?? game.LastLaunchedTicks,
         };
-        _games[index] = replacement;
+        _games[path] = replacement;
         return replacement;
     }
 
-    private void RemoveGame(string path)
-    {
-        var index = IndexOfPath(path);
-        if (index >= 0)
-            _games.RemoveAt(index);
-    }
+    private void RemoveGame(string path) => _games.Remove(path);
 
     private void LoadGames()
     {
@@ -156,32 +148,11 @@ public sealed class HomePageGameStore
     }
 
     private void SaveGames() =>
-        _settings.Games = _games.ToSerializeString();
-
-    private void MoveGameToFront(string path)
-    {
-        var currentIndex = IndexOfPath(path);
-        if (currentIndex > 0)
-        {
-            _games.Move(currentIndex, 0);
-        }
-    }
+        _settings.Games = _games.Select(game => game.Value).ToSerializeString();
 
     private void MarkGameLaunched(string path, long lastLaunchedTicks)
     {
-        if (ReplaceGame(path, lastLaunchedTicks: lastLaunchedTicks) is not null)
-            MoveGameToFront(path);
-    }
-
-    private int IndexOfPath(string path)
-    {
-        for (var i = 0; i < _games.Count; i++)
-        {
-            if (string.Equals(_games[i].Path, path, StringComparison.OrdinalIgnoreCase))
-                return i;
-        }
-
-        return -1;
+        ReplaceGame(path, lastLaunchedTicks: lastLaunchedTicks);
     }
 
     private void RequestSave()

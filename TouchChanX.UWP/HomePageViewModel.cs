@@ -1,5 +1,4 @@
 using R3;
-using R3.ObservableEvents;
 using TouchChanX.Persistence;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -24,8 +23,8 @@ public sealed class HomePageViewModel
 
     public Interaction<string, string?> RenameGameInteraction { get; } = new();
 
-    public ObservableListBindableView<GameEntryViewModel> GameItems => field ??=
-        _store.Games.ToBindableView(game => new GameEntryViewModel(game));
+    public GameEntryCollectionView GameItems => field ??=
+        _store.Games.ToNotifyCollectionChangedSlimCompact();
 
     public BindableReactiveProperty<GameEntryViewModel?> SelectedGame { get; } = new(null);
 

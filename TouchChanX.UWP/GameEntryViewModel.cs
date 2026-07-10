@@ -12,16 +12,15 @@ public sealed partial class GameEntryViewModel
     public GameEntryViewModel(GameEntry game)
     {
         Path = game.Path;
-        LastLaunchedTicks = game.LastLaunchedTicks;
-        Name.Value = game.Name;
+        Update(game);
         _ = LoadIconAsync();
     }
 
-    public BindableReactiveProperty<string> Name { get; } = new(string.Empty);
-
     public string Path { get; }
 
-    public long LastLaunchedTicks { get; }
+    public BindableReactiveProperty<string> Name { get; } = new(string.Empty);
+
+    public BindableReactiveProperty<long> LastLaunchedTicks { get; } = new(0);
 
     public BindableReactiveProperty<ImageSource?> Icon { get; } = new(null);
 
@@ -36,6 +35,12 @@ public sealed partial class GameEntryViewModel
         .ToBindableReactiveProperty(Visibility.Visible);
 
     public BindableReactiveProperty<Visibility> SelectedVisualVisibility { get; } = new(Visibility.Collapsed);
+
+    internal void Update(GameEntry game)
+    {
+        Name.Value = game.Name;
+        LastLaunchedTicks.Value = game.LastLaunchedTicks;
+    }
 
     public void SetSelected(bool isSelected) => 
         SelectedVisualVisibility.Value = isSelected ? Visibility.Visible : Visibility.Collapsed;
