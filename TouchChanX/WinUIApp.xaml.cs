@@ -85,7 +85,9 @@ public partial class WinUIApp(nint gameWindowHandle, IDisposable? splash = null)
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         // 不使用 UI Context，使用 TimeProvider 让基于时间的运算符正确回调
-        WinUI.MainWindow.InitilizeTimeProvider();
+        ObservableSystem.RegisterUnhandledExceptionHandler(ex => Debug.WriteLine(ex.ToString()));
+        ObservableSystem.DefaultTimeProvider = WinUI3DispatcherTimeProvider.Default;
+
         var window = new WinUI.MainWindow()
         {
             SystemBackdrop = new TransparentBackdrop()

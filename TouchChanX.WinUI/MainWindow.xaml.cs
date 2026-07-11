@@ -11,12 +11,6 @@ namespace TouchChanX.WinUI;
 /// </summary>
 public sealed partial class MainWindow : Window
 {
-    public static void InitilizeTimeProvider()
-    {
-        ObservableSystem.RegisterUnhandledExceptionHandler(ex => Debug.WriteLine(ex.ToString()));
-        ObservableSystem.DefaultTimeProvider = WinUI3DispatcherTimeProvider.Default;
-    }
-
     public MainWindow()
     {
         InitializeComponent();

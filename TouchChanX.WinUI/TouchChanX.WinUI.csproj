@@ -16,7 +16,6 @@
     <PackageReference Include="Microsoft.Web.WebView2" ExcludeAssets="All" />
     <PackageReference Include="R3" />
     <PackageReference Include="R3Extensions.ObservableEvents.SourceGenerator" />
-    <PackageReference Include="R3Extensions.WinUI3" />
   </ItemGroup>
 
   <ItemGroup>
