@@ -6,17 +6,9 @@ using Windows.UI.Xaml;
 
 namespace TouchChanX.UWP;
 
-public sealed class HomePageViewModel
+public sealed class HomePageViewModel(AppSettings settings)
 {
-    private static readonly TimeSpan LaunchCooldown = TimeSpan.FromSeconds(3);
-
-    private readonly HomePageGameStore _store;
-    private readonly Subject<Unit> _launchRequested = new();
-
-    public HomePageViewModel(AppSettings settings)
-    {
-        _store = new HomePageGameStore(settings);
-    }
+    private readonly HomePageGameStore _store = new(settings);
 
     public Interaction<Unit, string?> PickGamePathInteraction { get; } = new();
 
@@ -44,66 +36,61 @@ public sealed class HomePageViewModel
             .Switch()
             .ToBindableReactiveProperty(string.Empty);
 
-    public ReactiveCommand AddGameCommand => field ??= new(async (_, _) => await AddGameFromPickerAsync());
+    public ReactiveCommand<string[]> AddBunchGamesCommand => field ??= 
+        new(paths => _store.Dispatch(new GameCommand.AddRange(paths)));
 
-    private Observable<bool> CanLaunchSelectedGame => Observable.CombineLatest(
-        _store.HasGames,
-        _launchRequested
-            .SelectMany(_ => Observable.Concat(
-                Observable.Return(false),
-                Observable.Timer(LaunchCooldown).Select(_ => true)))
-            .Prepend(true),
-        (hasGame, isReady) => hasGame && isReady);
+    public ReactiveCommand AddGameCommand => field ??= new(
+        async (_, _) =>
+        {
+            var path = await PickGamePathInteraction
+                .Handle(Unit.Default)
+                .FirstAsync(CancellationToken.None);
+
+            if (path is not null)
+                _store.Dispatch(new GameCommand.Add(path));
+        },
+        awaitOperation: AwaitOperation.Drop);
 
     public ReactiveCommand<Unit> LaunchSelectedGameCommand => field ??=
-        CanLaunchSelectedGame.ToReactiveCommand<Unit>(
-            async (_, _) => await LaunchSelectedGameAsync(),
+        _store.HasGames.ToReactiveCommand<Unit>(
+            async (_, _) =>
+            {
+                await LaunchSelectedGameAsync();
+                await Task.Delay(TimeSpan.FromMilliseconds(3000), CancellationToken.None);
+            },
             initialCanExecute: false,
             awaitOperation: AwaitOperation.Drop);
 
     public ReactiveCommand RenameSelectedGameCommand => field ??=
-        new(async (_, _) => await RenameSelectedGameAsync(), awaitOperation: AwaitOperation.Drop);
+        new(async (_, _) => 
+        {
+            var game = SelectedGame.Value!;
+
+            var newName = await RenameGameInteraction
+                .Handle(game.Name.Value)
+                .FirstAsync(CancellationToken.None);
+
+            if (string.IsNullOrWhiteSpace(newName))
+                return;
+
+            _store.Dispatch(new GameCommand.Rename(game.Path, newName.Trim()));
+        }, awaitOperation: AwaitOperation.Drop);
 
     public ReactiveCommand RemoveSelectedGameCommand => field ??= new(_ =>
         _store.Dispatch(new GameCommand.Remove(SelectedGame.Value!.Path)));
-
-    public void Dispatch(GameCommand command) => _store.Dispatch(command);
-
-    private async Task AddGameFromPickerAsync()
-    {
-        var path = await PickGamePathInteraction.Handle(Unit.Default).FirstAsync();
-        if (path is not null)
-            _store.Dispatch(new GameCommand.Add(path));
-    }
 
     private async Task LaunchSelectedGameAsync()
     {
         var game = SelectedGame.Value!;
 
-        _launchRequested.OnNext(Unit.Default);
-        if (!await LaunchGameAsync(game))
+        var uri = new Uri($"touchchanx://launch/?path={Uri.EscapeDataString(game.Path)}");
+
+        if (!await Launcher.LaunchUriAsync(uri))
         {
             await ShowLaunchFailedInteraction.Handle(Unit.Default).FirstAsync();
             return;
         }
 
         _store.Dispatch(new GameCommand.MarkLaunched(game.Path, DateTimeOffset.UtcNow.UtcTicks));
-    }
-
-    private async Task RenameSelectedGameAsync()
-    {
-        var game = SelectedGame.Value!;
-
-        var newName = (await RenameGameInteraction.Handle(game.Name.Value).FirstAsync())?.Trim();
-        if (string.IsNullOrWhiteSpace(newName))
-            return;
-
-        _store.Dispatch(new GameCommand.Rename(game.Path, newName));
-    }
-
-    private static async Task<bool> LaunchGameAsync(GameEntryViewModel game)
-    {
-        var uri = new Uri($"touchchanx://launch/?path={Uri.EscapeDataString(game.Path)}");
-        return await Launcher.LaunchUriAsync(uri);
     }
 }

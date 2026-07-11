@@ -1,5 +1,6 @@
 using R3;
 using R3.ObservableEvents;
+using System.Windows.Input;
 using TouchChanX.Persistence;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -89,7 +90,7 @@ public sealed partial class HomePage : Page
             .Where(e => e.DataView.Contains(StandardDataFormats.StorageItems))
             .SelectAwait(async (e, _) => await e.DataView.GetStorageItemsAsync())
             .Select(items => items.OfType<StorageFile>().Select(file => file.Path).ToArray())
-            .Subscribe(paths => ViewModel.Dispatch(new GameCommand.AddRange(paths)));
+            .InvokeCommand(ViewModel.AddBunchGamesCommand);
 
         // 首次 SelectedIndex = 0 必须在 Loaded 之后才生效
         this.Events().Loaded
@@ -98,4 +99,12 @@ public sealed partial class HomePage : Page
             .Where(_ => GameList.Items.Count > 0 && GameList.SelectedIndex == -1)
             .Subscribe(_ => GameList.SelectedIndex = 0);
     }
+}
+
+public static class R3CommandExtensions
+{
+    public static IDisposable InvokeCommand<T>(this Observable<T> source, ICommand command) => 
+        source
+            .Where(command, static (v, cmd) => cmd.CanExecute(v))
+            .Subscribe(command, static (v, cmd) => cmd.Execute(v));
 }
