@@ -106,11 +106,3 @@ public sealed partial class HomePage : Page
             .InvokeCommand(ViewModel.SelectionChangedCommand);
     }
 }
-
-public static class R3CommandExtensions
-{
-    public static IDisposable InvokeCommand<T>(this Observable<T> source, ICommand command) => 
-        source
-            .Where(command, static (v, cmd) => cmd.CanExecute(v))
-            .Subscribe(command, static (v, cmd) => cmd.Execute(v));
-}

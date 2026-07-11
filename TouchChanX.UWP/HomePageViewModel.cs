@@ -52,11 +52,12 @@ public sealed class HomePageViewModel(AppSettings settings)
         awaitOperation: AwaitOperation.Drop);
 
     public ReactiveCommand<GameEntryViewModel> LaunchSelectedGameCommand => field ??=
-        new(async (game, _) =>
-        {
-            await LaunchSelectedGameAsync(game);
-            await Task.Delay(TimeSpan.FromMilliseconds(3000), CancellationToken.None);
-        }, awaitOperation: AwaitOperation.Drop);
+        ReactiveCommandFactory.CreateStatusReactiveCommand<GameEntryViewModel>(
+            async (game, _) =>
+            {
+                await LaunchSelectedGameAsync(game);
+                await Task.Delay(TimeSpan.FromSeconds(3), CancellationToken.None);
+            });
 
     public ReactiveCommand<GameEntryViewModel> RenameSelectedGameCommand => field ??=
         new(async (game, _) => 
