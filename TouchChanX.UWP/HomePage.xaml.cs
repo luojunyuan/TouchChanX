@@ -98,6 +98,12 @@ public sealed partial class HomePage : Page
             .Merge(GameList.Items.Events().VectorChanged.AsUnitObservable())
             .Where(_ => GameList.Items.Count > 0 && GameList.SelectedIndex == -1)
             .Subscribe(_ => GameList.SelectedIndex = 0);
+
+        GameList.Events().SelectionChanged
+            .Select(e => (
+                OldGame: e.RemovedItems.OfType<GameEntryViewModel>().FirstOrDefault(),
+                NewGame: e.AddedItems.OfType<GameEntryViewModel>().FirstOrDefault()))
+            .InvokeCommand(ViewModel.SelectionChangedCommand);
     }
 }
 

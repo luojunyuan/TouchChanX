@@ -74,6 +74,14 @@ public sealed class HomePageViewModel(AppSettings settings)
     public ReactiveCommand<GameEntryViewModel> RemoveSelectedGameCommand => field ??= new(game =>
         _store.Dispatch(new GameCommand.Remove(game.Path)));
 
+    public ReactiveCommand<(GameEntryViewModel? OldGame, GameEntryViewModel? NewGame)> 
+        SelectionChangedCommand => field ??=
+        new(pair =>
+        {
+            pair.OldGame?.SetSelected(false);
+            pair.NewGame?.SetSelected(true);
+        });
+
     private async Task LaunchSelectedGameAsync(GameEntryViewModel game)
     {
         var uri = new Uri($"touchchanx://launch/?path={Uri.EscapeDataString(game.Path)}");
