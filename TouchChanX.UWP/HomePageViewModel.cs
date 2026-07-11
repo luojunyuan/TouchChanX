@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using R3;
 using TouchChanX.Persistence;
 using Windows.System;
@@ -23,8 +24,7 @@ public sealed class HomePageViewModel
 
     public Interaction<string, string?> RenameGameInteraction { get; } = new();
 
-    public GameEntryCollectionView GameItems => field ??=
-        _store.Games.ToNotifyCollectionChangedSlimCompact();
+    public ObservableCollection<GameEntryViewModel> GameItems => _store.Games;
 
     public BindableReactiveProperty<GameEntryViewModel?> SelectedGame { get; } = new(null);
 

@@ -7,7 +7,7 @@ namespace TouchChanX.UWP;
 public static class GameEntrySerialization
 {
     public static string ToSerializeString(this IEnumerable<GameEntry> games) =>
-        JsonSerializer.Serialize(games.ToArray(), GameEntryJsonContext.Default.GameEntryArray);
+        JsonSerializer.Serialize([.. games], GameEntryJsonContext.Default.GameEntryArray);
 
     public static IEnumerable<GameEntry> ToStoredGames(this string value)
     {

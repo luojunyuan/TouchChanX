@@ -12,7 +12,8 @@ public sealed partial class GameEntryViewModel
     public GameEntryViewModel(GameEntry game)
     {
         Path = game.Path;
-        Update(game);
+        Name.Value = game.Name;
+        LastLaunchedTicks.Value = game.LastLaunchedTicks;
         _ = LoadIconAsync();
     }
 
@@ -36,13 +37,7 @@ public sealed partial class GameEntryViewModel
 
     public BindableReactiveProperty<Visibility> SelectedVisualVisibility { get; } = new(Visibility.Collapsed);
 
-    internal void Update(GameEntry game)
-    {
-        Name.Value = game.Name;
-        LastLaunchedTicks.Value = game.LastLaunchedTicks;
-    }
-
-    public void SetSelected(bool isSelected) => 
+    public void SetSelected(bool isSelected) =>
         SelectedVisualVisibility.Value = isSelected ? Visibility.Visible : Visibility.Collapsed;
 
     private async Task LoadIconAsync()

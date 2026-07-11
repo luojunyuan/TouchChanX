@@ -1,4 +1,4 @@
-using ObservableCollections;
+using System.Collections.ObjectModel;
 using R3;
 using TouchChanX.Persistence;
 
@@ -7,65 +7,41 @@ namespace TouchChanX.UWP;
 public sealed class HomePageGameStore
 {
     private readonly AppSettings _settings;
-    private readonly ObservableList<GameEntry> _games = [];
-    private bool _isLoadingGames;
-    private bool _isDispatching;
-    private bool _saveRequested;
+    private readonly ObservableCollection<GameEntryViewModel> _games = [];
+    private readonly ReactiveProperty<bool> _hasGames = new(false);
 
     public HomePageGameStore(AppSettings settings)
     {
         _settings = settings;
-        _games.ObserveChanged()
-            .Do(_ => RequestSave())
-            .Subscribe();
-
         LoadGames();
     }
 
-    public ObservableList<GameEntry> Games => _games;
+    // ponytail: UWP needs the concrete ObservableCollection for its native ABI projection;
+    // add a custom IBindableObservableVector only if runtime mutation enforcement becomes necessary.
+    public ObservableCollection<GameEntryViewModel> Games => _games;
 
-    public Observable<bool> HasGames => field ??=
-        _games.ObserveChanged()
-            .Select(_ => _games.Count > 0)
-            .Prepend(_games.Count > 0);
+    public Observable<bool> HasGames => _hasGames;
 
     public void Dispatch(GameCommand command)
     {
-        _isDispatching = true;
-        try
-        {
-            Apply(command);
-        }
-        finally
-        {
-            _isDispatching = false;
-            SaveIfRequested();
-        }
+        if (!Apply(command))
+            return;
+
+        SaveGames();
+        _hasGames.Value = _games.Count > 0;
     }
 
-    private void Apply(GameCommand command)
+    private bool Apply(GameCommand command)
     {
-        switch (command)
+        return command switch
         {
-            case GameCommand.Add(var path):
-                TryAddGame(path);
-                break;
-            case GameCommand.AddRange(var paths):
-                foreach (var path in paths)
-                {
-                    TryAddGame(path);
-                }
-                break;
-            case GameCommand.Rename(var path, var name):
-                ReplaceGame(path, name: name);
-                break;
-            case GameCommand.Remove(var path):
-                RemoveGame(path);
-                break;
-            case GameCommand.MarkLaunched(var path, var lastLaunchedTicks):
-                MarkGameLaunched(path, lastLaunchedTicks);
-                break;
-        }
+            GameCommand.Add(var path) => TryAddGame(path),
+            GameCommand.AddRange(var paths) => TryAddGames(paths),
+            GameCommand.Rename(var path, var name) => RenameGame(path, name),
+            GameCommand.Remove(var path) => RemoveGame(path),
+            GameCommand.MarkLaunched(var path, var ticks) => MarkGameLaunched(path, ticks),
+            _ => false,
+        };
     }
 
     private static bool TryResolveGamePath(string path, out string gamePath)
@@ -105,69 +81,75 @@ public sealed class HomePageGameStore
             return false;
         }
 
-        _games.Add(new GameEntry
+        _games.Add(new GameEntryViewModel(new GameEntry
         {
             Name = string.IsNullOrWhiteSpace(name) ? Path.GetFileNameWithoutExtension(gamePath) : name,
             Path = gamePath,
             LastLaunchedTicks = lastLaunchedTicks,
-        });
+        }));
         return true;
     }
 
-    private GameEntry? ReplaceGame(string path, string? name = null, long? lastLaunchedTicks = null)
+    private bool TryAddGames(IReadOnlyList<string> paths)
+    {
+        var changed = false;
+        foreach (var path in paths)
+        {
+            changed |= TryAddGame(path);
+        }
+
+        return changed;
+    }
+
+    private bool RenameGame(string path, string name)
+    {
+        var index = IndexOfPath(path);
+        if (index < 0 || _games[index].Name.Value == name)
+            return false;
+
+        _games[index].Name.Value = name;
+        return true;
+    }
+
+    private bool RemoveGame(string path)
     {
         var index = IndexOfPath(path);
         if (index < 0)
-            return null;
+            return false;
 
-        var game = _games[index];
-        var replacement = new GameEntry
-        {
-            Name = name ?? game.Name,
-            Path = game.Path,
-            LastLaunchedTicks = lastLaunchedTicks ?? game.LastLaunchedTicks,
-        };
-        _games[index] = replacement;
-        return replacement;
-    }
-
-    private void RemoveGame(string path)
-    {
-        var index = IndexOfPath(path);
-        if (index >= 0)
-            _games.RemoveAt(index);
+        _games.RemoveAt(index);
+        return true;
     }
 
     private void LoadGames()
     {
-        _isLoadingGames = true;
-        try
+        foreach (var game in _settings.Games.ToStoredGames().OrderByDescending(game => game.LastLaunchedTicks))
         {
-            foreach (var game in _settings.Games.ToStoredGames().OrderByDescending(game => game.LastLaunchedTicks))
-            {
-                TryAddGame(game.Path, game.Name, game.LastLaunchedTicks);
-            }
+            TryAddGame(game.Path, game.Name, game.LastLaunchedTicks);
         }
-        finally
-        {
-            _isLoadingGames = false;
-        }
+
+        _hasGames.Value = _games.Count > 0;
     }
 
     private void SaveGames() =>
-        _settings.Games = _games.ToSerializeString();
+        _settings.Games = _games.Select(game => new GameEntry
+        {
+            Name = game.Name.Value,
+            Path = game.Path,
+            LastLaunchedTicks = game.LastLaunchedTicks.Value,
+        }).ToSerializeString();
 
-    private void MoveGameToFront(string path)
+    private bool MarkGameLaunched(string path, long lastLaunchedTicks)
     {
-        var currentIndex = IndexOfPath(path);
-        if (currentIndex > 0)
-            _games.Move(currentIndex, 0);
-    }
+        var index = IndexOfPath(path);
+        if (index < 0)
+            return false;
 
-    private void MarkGameLaunched(string path, long lastLaunchedTicks)
-    {
-        if (ReplaceGame(path, lastLaunchedTicks: lastLaunchedTicks) is not null)
-            MoveGameToFront(path);
+        _games[index].LastLaunchedTicks.Value = lastLaunchedTicks;
+        if (index > 0)
+            _games.Move(index, 0);
+
+        return true;
     }
 
     private int IndexOfPath(string path)
@@ -179,29 +161,6 @@ public sealed class HomePageGameStore
         }
 
         return -1;
-    }
-
-    private void RequestSave()
-    {
-        if (_isLoadingGames)
-            return;
-
-        if (_isDispatching)
-        {
-            _saveRequested = true;
-            return;
-        }
-
-        SaveGames();
-    }
-
-    private void SaveIfRequested()
-    {
-        if (!_saveRequested)
-            return;
-
-        _saveRequested = false;
-        SaveGames();
     }
 }
 
