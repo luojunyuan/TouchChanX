@@ -83,37 +83,41 @@ public static partial class GameStartup
     /// <summary>
     /// 获取或启动游戏进程
     /// </summary>
-    public static async Task<Result<Process>> GetOrLaunchGameAsync(string path)
+    public static async Task<Result<Process>> GetOrLaunchGameAsync(GameLaunchOptions options)
     {
-        var process = await GetWindowProcessByPathAsync(path);
+        var launcher = !string.IsNullOrWhiteSpace(options.LauncherPath) && File.Exists(options.LauncherPath)
+            ? options.LauncherPath
+            : null;
+        var process = await GetWindowProcessByPathAsync(options.GamePath);
         if (process is not null)
         {
             Interop.OsPlatformApi.RestoreWindowQwQ(process.MainWindowHandle);
             return process;
         }
 
-        return await LaunchGameQwQ(path);
+        var launcherArguments = options.LauncherArguments?.Replace(
+            "{GamePath}",
+            $"\"{options.GamePath}\"",
+            StringComparison.Ordinal);
+
+        return await LaunchGameQwQ(options.GamePath, launcher, launcherArguments);
     }
 
     /// <summary>
     /// 启动游戏进程
     /// </summary>
-    private static async Task<Result<Process>> LaunchGameQwQ(string path)
+    private static async Task<Result<Process>> LaunchGameQwQ(string path, string? launcher = null, string? launcherArgs = null)
     {
         // NOTE: NUKITASHI2(steam) 会先启动一个进程闪现黑屏窗口，然后再重新启动游戏进程
-
-        // TODO: 通过 LE 启动，思考检查游戏id好的方法，处理超时和错误情况
-        // 考虑 LE 通过注册表查找还是通过配置文件，还是通过指定路径来启动
-        // 考虑侵入式的设计对 Locale Emulator 的支持
-        // Environment.GetCommandLineArgs().Contains("-le")
 
         // NOTE: 设置 WorkingDirectory 在游戏路径，避免部分游戏无法索引自身资源导致异常
         var startInfo = new ProcessStartInfo
         {
-            FileName = path,
-            WorkingDirectory = Path.GetDirectoryName(path),
+            FileName = launcher ?? path,
+            WorkingDirectory = Path.GetDirectoryName(launcher ?? path),
             EnvironmentVariables = { ["__COMPAT_LAYER"] = "HighDpiAware" }
         };
+        if (!string.IsNullOrWhiteSpace(launcherArgs)) startInfo.Arguments = launcherArgs;
         // QwQ: 耗时方法
         _ = Process.Start(startInfo);
 

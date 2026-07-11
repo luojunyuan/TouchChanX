@@ -1,6 +1,7 @@
 using TouchChanX.SplashScreenGdiPlus;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
+using TouchChanX.Persistence;
 
 if (args.Length == 0)
 {
@@ -21,7 +22,16 @@ await using var fileStream = TouchChanX.AssetLoader.AppSplashIcon;
 var splash = SplashScreen.Create(fileStream);
 splash.Show();
 
-var processResult = GameStartup.GetOrLaunchGameAsync(gamePath).GetAwaiter().GetResult();
+var settings = new AppSettings();
+var launcherPath = settings.ExternalLauncherEnabled ? settings.ExternalLauncherPath : null;
+var launcherArgs = launcherPath is null ? null : settings.ExternalLauncherArgs;
+var processResult = GameStartup.GetOrLaunchGameAsync(new GameLaunchOptions
+    {
+        GamePath = gamePath,
+        LauncherPath = launcherPath,
+        LauncherArguments = launcherArgs,
+    })
+    .GetAwaiter().GetResult();
 if (processResult.IsFailure(out var processError, out var process))
 {
     splash.Dispose();

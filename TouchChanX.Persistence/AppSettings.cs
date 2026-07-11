@@ -8,6 +8,9 @@ public sealed class AppSettings
 {
     private const string GamesKey = "Games";
     private const string TouchDockAnchorKey = "TouchDockAnchor";
+    private const string ExternalLauncherEnabledKey = "ExternalLauncherEnabled";
+    private const string ExternalLauncherPathKey = "ExternalLauncherPath";
+    private const string ExternalLauncherArgsKey = "ExternalLauncherArgs";
     private const string TogglePrefix = "Toggle.";
     private static ApplicationDataContainer? CachedLocalSettings;
     private static bool LocalSettingsResolved;
@@ -24,6 +27,24 @@ public sealed class AppSettings
     {
         get => ReadString(TouchDockAnchorKey) ?? string.Empty;
         set => WriteString(TouchDockAnchorKey, value);
+    }
+
+    public bool ExternalLauncherEnabled
+    {
+        get => ReadBool(ExternalLauncherEnabledKey);
+        set => WriteBool(ExternalLauncherEnabledKey, value);
+    }
+
+    public string ExternalLauncherPath
+    {
+        get => ReadString(ExternalLauncherPathKey) ?? string.Empty;
+        set => WriteString(ExternalLauncherPathKey, value);
+    }
+
+    public string ExternalLauncherArgs
+    {
+        get => ReadString(ExternalLauncherArgsKey) ?? string.Empty;
+        set => WriteString(ExternalLauncherArgsKey, value);
     }
 
     public bool Stretch

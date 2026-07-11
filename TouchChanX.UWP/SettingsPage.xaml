@@ -12,6 +12,29 @@
         <Grid Margin="32 24 32 32">
             <StackPanel Spacing="16">
                 <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="设置" />
+                <ct:SettingsExpander Header="使用其他程序启动游戏" Description="使用指定的 exe 启动游戏，默认使用 TouchChanX 主程序启动" IsExpanded="{x:Bind ExternalLauncherEnabled.Value, Mode=OneWay}">
+                    <ct:SettingsExpander.HeaderIcon><FontIcon Glyph="&#xE756;" /></ct:SettingsExpander.HeaderIcon>
+                    <ToggleSwitch IsOn="{x:Bind ExternalLauncherEnabled.Value, Mode=TwoWay}" OffContent="关闭" OnContent="开启" />
+                    <ct:SettingsExpander.Items>
+                        <ct:SettingsCard>
+                            <ct:SettingsCard.Header>
+                                <TextBox IsReadOnly="True" MinWidth="300" PlaceholderText="请选择启动程序" Text="{x:Bind ExternalLauncherPath.Value, Mode=OneWay}" />
+                            </ct:SettingsCard.Header>
+                            <Button Click="BrowseExternalLauncher_Click" Content="浏览…" />
+                        </ct:SettingsCard>
+                        <ct:SettingsCard Description="必须包含 {GamePath}">
+                            <ct:SettingsCard.Header>
+                                <TextBox LostFocus="ExternalLauncherArgs_LostFocus" MinWidth="300" Text="{x:Bind ExternalLauncherArgs.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </ct:SettingsCard.Header>
+                            <Button Content="添加游戏" />
+                        </ct:SettingsCard>
+                        <ct:SettingsCard>
+                            <ct:SettingsCard.Header>
+                                <TextBlock Text="{x:Bind LaunchCommandPreview.Value, Mode=OneWay}" TextWrapping="Wrap" />
+                            </ct:SettingsCard.Header>
+                        </ct:SettingsCard>
+                    </ct:SettingsExpander.Items>
+                </ct:SettingsExpander>
                 <ct:SettingsCard Description="仅占位 UI，暂未连接 ShellMenuHandler 业务逻辑。" Header="在上下文菜单中显示 TouchChanX">
                     <ct:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xE8A5;" />
