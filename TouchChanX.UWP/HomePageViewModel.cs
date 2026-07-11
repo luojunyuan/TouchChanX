@@ -51,21 +51,16 @@ public sealed class HomePageViewModel(AppSettings settings)
         },
         awaitOperation: AwaitOperation.Drop);
 
-    public ReactiveCommand<Unit> LaunchSelectedGameCommand => field ??=
-        _store.HasGames.ToReactiveCommand<Unit>(
-            async (_, _) =>
-            {
-                await LaunchSelectedGameAsync();
-                await Task.Delay(TimeSpan.FromMilliseconds(3000), CancellationToken.None);
-            },
-            initialCanExecute: false,
-            awaitOperation: AwaitOperation.Drop);
-
-    public ReactiveCommand RenameSelectedGameCommand => field ??=
-        new(async (_, _) => 
+    public ReactiveCommand<GameEntryViewModel> LaunchSelectedGameCommand => field ??=
+        new(async (game, _) =>
         {
-            var game = SelectedGame.Value!;
+            await LaunchSelectedGameAsync(game);
+            await Task.Delay(TimeSpan.FromMilliseconds(3000), CancellationToken.None);
+        }, awaitOperation: AwaitOperation.Drop);
 
+    public ReactiveCommand<GameEntryViewModel> RenameSelectedGameCommand => field ??=
+        new(async (game, _) => 
+        {
             var newName = await RenameGameInteraction
                 .Handle(game.Name.Value)
                 .FirstAsync(CancellationToken.None);
@@ -76,13 +71,11 @@ public sealed class HomePageViewModel(AppSettings settings)
             _store.Dispatch(new GameCommand.Rename(game.Path, newName.Trim()));
         }, awaitOperation: AwaitOperation.Drop);
 
-    public ReactiveCommand RemoveSelectedGameCommand => field ??= new(_ =>
-        _store.Dispatch(new GameCommand.Remove(SelectedGame.Value!.Path)));
+    public ReactiveCommand<GameEntryViewModel> RemoveSelectedGameCommand => field ??= new(game =>
+        _store.Dispatch(new GameCommand.Remove(game.Path)));
 
-    private async Task LaunchSelectedGameAsync()
+    private async Task LaunchSelectedGameAsync(GameEntryViewModel game)
     {
-        var game = SelectedGame.Value!;
-
         var uri = new Uri($"touchchanx://launch/?path={Uri.EscapeDataString(game.Path)}");
 
         if (!await Launcher.LaunchUriAsync(uri))

@@ -90,9 +90,15 @@
                                         Text="{x:Bind ViewModel.SelectedGameName.Value, Mode=OneWay}"
                                         TextTrimming="CharacterEllipsis" />
                                 </CommandBar.Content>
-                                <AppBarButton Command="{x:Bind ViewModel.LaunchSelectedGameCommand}" Icon="Play" Label="启动" />
-                                <AppBarButton Command="{x:Bind ViewModel.RenameSelectedGameCommand}" Icon="Edit" Label="重命名" />
-                                <AppBarButton Command="{x:Bind ViewModel.RemoveSelectedGameCommand}" Icon="Delete" Label="移除" />
+                                <AppBarButton Icon="Play" Label="启动" 
+                                    Command="{x:Bind ViewModel.LaunchSelectedGameCommand}"
+                                    CommandParameter="{x:Bind ViewModel.SelectedGame.Value, Mode=OneWay}" />
+                                <AppBarButton Icon="Edit" Label="重命名"
+                                    Command="{x:Bind ViewModel.RenameSelectedGameCommand}"
+                                    CommandParameter="{x:Bind ViewModel.SelectedGame.Value, Mode=OneWay}" />
+                                <AppBarButton Icon="Delete" Label="移除" 
+                                    Command="{x:Bind ViewModel.RemoveSelectedGameCommand}"
+                                    CommandParameter="{x:Bind ViewModel.SelectedGame.Value, Mode=OneWay}" />
                             </CommandBar>
 
                             <GridView x:Name="GameList"
