@@ -1,4 +1,6 @@
 using Microsoft.UI.Xaml;
+using Microsoft.Windows.AppNotifications;
+using Microsoft.Windows.AppNotifications.Builder;
 using R3;
 using R3.ObservableEvents;
 using System.Diagnostics;
@@ -15,6 +17,19 @@ namespace TouchChanX;
 
 public static class WinUIApplication
 {
+    public static void ShowUnknownGameDpiNotification()
+    {
+        var toast = new AppNotificationBuilder()
+            .AddText("触控酱无法确定当前游戏的 DPI 缩放")
+            .AddText("请考虑从触控酱重新启动游戏")
+            .BuildNotification();
+
+        // not work
+        toast.Expiration = DateTimeOffset.Now.AddSeconds(10);
+
+        AppNotificationManager.Default.Show(toast);
+    }
+
     private static bool PrepareMsixDependency()
     {
         try

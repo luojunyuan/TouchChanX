@@ -56,5 +56,8 @@ if (GameStartup.HasAttachedCurrentTouchChanX(gameWindowHandle))
     return;
 }
 
+if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000) && OsPlatformApi.IsDpiUnaware(process))
+    TouchChanX.WinUIApplication.ShowUnknownGameDpiNotification();
+
 // NOTE: splash 由 WinUIApp.OnLaunched 在 window.Activate() 之后释放
 TouchChanX.WinUIApplication.RunWithGameWindow(gameWindowHandle, splash);

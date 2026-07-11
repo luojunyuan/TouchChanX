@@ -1,4 +1,4 @@
-﻿using System.Runtime.Versioning;
+using System.Runtime.Versioning;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -43,7 +43,7 @@ public static partial class OsPlatformApi
     {
         var result = PInvoke.GetProcessDpiAwareness(process.SafeHandle, out var awareType);
 
-        return result == 0 && (awareType == 0 || awareType == PROCESS_DPI_AWARENESS.PROCESS_SYSTEM_DPI_AWARE);
+        return result == 0 && awareType is PROCESS_DPI_AWARENESS.PROCESS_DPI_UNAWARE;
     }
 
     /// <summary>
