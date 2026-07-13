@@ -1,9 +1,12 @@
 using R3;
+using R3.ObservableEvents;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using Windows.ApplicationModel.Core;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Services.Store;
 using Windows.System;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using WinRT;
 using WinRT.Interop;
@@ -32,6 +35,21 @@ public sealed partial class AboutPage : Page
     public AboutPage()
     {
         InitializeComponent();
+
+        CopyQqGroupButton.Events().Click.SubscribeAwait(
+            async (_, cancellationToken) =>
+            {
+                var dataPackage = new DataPackage();
+                dataPackage.SetText(QqGroupNumberText.Text);
+                Clipboard.SetContent(dataPackage);
+
+                CopyQqGroupContent.Visibility = Visibility.Collapsed;
+                QqGroupCopiedContent.Visibility = Visibility.Visible;
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+                CopyQqGroupContent.Visibility = Visibility.Visible;
+                QqGroupCopiedContent.Visibility = Visibility.Collapsed;
+            },
+            AwaitOperation.Drop);
     }
 
     private StoreContext StoreContext => field ??= new Func<StoreContext>(() =>

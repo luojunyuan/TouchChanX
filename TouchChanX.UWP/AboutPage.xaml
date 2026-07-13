@@ -14,6 +14,7 @@
                     <Image Width="64" Height="64" Source="ms-appx:///Images/StoreLogo.png" />
                     <StackPanel VerticalAlignment="Center" Spacing="2">
                         <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="TouchChanX" />
+                        <TextBlock Text="Build dev 2026.7" />
                         <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="轻触游戏窗口的 Touch 菜单。" />
                     </StackPanel>
                 </StackPanel>
@@ -44,10 +45,34 @@
                     </ct:SettingsCard.ActionIcon>
                 </ct:SettingsCard>
 
-                <ct:SettingsCard Description="QQ群链接待补充。" Header="QQ 交流群" IsEnabled="False">
+                <ct:SettingsCard Header="QQ 交流群">
+                    <ct:SettingsCard.Description>
+                        <StackPanel Spacing="2">
+                            <TextBlock x:Name="QqGroupNumberText" Text="942698378" />
+                            <TextBlock
+                                Text="第一时间向开发者吐槽问题、分享想法，围观讨论新功能。"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </ct:SettingsCard.Description>
                     <ct:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xE8F2;" />
                     </ct:SettingsCard.HeaderIcon>
+                    <Button x:Name="CopyQqGroupButton">
+                        <Grid>
+                            <StackPanel x:Name="CopyQqGroupContent" Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE8C8;" />
+                                <TextBlock Text="复制" />
+                            </StackPanel>
+                            <StackPanel
+                                x:Name="QqGroupCopiedContent"
+                                Orientation="Horizontal"
+                                Spacing="6"
+                                Visibility="Collapsed">
+                                <FontIcon Glyph="&#xE8FB;" />
+                                <TextBlock Text="完成" />
+                            </StackPanel>
+                        </Grid>
+                    </Button>
                 </ct:SettingsCard>
 
                 <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="TouchChanX 是开源项目，遵循仓库中的开源许可。" TextWrapping="Wrap" />
