@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using LightResults;
 using Microsoft.Win32.SafeHandles;
 using Windows.Win32;
@@ -78,6 +79,35 @@ public static partial class GameStartup
         }
 
         return null;
+    }
+
+    public static Result TestExternalLauncher(
+        string gamePath,
+        string launcherPath,
+        string launcherArguments)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = launcherPath,
+            WorkingDirectory = Path.GetDirectoryName(launcherPath),
+            Arguments = launcherArguments.Replace(
+                "{GamePath}",
+                $"\"{gamePath}\"",
+                StringComparison.Ordinal),
+            EnvironmentVariables = { ["__COMPAT_LAYER"] = "HighDpiAware" }
+        };
+
+        try
+        {
+            using var process = Process.Start(startInfo);
+            return process is null
+                ? Result.Failure($"Failed to start \"{launcherPath}\".")
+                : Result.Success();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or Win32Exception)
+        {
+            return Result.Failure($"Failed to start \"{launcherPath}\": {ex.Message}");
+        }
     }
 
     /// <summary>

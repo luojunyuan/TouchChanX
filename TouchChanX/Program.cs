@@ -1,7 +1,11 @@
+using TouchChanX;
 using TouchChanX.SplashScreenGdiPlus;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
 using TouchChanX.Persistence;
+
+if (ExternalLauncherTestStartup.TryHandle(args.FirstOrDefault()))
+    return;
 
 if (args.Length == 0)
 {
