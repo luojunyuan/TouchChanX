@@ -15,7 +15,7 @@
                 <ct:SettingsExpander
                     Description="启动程序和参数有效后才能启用"
                     Header="使用其他程序启动游戏"
-                    IsExpanded="True">
+                    IsExpanded="{x:Bind ExternalLauncherEnabled.Value, Mode=OneWay}">
                     <ct:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xE756;" />
                     </ct:SettingsExpander.HeaderIcon>
