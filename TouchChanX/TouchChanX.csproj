@@ -20,6 +20,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.AI.MachineLearning" ExcludeAssets="All" />
+    <PackageReference Include="Microsoft.Web.WebView2" ExcludeAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\TouchChanX.SplashScreenGdiPlus\TouchChanX.SplashScreenGdiPlus.csproj" />
     <ProjectReference Include="..\TouchChanX.Win32\TouchChanX.Win32.csproj" />
     <ProjectReference Include="..\TouchChanX.WinUI\TouchChanX.WinUI.csproj" />
