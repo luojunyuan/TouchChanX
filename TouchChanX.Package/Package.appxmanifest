@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -13,7 +13,7 @@
   <Identity
     Name="33758k1mlka.ErogeHelper"
     Publisher="CN=C50FB846-79D7-4A28-9852-ECD147EE5A40"
-    Version="3.0.1.0" />
+    Version="3.0.4.0" />
 
   <Properties>
     <DisplayName>ms-resource:DisplayName</DisplayName>
