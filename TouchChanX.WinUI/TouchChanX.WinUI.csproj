@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TouchChanX.Persistence\TouchChanX.Persistence.csproj" />
-    <ProjectReference Include="..\TouchChanX.Win32\TouchChanX.Win32.csproj" />
   </ItemGroup>
 
 </Project>
