@@ -19,6 +19,7 @@
     <PackageVersion Include="Microsoft.Windows.AI.MachineLearning" Version="2.1.71" />
     <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4022.49" />
     <PackageVersion Include="R3" Version="1.3.1" />
+    <PackageVersion Include="R3Extensions.AotCompatible" Version="1.3.1.1" />
     <PackageVersion Include="R3Extensions.Interaction" Version="1.0.0" />
     <PackageVersion Include="R3Extensions.ObservableEvents.SourceGenerator" Version="1.3.3" />
     <PackageVersion Include="System.Drawing.Common" Version="10.0.9" />
