@@ -29,6 +29,7 @@
                             <ct:SettingsCard.Header>
                                 <StackPanel Spacing="4">
                                     <TextBox
+                                        Description="{x:Bind GetLauncherPathDescription(ExternalLauncherPath.Value), Mode=OneWay}"
                                         Header="启动程序"
                                         IsReadOnly="True"
                                         PlaceholderText="请选择启动程序"
@@ -42,10 +43,11 @@
                                 </StackPanel>
                             </Button>
                         </ct:SettingsCard>
-                        <ct:SettingsCard Description="{}{GamePath} 会替换为游戏主程序的完整路径">
+                        <ct:SettingsCard>
                             <ct:SettingsCard.Header>
                                 <StackPanel Spacing="4">
                                     <TextBox
+                                        Description="{x:Bind GetLauncherArgumentsDescription(ExternalLauncherArgs.Value), Mode=OneWay}"
                                         Header="启动参数"
                                         Text="{x:Bind ExternalLauncherArgs.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>

@@ -8,6 +8,7 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     DefaultButton="Primary"
     IsPrimaryButtonEnabled="{x:Bind CanStart.Value, Mode=OneWay}"
+    PrimaryButtonStyle="{StaticResource AccentButtonStyle}"
     PrimaryButtonText="启动测试"
     SecondaryButtonText="取消"
     Title="测试启动器"
