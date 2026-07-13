@@ -16,13 +16,20 @@ if (gamePathResult.IsFailure(out var pathError, out var gamePath))
     return;
 }
 
+var settings = new AppSettings();
+if (settings.ExternalLauncherEnabled && !File.Exists(settings.ExternalLauncherPath))
+{
+    OsPlatformApi.MessageBox.Show(
+        $"External launcher \"{settings.ExternalLauncherPath}\" not found, please check the launcher setting.");
+    return;
+}
+
 await using var fileStream = TouchChanX.AssetLoader.AppSplashIcon;
 
 // 创建并显示启动画面，持续到 WinUI 窗口完成初始化
 var splash = SplashScreen.Create(fileStream);
 splash.Show();
 
-var settings = new AppSettings();
 var launcherPath = settings.ExternalLauncherEnabled ? settings.ExternalLauncherPath : null;
 var launcherArgs = launcherPath is null ? null : settings.ExternalLauncherArgs;
 var processResult = GameStartup.GetOrLaunchGameAsync(new GameLaunchOptions

@@ -86,11 +86,8 @@ public sealed class AppSettings
     private string? ReadString(string key) =>
         _localSettings?.Values[key] as string;
 
-    private void WriteString(string key, string value)
-    {
-        if (_localSettings is not null)
-            _localSettings.Values[key] = value;
-    }
+    private void WriteString(string key, string value) =>
+        _localSettings?.Values[key] = value;
 
     private bool ReadBool(string key) =>
         bool.TryParse(ReadString(key), out var value) && value;

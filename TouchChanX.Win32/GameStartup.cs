@@ -85,9 +85,7 @@ public static partial class GameStartup
     /// </summary>
     public static async Task<Result<Process>> GetOrLaunchGameAsync(GameLaunchOptions options)
     {
-        var launcher = !string.IsNullOrWhiteSpace(options.LauncherPath) && File.Exists(options.LauncherPath)
-            ? options.LauncherPath
-            : null;
+        var launcher = options.LauncherPath;
         var process = await GetWindowProcessByPathAsync(options.GamePath);
         if (process is not null)
         {
