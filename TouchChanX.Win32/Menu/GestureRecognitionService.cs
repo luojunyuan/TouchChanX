@@ -105,29 +105,38 @@ public sealed class GestureRecognitionService : IDisposable
 
     private nint WndProc(nint hwnd, uint msg, nuint wParam, nint lParam)
     {
-        if (_isEnabled)
+        // Managed exceptions must not cross the subclassed native window procedure boundary.
+        try
         {
-            switch (msg)
+            if (_isEnabled)
             {
-                case WM_INPUT:
-                    ProcessRawInput(lParam);
-                    break;
-                case WM_INPUT_DEVICE_CHANGE:
-                    _validRawInputDevices.Clear();
-                    break;
-                case WM_POINTERDOWN:
-                    HandlePointerDown(GetPointerId(wParam), TryGetPointerPoint(wParam, out var downPoint) ? downPoint : null);
-                    break;
-                case WM_POINTERUPDATE:
-                    HandlePointerUpdate(GetPointerId(wParam), TryGetPointerPoint(wParam, out var updatePoint) ? updatePoint : null);
-                    break;
-                case WM_POINTERUP:
-                    HandlePointerUp(GetPointerId(wParam), TryGetPointerPoint(wParam, out var upPoint) ? upPoint : null);
-                    break;
-                case WM_POINTERCAPTURECHANGED:
-                    ResetCapture();
-                    break;
+                switch (msg)
+                {
+                    case WM_INPUT:
+                        ProcessRawInput(lParam);
+                        break;
+                    case WM_INPUT_DEVICE_CHANGE:
+                        _validRawInputDevices.Clear();
+                        break;
+                    case WM_POINTERDOWN:
+                        HandlePointerDown(GetPointerId(wParam), TryGetPointerPoint(wParam, out var downPoint) ? downPoint : null);
+                        break;
+                    case WM_POINTERUPDATE:
+                        HandlePointerUpdate(GetPointerId(wParam), TryGetPointerPoint(wParam, out var updatePoint) ? updatePoint : null);
+                        break;
+                    case WM_POINTERUP:
+                        HandlePointerUp(GetPointerId(wParam), TryGetPointerPoint(wParam, out var upPoint) ? upPoint : null);
+                        break;
+                    case WM_POINTERCAPTURECHANGED:
+                        ResetCapture();
+                        break;
+                }
             }
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            Debug.WriteLine($"Gesture recognition failed: {ex}");
+            ResetCapture();
         }
 
         return PInvoke.CallWindowProc(
@@ -166,16 +175,10 @@ public sealed class GestureRecognitionService : IDisposable
 
     private void ProcessRawInput(nint rawInputHandle)
     {
-        try
-        {
-            if (!TryReadRawInput(rawInputHandle, out var contacts))
-                return;
+        if (!TryReadRawInput(rawInputHandle, out var contacts))
+            return;
 
-            ProcessRawContacts(contacts);
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or ExternalException or OverflowException)
-        {
-        }
+        ProcessRawContacts(contacts);
     }
 
     private unsafe bool TryReadRawInput(nint rawInputHandle, out IReadOnlyList<RawContact> contacts)

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using LightResults;
 using Microsoft.Win32.SafeHandles;
 using Windows.Win32;
@@ -30,9 +31,10 @@ public static partial class GameStartup
         string? resolvedPath;
         try
         {
-            resolvedPath = WindowsShortcut.Load(path).Path;
+            using var shortcut = WindowsShortcut.Load(path);
+            resolvedPath = shortcut.Path;
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is FileNotFoundException or COMException)
         {
             return Result.Failure<string>($"Failed when resolve \"{path}\", please try start from game folder.");
         }
@@ -186,15 +188,14 @@ public static partial class GameStartup
                 if (!string.Equals(imagePath, normalizedGamePath, StringComparison.OrdinalIgnoreCase))
                     continue;
 
+                Process? process = null;
                 try
                 {
-                    var process = Process.GetProcessById((int)processId);
+                    process = Process.GetProcessById((int)processId);
                     process.Refresh();
 
                     if (!process.HasExited)
                         return process;
-
-                    process.Dispose();
                 }
                 catch (ArgumentException)
                 {
@@ -204,6 +205,12 @@ public static partial class GameStartup
                 {
                     // Process exited while creating or refreshing the managed Process wrapper.
                 }
+                catch (Win32Exception)
+                {
+                    // Process became unavailable while checking its state.
+                }
+
+                process?.Dispose();
             }
 
             return null;

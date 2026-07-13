@@ -38,7 +38,7 @@ public static class GameIconExtractor
                 .FirstOrDefault()
                 ?.Bytes;
         }
-        catch (Exception ex) when (ex is InvalidDataException or ArgumentException)
+        catch (Exception ex) when (ex is InvalidDataException or ArgumentException or OverflowException)
         {
             Debug.WriteLine($"Failed to extract raw PNG icon from {path}: {ex}");
             return null;

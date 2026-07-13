@@ -1,3 +1,4 @@
+using LightResults;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppNotifications;
 using Microsoft.Windows.AppNotifications.Builder;
@@ -8,7 +9,6 @@ using TouchChanX.Persistence;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
 using TouchChanX.Win32.Menu;
-using TouchChanX.WinUI.Menu;
 using Windows.ApplicationModel;
 using Windows.System;
 using WinRT;
@@ -32,40 +32,37 @@ public static class WinUIApplication
 
     private static bool PrepareMsixDependency()
     {
+        Package package;
         try
         {
-            // 使用 MSIX 动态依赖包 API，强行修改静态包图的依赖顺序，注册 WindowsAppRuntime 依赖包到当前进程中
-            var dependencyPackageList = Package.Current.Dependencies;
-            // Microsoft.UI.Xaml.2.8
-            // WindowsAppRuntime.2
-            // Microsoft Visual C++ 2015 UWP Desktop Runtime Package
-            // Microsoft Visual C++ 2015 UWP Runtime Package
-
-            var windowsAppRuntimePackage = dependencyPackageList
-                .FirstOrDefault(p => p.DisplayName.Contains("WindowsAppRuntime"));
-
-            if (windowsAppRuntimePackage is null)
-                return false;
-
-            if (!OsPlatformApi.TryRegisterDependency(
-                windowsAppRuntimePackage.Id.FamilyName,
-                Package.Current.Id.Architecture switch
-                {
-                    ProcessorArchitecture.Arm64 => PackageDependencyProcessorArchitectures.Arm64,
-                    ProcessorArchitecture.X64 => PackageDependencyProcessorArchitectures.X64,
-                    _ => throw new NotSupportedException("Unsupported architecture")
-                }))
-            {
-                return false;
-            }
+            package = Package.Current;
         }
         catch (InvalidOperationException ex)
         {
             // 临时跳过调试时非打包项目直接运行
             Debug.WriteLine(ex);
+            return true;
         }
 
-        return true;
+        // 使用 MSIX 动态依赖包 API，强行修改静态包图的依赖顺序，注册 WindowsAppRuntime 依赖包到当前进程中
+        var dependencyPackageList = package.Dependencies;
+        // Microsoft.UI.Xaml.2.8
+        // WindowsAppRuntime.2
+        // Microsoft Visual C++ 2015 UWP Desktop Runtime Package
+        // Microsoft Visual C++ 2015 UWP Runtime Package
+
+        var windowsAppRuntimePackage = dependencyPackageList
+            .FirstOrDefault(p => p.DisplayName.Contains("WindowsAppRuntime"));
+
+        return windowsAppRuntimePackage is not null &&
+            OsPlatformApi.TryRegisterDependency(
+                windowsAppRuntimePackage.Id.FamilyName,
+                package.Id.Architecture switch
+                {
+                    ProcessorArchitecture.Arm64 => PackageDependencyProcessorArchitectures.Arm64,
+                    ProcessorArchitecture.X64 => PackageDependencyProcessorArchitectures.X64,
+                    _ => throw new NotSupportedException("Unsupported architecture")
+                });
     }
 
     public static void RunWithGameWindow(nint gameWindowHandle, IDisposable? splash = null)
@@ -131,12 +128,12 @@ public partial class WinUIApp(nint gameWindowHandle, IDisposable? splash = null)
             .Select(rect => rect?.Scale(window.Dpi).ToGdiRect())
             .Subscribe(observableRegions.SetMessageFlyoutRegion);
 
-        MenuControl.ObservableCommandRequested
+        WinUI.Menu.MenuControl.ObservableCommandRequested
             .TakeUntil(window.Events().Closed)
             .SubscribeAwait(async (commandId, _) =>
                 await TouchMenuCommandService.ExecuteAsync(commandId, gameWindowHandle));
 
-        MenuControl.ObservableToggleChanged
+        WinUI.Menu.MenuControl.ObservableToggleChanged
             .TakeUntil(window.Events().Closed)
             .Subscribe(toggle =>
                 TouchMenuCommandService.SetToggleState(toggle.Id, toggle.IsOn, gameWindowHandle, hwnd));

@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 using R3;
 using TouchChanX.Persistence;
+using WindowsShortcutFactory;
 
 namespace TouchChanX.UWP;
 
@@ -55,15 +57,27 @@ public sealed class HomePageGameStore
             return false;
         }
 
-        var resolvedPath = ShellLinkResolver.ResolveIfShortcut(path);
-        if (string.IsNullOrWhiteSpace(resolvedPath) ||
-            !File.Exists(resolvedPath) ||
-            !Path.GetExtension(resolvedPath).Equals(".exe", StringComparison.OrdinalIgnoreCase))
+        try
+        {
+            if (Path.GetExtension(path).Equals(".lnk", StringComparison.OrdinalIgnoreCase))
+            {
+                using var shortcut = WindowsShortcut.Load(path);
+                path = Environment.ExpandEnvironmentVariables(shortcut.Path ?? string.Empty);
+            }
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or COMException)
         {
             return false;
         }
 
-        gamePath = resolvedPath;
+        if (string.IsNullOrWhiteSpace(path) ||
+            !File.Exists(path) ||
+            !Path.GetExtension(path).Equals(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        gamePath = path;
         return true;
     }
 

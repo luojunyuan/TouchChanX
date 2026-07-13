@@ -81,22 +81,8 @@ public static partial class GameStartup // Win32
     private static string? GetCurrentProcessImagePath()
     {
         var path = Environment.ProcessPath;
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            try
-            {
-                using var currentProcess = Process.GetCurrentProcess();
-                path = currentProcess.MainModule?.FileName;
-            }
-            catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException)
-            {
-                Debug.WriteLine($"Failed to get current process image path: {ex}");
-                return null;
-            }
-        }
-
         return string.IsNullOrWhiteSpace(path)
-            ? null
+            ? GetProcessImagePath((uint)Environment.ProcessId)
             : NormalizeExecutablePath(path);
     }
 

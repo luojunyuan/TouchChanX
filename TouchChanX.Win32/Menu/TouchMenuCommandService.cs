@@ -144,7 +144,7 @@ public static class TouchMenuCommandService
     {
         try
         {
-            Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
+            using var process = Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
         {

@@ -28,6 +28,7 @@
     <PackageReference Include="R3Extensions.AotCompatible" />
     <PackageReference Include="R3Extensions.ObservableEvents.SourceGenerator" />
     <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="WindowsShortcutFactory" />
   </ItemGroup>
 
   <ItemGroup>

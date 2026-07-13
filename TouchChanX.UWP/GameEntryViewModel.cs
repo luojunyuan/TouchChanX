@@ -67,7 +67,7 @@ public sealed partial class GameEntryViewModel
             await image.SetSourceAsync(stream);
             return image;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not (OperationCanceledException or OutOfMemoryException))
         {
             Debug.WriteLine(ex);
             return null;

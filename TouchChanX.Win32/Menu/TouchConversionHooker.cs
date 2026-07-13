@@ -54,12 +54,13 @@ internal static class TouchConversionHooker
 
     private static LRESULT Hook(int nCode, WPARAM wParam, LPARAM lParam)
     {
+        // Managed exceptions must not cross the native hook boundary.
         try
         {
             if (nCode >= 0 && lParam.Value != 0)
                 HandleMouseHook(wParam, lParam);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             Debug.WriteLine($"Touch conversion hook failed: {ex}");
         }
