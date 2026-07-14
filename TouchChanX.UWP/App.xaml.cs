@@ -1,4 +1,5 @@
 using Windows.ApplicationModel.Activation;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using R3;
 using R3.ObservableEvents;
@@ -11,6 +12,8 @@ namespace TouchChanX.UWP;
 /// </summary>
 public sealed partial class App : Application
 {
+    private const string DevelopmentNoticeShownKey = "DevelopmentNoticeShown";
+
     /// <summary>
     /// Initializes the singleton application object. This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -21,7 +24,7 @@ public sealed partial class App : Application
     }
 
     /// <inheritdoc/>
-    protected override void OnLaunched(LaunchActivatedEventArgs e)
+    protected override async void OnLaunched(LaunchActivatedEventArgs e)
     {
         // Do not repeat app initialization when the Window already has content,
         // just ensure that the window is active.
@@ -43,15 +46,34 @@ public sealed partial class App : Application
 
         if (e.PrelaunchActivated == false)
         {
+            var showDevelopmentNotice = false;
+
             if (rootFrame.Content == null)
             {
                 // When the navigation stack isn't restored navigate to the first page, configuring
                 // the new page by passing required information as a navigation parameter.
                 rootFrame.Navigate(typeof(MainPage), e.Arguments);
+                showDevelopmentNotice = true;
             }
 
             // Ensure the current window is active
             Window.Current.Activate();
+
+            if (showDevelopmentNotice)
+            {
+                var localSettings = ApplicationData.Current.LocalSettings;
+                if (localSettings.Values[DevelopmentNoticeShownKey] is not true)
+                {
+                    localSettings.Values[DevelopmentNoticeShownKey] = true;
+
+                    await new ContentDialog
+                    {
+                        Title = "提示",
+                        Content = "触控酱v3 arm64 仍处于开发中，欢迎加入QQ群 942698378 交流反馈",
+                        CloseButtonText = "确定",
+                    }.ShowAsync();
+                }
+            }
         }
     }
 }
