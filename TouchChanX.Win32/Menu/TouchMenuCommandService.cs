@@ -1,6 +1,7 @@
 using TouchChanX.Win32.Interop;
 using R3;
 using Windows.Win32;
+using Windows.Win32.Foundation;
 
 namespace TouchChanX.Win32.Menu;
 
@@ -106,7 +107,11 @@ public static class TouchMenuCommandService
                 GameWindowHandle = gameWindowHandle,
                 TouchWindowHandle = touchWindowHandle,
             };
-            var subscription = service.ObservableGestureRecognized.Subscribe(observer.OnNext);
+            var subscription = service.ObservableGestureRecognized.Subscribe(gesture =>
+            {
+                SendGestureInput(gesture, service.LastGesturePosition, gameWindowHandle);
+                observer.OnNext(gesture);
+            });
 
             return Disposable.Create(() =>
             {
@@ -114,6 +119,29 @@ public static class TouchMenuCommandService
                 service.Dispose();
             });
         });
+
+    private static void SendGestureInput(RecognizedGesture gesture, System.Drawing.Point position, nint gameWindowHandle)
+    {
+        if (gameWindowHandle == nint.Zero || PInvoke.GetForegroundWindow() != new HWND(gameWindowHandle))
+            return;
+
+        switch (gesture)
+        {
+            case RecognizedGesture.TwoFingerTap:
+                PInvoke.SetCursorPos(position.X, position.Y);
+                _ = InputSimulator.RightClickAsync();
+                break;
+            case RecognizedGesture.ThreeFingerTap:
+                _ = InputSimulator.PressAsync(VirtualKeyCode.Space);
+                break;
+            case RecognizedGesture.TwoFingerSwipeUp:
+                InputSimulator.Scroll(1);
+                break;
+            case RecognizedGesture.TwoFingerSwipeDown:
+                InputSimulator.Scroll(-1);
+                break;
+        }
+    }
 
     private static void BringGameWindowToForeground(nint hwnd) =>
         PInvoke.SetForegroundWindow(new(hwnd));

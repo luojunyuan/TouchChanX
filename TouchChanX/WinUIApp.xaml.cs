@@ -169,10 +169,10 @@ public partial class WinUIApp(nint gameWindowHandle, IDisposable? splash = null)
     private static string GetGestureMessage(RecognizedGesture gesture) =>
         gesture switch
         {
-            RecognizedGesture.ThreeFingerTap => "三指点击",
-            RecognizedGesture.TwoFingerTap => "双指点击",
-            RecognizedGesture.TwoFingerSwipeUp => "双指上滑",
-            RecognizedGesture.TwoFingerSwipeDown => "双指下滑",
+            RecognizedGesture.ThreeFingerTap => "空格",
+            RecognizedGesture.TwoFingerTap => "鼠标右键",
+            RecognizedGesture.TwoFingerSwipeUp => "滚轮上划",
+            RecognizedGesture.TwoFingerSwipeDown => "滚轮下滑",
             _ => gesture.ToString(),
         };
 }

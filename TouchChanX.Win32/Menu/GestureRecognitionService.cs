@@ -55,6 +55,8 @@ public sealed class GestureRecognitionService : IDisposable
 
     public Observable<RecognizedGesture> ObservableGestureRecognized => _gestureRecognized;
 
+    internal System.Drawing.Point LastGesturePosition { get; private set; }
+
     public GestureRecognitionService(nint hwnd)
     {
         if (hwnd == nint.Zero)
@@ -585,13 +587,19 @@ public sealed class GestureRecognitionService : IDisposable
             return null;
 
         var ctx = BuildGestureContext();
-        return _gestures.FirstOrDefault(g => g.Matches(ctx))?.Gesture;
+        var definition = _gestures.FirstOrDefault(g => g.Matches(ctx));
+        if (definition is null)
+            return null;
+
+        LastGesturePosition = ctx.Position;
+        return definition.Gesture;
     }
 
     private GestureContext BuildGestureContext() => new(
         MaxContactCount: (int)_maxContactCount,
         Duration: DateTimeOffset.Now - _captureStartedAt,
         MaxMovement: _completedStrokes.Max(static s => s.Movement),
+        Position: _completedStrokes[0].StartPoint,
         DominantStroke: _completedStrokes.MaxBy(static s => Math.Abs(s.Delta.Y))
     );
 
@@ -646,6 +654,8 @@ public sealed class GestureRecognitionService : IDisposable
 
         public Vector2 Delta => new((float)(_last.X - _start.X), (float)(_last.Y - _start.Y));
 
+        public System.Drawing.Point StartPoint => new(_start.X, _start.Y);
+
         public double Movement { get; private set; }
 
         public void Add(PointerPoint point)
@@ -678,6 +688,7 @@ public sealed class GestureRecognitionService : IDisposable
         int MaxContactCount,
         TimeSpan Duration,
         double MaxMovement,
+        System.Drawing.Point Position,
         PointerStroke? DominantStroke);
 
     private sealed record GestureDefinition(RecognizedGesture Gesture, Func<GestureContext, bool> Matches);
