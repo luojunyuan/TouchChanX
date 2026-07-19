@@ -36,7 +36,7 @@ internal static class TouchMenuCatalog
             Toggle("stretch", "Stretch", ExtendedSymbol.AspectRatio, new(1, 0), isEnabled: false),
             Navigate("game-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
             Command("close-game", "Close", ExtendedSymbol.ChromeClose, new(1, 2)),
-            Command("brightness-down", "Dim", ExtendedSymbol.KeyboardLowerBrightness, new(2, 0), isEnabled: false),
+            Command("brightness-down", "Dim", ExtendedSymbol.KeyboardLowerBrightness, new(2, 0)),
             Command("brightness-up", "Restore", ExtendedSymbol.KeyboardBrightness, new(2, 1), isEnabled: false),
         ]);
 

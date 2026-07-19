@@ -28,6 +28,7 @@ public sealed partial class MainWindow : Window
     /// 手动激活 window 的 xbind，用于设置为子窗口后，Activated 事件不触发的情景
     /// </summary>
     public void InitializeBindings() => this.Bindings.Initialize();
+
 }
 
 /// <summary>

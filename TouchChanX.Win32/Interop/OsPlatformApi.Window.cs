@@ -171,4 +171,6 @@ public enum ExtendedWindowStyles : uint
 {
     Layered = WINDOW_EX_STYLE.WS_EX_LAYERED,
     AppWindow = WINDOW_EX_STYLE.WS_EX_APPWINDOW,
+    Transparent = WINDOW_EX_STYLE.WS_EX_TRANSPARENT,
+    NoActivate = WINDOW_EX_STYLE.WS_EX_NOACTIVATE,
 }

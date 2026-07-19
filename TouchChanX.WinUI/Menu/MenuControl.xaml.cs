@@ -28,6 +28,7 @@ public sealed record TouchMenuToggleChanged(string Id, bool IsOn);
 public sealed partial class MenuControl : UserControl
 {
     private const double MenuPadding = 24.0;
+    private const int MaxBrightnessLevel = 8;
 
     private readonly AppSettings _settings = new();
     private readonly Dictionary<string, bool> _toggleStates = [];
@@ -37,6 +38,7 @@ public sealed partial class MenuControl : UserControl
     private RenderedMenuPage? _activePage;
     private TouchMenuPageId _currentPageId = TouchMenuPageId.Main;
     private bool _isTransitioning;
+    private int _brightnessLevel;
 
     private float CellDistance
     {
@@ -160,7 +162,33 @@ public sealed partial class MenuControl : UserControl
         if (ShouldCloseBeforeCommand(commandId))
             await CloseMenuAsync();
 
+        UpdateBrightnessState(commandId);
         CommandRequestedSubject.OnNext(commandId);
+    }
+
+    private void UpdateBrightnessState(string commandId)
+    {
+        switch (commandId)
+        {
+            case "brightness-down":
+                if (_brightnessLevel < MaxBrightnessLevel)
+                    _brightnessLevel++;
+                break;
+            case "brightness-up":
+                _brightnessLevel = 0;
+                break;
+            default:
+                return;
+        }
+
+        SetActiveCommandEnabled("brightness-down", _brightnessLevel < MaxBrightnessLevel);
+        SetActiveCommandEnabled("brightness-up", _brightnessLevel > 0);
+    }
+
+    private void SetActiveCommandEnabled(string commandId, bool isEnabled)
+    {
+        if (_activePage?.Items.FirstOrDefault(item => item.Descriptor.Id == commandId)?.Element is MenuButton button)
+            button.IsEnabled = isEnabled;
     }
 
     private static bool ShouldCloseBeforeCommand(string commandId) =>
@@ -262,7 +290,7 @@ public sealed partial class MenuControl : UserControl
                 Text = item.Text,
                 IsToggle = item.Kind == TouchMenuItemKind.Toggle,
                 IsOn = isOn,
-                IsEnabled = item.IsEnabled,
+                IsEnabled = IsCommandEnabled(item),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
             };
@@ -282,6 +310,14 @@ public sealed partial class MenuControl : UserControl
 
         return new RenderedMenuPage(descriptor, host, items, subscriptions);
     }
+
+    private bool IsCommandEnabled(TouchMenuItemDescriptor item) =>
+        item.Id switch
+        {
+            "brightness-down" => _brightnessLevel < MaxBrightnessLevel,
+            "brightness-up" => _brightnessLevel > 0,
+            _ => item.IsEnabled,
+        };
 
     private static void DisposePage(RenderedMenuPage? page)
     {

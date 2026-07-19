@@ -1,14 +1,8 @@
-using LightResults;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppNotifications;
 using Microsoft.Windows.AppNotifications.Builder;
-using R3;
-using R3.ObservableEvents;
 using System.Diagnostics;
-using TouchChanX.Persistence;
-using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
-using TouchChanX.Win32.Menu;
 using Windows.ApplicationModel;
 using Windows.System;
 using WinRT;
@@ -88,110 +82,11 @@ public static class WinUIApplication
 
 public partial class WinUIApp(nint gameWindowHandle, IDisposable? splash = null)
 {
-    private partial class TransparentBackdrop : Microsoft.UI.Xaml.Media.SystemBackdrop { }
+    private WinUIAppController? _controller;
 
-    /// <summary>
-    /// WinUI 程序窗口入口点事件函数
-    /// </summary>
-    /// <remarks>QwQ: 耗时方法</remarks>
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        // 不使用 UI Context，使用 TimeProvider 让基于时间的运算符正确回调
-        ObservableSystem.RegisterUnhandledExceptionHandler(ex => Debug.WriteLine(ex.ToString()));
-        ObservableSystem.DefaultTimeProvider = WinUI3DispatcherTimeProvider.Default;
-
-        var window = new WinUI.MainWindow()
-        {
-            SystemBackdrop = new TransparentBackdrop()
-        };
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-        OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.TiledWindow, false);
-        // SetParent 的基础条件之一，可以让子窗口与父窗口统一焦点
-        OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.Child, true);
-        // 必须给 WinUI 外层 Win32 窗口添加 Layered 样式，以使窗口作为子窗口时分层背景正常可见
-        OsPlatformApi.ToggleWindowExStyle(hwnd, ExtendedWindowStyles.Layered, true);
-        // NOTE: 设置为子窗口后，window.AppWindow 会返回 null、Activated 事件一次也不激活了
-        OsPlatformApi.SetParentWindowQwQ(hwnd, gameWindowHandle);
-
-        // 确保在设置为子窗口后，重定位对齐父窗口左上角
-        GameWindowService.ClientSizeChanged(gameWindowHandle)
-            .Subscribe(size => OsPlatformApi.ResizeWindow(hwnd, size));
-
-        var observableRegions = new WindowObservableRegionSet(hwnd);
-        WinUI.Touch.TouchControl.ObservableRegionResetRequested
-            .Merge(WinUI.Menu.MenuControl.ObservableRegionResetRequested)
-            .Subscribe(_ => observableRegions.UseOriginalRegion());
-        WinUI.Touch.TouchControl.ObservableTouchRegionChanged
-            .Select(touchRect => touchRect.Scale(window.Dpi).ToGdiRect())
-            .Subscribe(observableRegions.SetBaseRegion);
-        window.MessageFlyoutVisibleRegionChanged
-            .Select(rect => rect?.Scale(window.Dpi).ToGdiRect())
-            .Subscribe(observableRegions.SetMessageFlyoutRegion);
-
-        WinUI.Menu.MenuControl.ObservableCommandRequested
-            .TakeUntil(window.Events().Closed)
-            .SubscribeAwait(async (commandId, _) =>
-                await TouchMenuCommandService.ExecuteAsync(commandId, gameWindowHandle));
-
-        WinUI.Menu.MenuControl.ObservableToggleChanged
-            .TakeUntil(window.Events().Closed)
-            .Subscribe(toggle =>
-                TouchMenuCommandService.SetToggleState(toggle.Id, toggle.IsOn, gameWindowHandle, hwnd));
-
-        TouchMenuCommandService.ObservableGestureRecognized
-            .TakeUntil(window.Events().Closed)
-            .Select(GetGestureMessage)
-            .Subscribe(window.ShowMessage);
-
-        var settings = new AppSettings();
-        if (settings.TouchToMouse)
-            TouchMenuCommandService.SetToggleState("touch-to-mouse", true, gameWindowHandle, hwnd);
-        if (settings.Gesture)
-            TouchMenuCommandService.SetToggleState("gesture", true, gameWindowHandle, hwnd);
-
-        // TODO: 监视父窗口销毁事件，把窗口设置到新的 gameWindowHandle 上
-        GameWindowService.WindowDestroyed(gameWindowHandle).Subscribe(_ =>
-        {
-            // 会循环询找新的窗口，直到找到一个有效的窗口或者超时就直接退出程序
-            gameWindowHandle = nint.Zero;
-
-            OsPlatformApi.SetParentWindowQwQ(hwnd, gameWindowHandle);
-            GameWindowService.ClientSizeChanged(gameWindowHandle)
-                .Subscribe(size => OsPlatformApi.ResizeWindow(hwnd, size));
-        });
-
-        window.InitializeBindings();
-        window.Activate();
-
-        splash?.Dispose();
-    }
-
-    private static string GetGestureMessage(RecognizedGesture gesture) =>
-        gesture switch
-        {
-            RecognizedGesture.ThreeFingerTap => "空格",
-            RecognizedGesture.TwoFingerTap => "鼠标右键",
-            RecognizedGesture.TwoFingerSwipeUp => "滚轮上划",
-            RecognizedGesture.TwoFingerSwipeDown => "滚轮下滑",
-            _ => gesture.ToString(),
-        };
-}
-
-public static class WinUIExtension
-{
-    private const int AntiClippingOffset = 1;
-
-    extension(Windows.Foundation.Rect rect)
-    {
-        public Windows.Foundation.Rect Scale(double f) =>
-            new(rect.X * f, rect.Y * f, rect.Width * f, rect.Height * f);
-
-        public System.Drawing.Rectangle ToGdiRect() =>
-            new((int)rect.X, (int)rect.Y, (int)rect.Width + AntiClippingOffset, (int)rect.Height + AntiClippingOffset);
-    }
-
-    extension(Window window)
-    {
-        public double Dpi => window.Content.XamlRoot.RasterizationScale;
+        _controller = new WinUIAppController(gameWindowHandle, splash);
+        _controller.Start();
     }
 }
