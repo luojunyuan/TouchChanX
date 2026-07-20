@@ -339,7 +339,6 @@ public sealed partial class MenuControl : UserControl
     private bool LoadToggleState(string id, bool defaultValue) =>
         id switch
         {
-            "stretch" => _settings.Stretch,
             "touch-bar" => _settings.TouchBar,
             "keyboard" => _settings.Keyboard,
             "touch-to-mouse" => _settings.TouchToMouse,
@@ -352,9 +351,6 @@ public sealed partial class MenuControl : UserControl
     {
         switch (id)
         {
-            case "stretch":
-                _settings.Stretch = isOn;
-                break;
             case "touch-bar":
                 _settings.TouchBar = isOn;
                 break;

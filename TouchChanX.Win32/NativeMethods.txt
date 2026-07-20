@@ -16,6 +16,7 @@ ShowWindow
 SetForegroundWindow
 GetWindowLong
 SetWindowLong
+SetWindowPos
 WINDOW_STYLE
 WINDOW_EX_STYLE
 
@@ -53,6 +54,8 @@ PROCESS_ACCESS_RIGHTS
 
 // ---- 菜单命令相关 ----
 GetWindowRect
+GetMenu
+SetMenu
 PostMessage
 SendInput
 MapVirtualKey

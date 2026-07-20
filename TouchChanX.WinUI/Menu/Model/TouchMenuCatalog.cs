@@ -33,7 +33,7 @@ internal static class TouchMenuCatalog
         [
             Command("fullscreen", "Fullscreen", Symbol.FullScreen, new(0, 1)),
             Navigate("move-game", "Move", Symbol.Trim, new(0, 2), TouchMenuPageId.WinMove),
-            Toggle("stretch", "Stretch", ExtendedSymbol.AspectRatio, new(1, 0), isEnabled: false),
+            Command("stretch", "Stretch", ExtendedSymbol.AspectRatio, new(1, 0)),
             Navigate("game-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
             Command("close-game", "Close", ExtendedSymbol.ChromeClose, new(1, 2)),
             Command("brightness-down", "Dim", ExtendedSymbol.KeyboardLowerBrightness, new(2, 0)),

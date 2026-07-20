@@ -47,12 +47,6 @@ public sealed class AppSettings
         set => WriteString(ExternalLauncherArgsKey, value);
     }
 
-    public bool Stretch
-    {
-        get => ReadBool(TogglePrefix + "stretch");
-        set => WriteBool(TogglePrefix + "stretch", value);
-    }
-
     public bool TouchBar
     {
         get => ReadBool(TogglePrefix + "touch-bar");

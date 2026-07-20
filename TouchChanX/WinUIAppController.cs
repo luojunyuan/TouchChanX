@@ -74,6 +74,9 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
             {
                 switch (commandId)
                 {
+                    case "stretch":
+                        StretchWindowService.Toggle(_gameWindowHandle);
+                        return;
                     case "brightness-down":
                         EnsureDimWindow();
                         dimWindow!.Dim();
