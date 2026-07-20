@@ -135,10 +135,10 @@ public static class TouchMenuCommandService
                 _ = InputSimulator.PressAsync(VirtualKeyCode.Space);
                 break;
             case RecognizedGesture.TwoFingerSwipeUp:
-                InputSimulator.Scroll(1);
+                InputSimulator.Scroll(-1);
                 break;
             case RecognizedGesture.TwoFingerSwipeDown:
-                InputSimulator.Scroll(-1);
+                InputSimulator.Scroll(1);
                 break;
         }
     }
