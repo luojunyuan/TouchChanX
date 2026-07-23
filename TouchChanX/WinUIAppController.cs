@@ -152,8 +152,8 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
         {
             RecognizedGesture.ThreeFingerTap => "空格",
             RecognizedGesture.TwoFingerTap => "鼠标右键",
-            RecognizedGesture.TwoFingerSwipeUp => "滚轮下滑",
-            RecognizedGesture.TwoFingerSwipeDown => "滚轮上划",
+            RecognizedGesture.TwoFingerSwipeUp => "滚轮上划",
+            RecognizedGesture.TwoFingerSwipeDown => "滚轮下滑",
             _ => gesture.ToString(),
         };
 
