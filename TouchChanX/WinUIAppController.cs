@@ -13,50 +13,70 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
 {
     private nint _gameWindowHandle = gameWindowHandle;
     private readonly IDisposable? _splash = splash;
-
-    private partial class TransparentBackdrop : Microsoft.UI.Xaml.Media.SystemBackdrop { }
+    private nint _touchWindowHandle;
+    private IDisposable? _clientSizeSubscription;
+    private IDisposable? _windowDestroyedSubscription;
+    private bool _touchToMouseEnabled;
+    private bool _gestureEnabled;
 
     public void Start()
     {
+        InitializeReactiveRuntime();
+
+        var window = CreateMainWindow();
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        _touchWindowHandle = hwnd;
+        WindowConfiguration.ConfigureEmbeddedWindow(hwnd, _gameWindowHandle);
+
+        var overlays = new GameWindowOverlayController(
+            _gameWindowHandle,
+            window.ShowMessage);
+        SubscribeClientSize(hwnd, overlays);
+        SubscribeObservableRegions(window, hwnd);
+        SubscribeMenuCommands(window, overlays);
+        SubscribeMenuToggles(window, hwnd);
+        SubscribeGestures(window);
+        ApplySettings(hwnd);
+        SubscribeGameWindowDestroyed(hwnd, overlays);
+
+        window.InitializeBindings();
+        window.Events().Closed.Subscribe(_ =>
+        {
+            DisposeGameWindowSubscriptions();
+            TouchMenuCommandService.DisconnectGameWindowInteractions();
+            overlays.Dispose();
+        });
+        window.Activate();
+
+        _splash?.Dispose();
+    }
+
+    private static void InitializeReactiveRuntime()
+    {
         ObservableSystem.RegisterUnhandledExceptionHandler(ex => Debug.WriteLine(ex.ToString()));
         ObservableSystem.DefaultTimeProvider = WinUI3DispatcherTimeProvider.Default;
+    }
 
-        var window = new WinUI.MainWindow()
+    private static WinUI.MainWindow CreateMainWindow() =>
+        new()
         {
             SystemBackdrop = new TransparentBackdrop()
         };
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-        ConfigureEmbeddedWindow(hwnd, _gameWindowHandle);
-        WinUI.DimWindow? dimWindow = null;
-        nint dimHwnd = nint.Zero;
-        System.Drawing.Size? clientSize = null;
 
-        // Keep both embedded windows aligned with the game client area.
-        GameWindowService.ClientSizeChanged(_gameWindowHandle)
+    private void SubscribeClientSize(nint hwnd, GameWindowOverlayController overlays)
+    {
+        // Keep the embedded window and its auxiliary overlays aligned with the game client area.
+        _clientSizeSubscription?.Dispose();
+        _clientSizeSubscription = GameWindowService.ClientSizeChanged(_gameWindowHandle)
             .Subscribe(size =>
             {
-                clientSize = size;
                 OsPlatformApi.ResizeWindow(hwnd, size);
-                if (dimHwnd != nint.Zero)
-                    OsPlatformApi.ResizeWindow(dimHwnd, size);
+                overlays.UpdateClientSize(size);
             });
+    }
 
-        void EnsureDimWindow()
-        {
-            if (dimWindow is not null)
-                return;
-
-            dimWindow = new WinUI.DimWindow()
-            {
-                SystemBackdrop = new TransparentBackdrop()
-            };
-            dimHwnd = WinRT.Interop.WindowNative.GetWindowHandle(dimWindow);
-            ConfigureEmbeddedWindow(dimHwnd, _gameWindowHandle, clickThrough: true);
-            if (clientSize is { } size)
-                OsPlatformApi.ResizeWindow(dimHwnd, size);
-            dimWindow.Activate();
-        }
-
+    private static void SubscribeObservableRegions(WinUI.MainWindow window, nint hwnd)
+    {
         var observableRegions = new WindowObservableRegionSet(hwnd);
         WinUI.Touch.TouchControl.ObservableRegionResetRequested
             .Merge(WinUI.Menu.MenuControl.ObservableRegionResetRequested)
@@ -67,7 +87,10 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
         window.MessageFlyoutVisibleRegionChanged
             .Select(rect => rect?.Scale(window.Dpi).ToGdiRect())
             .Subscribe(observableRegions.SetMessageFlyoutRegion);
+    }
 
+    private void SubscribeMenuCommands(WinUI.MainWindow window, GameWindowOverlayController overlays)
+    {
         WinUI.Menu.MenuControl.ObservableCommandRequested
             .TakeUntil(window.Events().Closed)
             .SubscribeAwait(async (commandId, _) =>
@@ -78,73 +101,79 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
                         StretchWindowService.Toggle(_gameWindowHandle);
                         return;
                     case "brightness-down":
-                        EnsureDimWindow();
-                        dimWindow!.Dim();
+                        overlays.Dim();
                         return;
                     case "brightness-up":
-                        dimWindow?.Close();
-                        dimWindow = null;
-                        dimHwnd = nint.Zero;
+                        overlays.RestoreBrightness();
+                        return;
+                    case "lock-game":
+                        overlays.OpenLockWindow();
+                        return;
+                    default:
+                        await TouchMenuCommandService.ExecuteAsync(commandId, _gameWindowHandle);
                         return;
                 }
-
-                await TouchMenuCommandService.ExecuteAsync(commandId, _gameWindowHandle);
             });
+    }
 
+    private void SubscribeMenuToggles(WinUI.MainWindow window, nint hwnd)
+    {
         WinUI.Menu.MenuControl.ObservableToggleChanged
             .TakeUntil(window.Events().Closed)
             .Subscribe(toggle =>
-                TouchMenuCommandService.SetToggleState(toggle.Id, toggle.IsOn, _gameWindowHandle, hwnd));
+            {
+                switch (toggle.Id)
+                {
+                    case "touch-to-mouse":
+                        _touchToMouseEnabled = toggle.IsOn;
+                        break;
+                    case "gesture":
+                        _gestureEnabled = toggle.IsOn;
+                        break;
+                }
 
+                TouchMenuCommandService.SetToggleState(toggle.Id, toggle.IsOn, _gameWindowHandle, hwnd);
+            });
+    }
+
+    private static void SubscribeGestures(WinUI.MainWindow window)
+    {
         TouchMenuCommandService.ObservableGestureRecognized
             .TakeUntil(window.Events().Closed)
             .Select(GetGestureMessage)
             .Subscribe(window.ShowMessage);
+    }
 
+    private void ApplySettings(nint hwnd)
+    {
         var settings = new AppSettings();
+        _touchToMouseEnabled = settings.TouchToMouse;
+        _gestureEnabled = settings.Gesture;
         if (settings.TouchToMouse)
             TouchMenuCommandService.SetToggleState("touch-to-mouse", true, _gameWindowHandle, hwnd);
         if (settings.Gesture)
             TouchMenuCommandService.SetToggleState("gesture", true, _gameWindowHandle, hwnd);
-
-        // TODO: monitor parent destruction and attach to the next game window.
-        GameWindowService.WindowDestroyed(_gameWindowHandle).Subscribe(_ =>
-        {
-            _gameWindowHandle = nint.Zero;
-
-            OsPlatformApi.SetParentWindowQwQ(hwnd, _gameWindowHandle);
-            if (dimHwnd != nint.Zero)
-            {
-                dimWindow?.Close();
-                dimWindow = null;
-                dimHwnd = nint.Zero;
-            }
-            GameWindowService.ClientSizeChanged(_gameWindowHandle)
-                .Subscribe(size => OsPlatformApi.ResizeWindow(hwnd, size));
-        });
-
-        window.InitializeBindings();
-        window.Events().Closed.Subscribe(_ => dimWindow?.Close());
-        window.Activate();
-
-        _splash?.Dispose();
     }
 
-    private static void ConfigureEmbeddedWindow(nint hwnd, nint parent, bool clickThrough = false)
+    private void SubscribeGameWindowDestroyed(nint hwnd, GameWindowOverlayController overlays)
     {
-        OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.TiledWindow, false);
-        // SetParent requires the child window style so focus follows the game window.
-        OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.Child, true);
-        // Layered rendering is required for a WinUI window embedded as a child.
-        OsPlatformApi.ToggleWindowExStyle(hwnd, ExtendedWindowStyles.Layered, true);
-
-        if (clickThrough)
+        // TODO: monitor parent destruction and attach to the next game window.
+        _windowDestroyedSubscription?.Dispose();
+        _windowDestroyedSubscription = GameWindowService.WindowDestroyed(_gameWindowHandle).Subscribe(_ =>
         {
-            OsPlatformApi.ToggleWindowExStyle(hwnd, ExtendedWindowStyles.Transparent, true);
-            OsPlatformApi.ToggleWindowExStyle(hwnd, ExtendedWindowStyles.NoActivate, true);
-        }
+            _gameWindowHandle = nint.Zero;
+            DisposeGameWindowSubscriptions();
+            overlays.HandleGameWindowDestroyed();
+            WindowConfiguration.DetachEmbeddedWindow(hwnd);
+        });
+    }
 
-        OsPlatformApi.SetParentWindowQwQ(hwnd, parent);
+    private void DisposeGameWindowSubscriptions()
+    {
+        _clientSizeSubscription?.Dispose();
+        _clientSizeSubscription = null;
+        _windowDestroyedSubscription?.Dispose();
+        _windowDestroyedSubscription = null;
     }
 
     private static string GetGestureMessage(RecognizedGesture gesture) =>

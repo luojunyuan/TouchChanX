@@ -98,6 +98,12 @@ public static class TouchMenuCommandService
         }
     }
 
+    public static void DisconnectGameWindowInteractions()
+    {
+        TouchConversionHooker.Uninstall();
+        GestureRecognitionSession.Disposable = Disposable.Empty;
+    }
+
     private static Observable<RecognizedGesture> ObserveGestureRecognition(nint touchWindowHandle, nint gameWindowHandle) =>
         Observable.Create<RecognizedGesture>(observer =>
         {
@@ -122,7 +128,8 @@ public static class TouchMenuCommandService
 
     private static void SendGestureInput(RecognizedGesture gesture, System.Drawing.Point position, nint gameWindowHandle)
     {
-        if (gameWindowHandle == nint.Zero || PInvoke.GetForegroundWindow() != new HWND(gameWindowHandle))
+        if (gameWindowHandle == nint.Zero ||
+            PInvoke.GetForegroundWindow() != new HWND(gameWindowHandle))
             return;
 
         switch (gesture)

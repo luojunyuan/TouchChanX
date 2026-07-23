@@ -192,7 +192,7 @@ public sealed partial class MenuControl : UserControl
     }
 
     private static bool ShouldCloseBeforeCommand(string commandId) =>
-        commandId is "screenshot" or "close-game";
+        commandId is "screenshot" or "close-game" or "lock-game";
 
     private async Task SwitchPageAsync(TouchMenuPageId targetPageId, MenuCell origin)
     {

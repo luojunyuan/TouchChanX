@@ -38,6 +38,7 @@ internal static class TouchMenuCatalog
             Command("close-game", "Close", ExtendedSymbol.ChromeClose, new(1, 2)),
             Command("brightness-down", "Dim", ExtendedSymbol.KeyboardLowerBrightness, new(2, 0)),
             Command("brightness-up", "Restore", ExtendedSymbol.KeyboardBrightness, new(2, 1), isEnabled: false),
+            Command("lock-game", "Lock", ExtendedSymbol.Lock, new(2, 2)),
         ]);
 
     public static TouchMenuPageDescriptor Function { get; } = new(
@@ -119,4 +120,5 @@ internal static class ExtendedSymbol
     public const Symbol StaplingLandscapeBottomRight = (Symbol)0xF5A4;
     public const Symbol VerticalBattery3 = (Symbol)0xF5F5;
     public const Symbol TextSelect = (Symbol)0xF683;
+    public const Symbol Lock = (Symbol)0xE72E;
 }

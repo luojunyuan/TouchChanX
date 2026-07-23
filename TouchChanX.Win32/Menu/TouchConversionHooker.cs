@@ -57,7 +57,8 @@ internal static class TouchConversionHooker
         // Managed exceptions must not cross the native hook boundary.
         try
         {
-            if (nCode >= 0 && lParam.Value != 0)
+            if (nCode >= 0 &&
+                lParam.Value != 0)
                 HandleMouseHook(wParam, lParam);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
@@ -87,7 +88,8 @@ internal static class TouchConversionHooker
             touchWindowHandle = _touchWindowHandle;
         }
 
-        if (gameWindowHandle == nint.Zero || PInvoke.GetForegroundWindow() != new HWND(gameWindowHandle))
+        if (gameWindowHandle == nint.Zero ||
+            PInvoke.GetForegroundWindow() != new HWND(gameWindowHandle))
             return;
 
         if (OsPlatformApi.IsPointInsideWindowOrChild(info.pt, touchWindowHandle))

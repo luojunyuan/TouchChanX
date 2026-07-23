@@ -25,6 +25,12 @@ public static partial class OsPlatformApi // Window
     public static bool HideWindow(nint hWnd) => PInvoke.ShowWindow(new(hWnd), SHOW_WINDOW_CMD.SW_HIDE);
 
     /// <summary>
+    /// 显示窗口但不抢占当前焦点
+    /// </summary>
+    public static bool ShowWindowNoActivate(nint hwnd) =>
+        PInvoke.ShowWindow(new(hwnd), SHOW_WINDOW_CMD.SW_SHOWNOACTIVATE);
+
+    /// <summary>
     /// 在窗口处于最小化时恢复窗口
     /// </summary>
     public static void RestoreWindowQwQ(nint windowHandle)
@@ -41,6 +47,33 @@ public static partial class OsPlatformApi // Window
         PInvoke.GetClientRect(new(hwnd), out var initRect);
         return initRect.Size;
     }
+
+    /// <summary>
+    /// 获取窗口屏幕坐标和大小。
+    /// </summary>
+    public static bool TryGetWindowRectangle(nint hwnd, out Rectangle rectangle)
+    {
+        if (!PInvoke.GetWindowRect(new(hwnd), out var windowRect))
+        {
+            rectangle = default;
+            return false;
+        }
+
+        rectangle = new(windowRect.left, windowRect.top, windowRect.Width, windowRect.Height);
+        return true;
+    }
+
+    /// <summary>
+    /// 一次性设置窗口的屏幕坐标和大小。
+    /// </summary>
+    public static bool PositionWindow(nint hwnd, Rectangle rectangle) =>
+        PInvoke.MoveWindow(
+            new(hwnd),
+            rectangle.X,
+            rectangle.Y,
+            rectangle.Width,
+            rectangle.Height,
+            true);
 
     /// <summary>
     /// 判断屏幕坐标是否命中 Touch 窗口或其子窗口
@@ -106,6 +139,9 @@ public static partial class OsPlatformApi // Window
     {
         var oldStyle = (WindowStyles)PInvoke.GetWindowLong(new HWND(hwnd), WINDOW_LONG_PTR_INDEX.GWL_STYLE);
         var newStyle = enable ? oldStyle | style : oldStyle & ~style;
+        if (newStyle == oldStyle)
+            return;
+
         if (PInvoke.SetWindowLong(new HWND(hwnd), WINDOW_LONG_PTR_INDEX.GWL_STYLE, (int)newStyle) != (int)oldStyle)
             throw new Win32Exception();
     }
@@ -117,6 +153,9 @@ public static partial class OsPlatformApi // Window
     {
         var oldStyle = (ExtendedWindowStyles)PInvoke.GetWindowLong(new HWND(hwnd), WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
         var newStyle = enable ? oldStyle | style : oldStyle & ~style;
+        if (newStyle == oldStyle)
+            return;
+
         if (PInvoke.SetWindowLong(new HWND(hwnd), WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, (int)newStyle) != (int)oldStyle)
             throw new Win32Exception();
     }

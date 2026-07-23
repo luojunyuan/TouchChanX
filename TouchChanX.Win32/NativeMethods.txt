@@ -49,6 +49,14 @@ GetForegroundWindow
 WindowFromPoint
 OpenProcess
 CloseHandle
+CreateToolhelp32Snapshot
+Thread32First
+Thread32Next
+OpenThread
+SuspendThread
+ResumeThread
+THREAD_ACCESS_RIGHTS
+THREADENTRY32
 QueryFullProcessImageName
 PROCESS_ACCESS_RIGHTS
 
