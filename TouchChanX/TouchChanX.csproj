@@ -7,7 +7,8 @@
     <Platforms>x86;x64;ARM64</Platforms>
     <PublishAot>true</PublishAot>
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
-    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!--  打包项目中注释掉下面这行，否则无法激活 MSIX 应用  -->
+    <!--<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>-->
   </PropertyGroup>
   
   <ItemGroup>
