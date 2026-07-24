@@ -49,7 +49,7 @@ internal static class TouchMenuCatalog
             Toggle("keyboard", "Keyboard", ExtendedSymbol.KeyboardClassic, new(0, 2), isEnabled: false),
             Toggle("touch-to-mouse", "Tap Click", Symbol.TouchPointer, new(1, 0), toolTip: "When you tap, the previous tapped position will be clicked."),
             Navigate("function-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
-            Toggle("battery", "Battery", ExtendedSymbol.VerticalBattery3, new(1, 2), isEnabled: false),
+            Toggle("battery", "Battery", ExtendedSymbol.VerticalBattery3, new(1, 2)),
             Command("text-magnifier", "Text Magnifier", ExtendedSymbol.TextSelect, new(2, 0), isEnabled: false),
             Toggle("gesture", "Gesture", ExtendedSymbol.FingerInking, new(2, 1)),
             Command("game-handler", "Handler", ExtendedSymbol.Game, new(2, 2), isEnabled: false),

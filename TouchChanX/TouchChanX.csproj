@@ -7,7 +7,7 @@
     <Platforms>x86;x64;ARM64</Platforms>
     <PublishAot>true</PublishAot>
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
-    <!--<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>-->
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
   </PropertyGroup>
   
   <ItemGroup>

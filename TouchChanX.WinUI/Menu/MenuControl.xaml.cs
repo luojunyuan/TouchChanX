@@ -27,6 +27,9 @@ public sealed record TouchMenuToggleChanged(string Id, bool IsOn);
 
 public sealed partial class MenuControl : UserControl
 {
+    /// <summary>Set by host when battery hardware is present.</summary>
+    public static bool IsBatteryFeatureAvailable { get; set; }
+
     private const double MenuPadding = 24.0;
     private const int MaxBrightnessLevel = 8;
 
@@ -316,6 +319,7 @@ public sealed partial class MenuControl : UserControl
         {
             "brightness-down" => _brightnessLevel < MaxBrightnessLevel,
             "brightness-up" => _brightnessLevel > 0,
+            "battery" => IsBatteryFeatureAvailable,
             _ => item.IsEnabled,
         };
 

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using TouchChanX.Persistence;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
+using TouchChanX.Win32.Battery;
 using TouchChanX.Win32.Menu;
 
 namespace TouchChanX;
@@ -14,30 +15,42 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
     private nint _gameWindowHandle = gameWindowHandle;
     private readonly IDisposable? _splash = splash;
     private nint _touchWindowHandle;
+    private nint _hudWindowHandle;
+    private WinUI.HudWindow? _hudWindow;
     private IDisposable? _clientSizeSubscription;
     private IDisposable? _windowDestroyedSubscription;
+    private IDisposable? _batterySubscription;
+    private BatteryMonitor? _batteryMonitor;
     private bool _touchToMouseEnabled;
     private bool _gestureEnabled;
 
     public void Start()
     {
         InitializeReactiveRuntime();
+        WinUI.Menu.MenuControl.IsBatteryFeatureAvailable = BatteryMonitor.IsAvailable();
 
         var window = CreateMainWindow();
+        var hudWindow = CreateHudWindow();
+        _hudWindow = hudWindow;
+
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        var hudHwnd = WinRT.Interop.WindowNative.GetWindowHandle(hudWindow);
         _touchWindowHandle = hwnd;
+        _hudWindowHandle = hudHwnd;
+
         WindowConfiguration.ConfigureEmbeddedWindow(hwnd, _gameWindowHandle);
+        WindowConfiguration.ConfigureEmbeddedWindow(hudHwnd, _gameWindowHandle, clickThrough: true);
 
         var overlays = new GameWindowOverlayController(
             _gameWindowHandle,
-            window.ShowMessage);
-        SubscribeClientSize(hwnd, overlays);
+            hudWindow.ShowMessage);
+        SubscribeClientSize(hwnd, hudHwnd, overlays);
         SubscribeObservableRegions(window, hwnd);
         SubscribeMenuCommands(window, overlays);
-        SubscribeMenuToggles(window, hwnd);
-        SubscribeGestures(window);
-        ApplySettings(hwnd);
-        SubscribeGameWindowDestroyed(hwnd, overlays);
+        SubscribeMenuToggles(window, hwnd, hudWindow);
+        SubscribeGestures(window, hudWindow);
+        ApplySettings(hwnd, hudWindow);
+        SubscribeGameWindowDestroyed(hwnd, hudHwnd, overlays);
 
         window.InitializeBindings();
         window.Events().Closed.Subscribe(_ =>
@@ -45,8 +58,11 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
             DisposeGameWindowSubscriptions();
             TouchMenuCommandService.DisconnectGameWindowInteractions();
             overlays.Dispose();
+            CloseHudWindow();
         });
+
         window.Activate();
+        hudWindow.Activate();
 
         _splash?.Dispose();
     }
@@ -63,7 +79,13 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
             SystemBackdrop = new TransparentBackdrop()
         };
 
-    private void SubscribeClientSize(nint hwnd, GameWindowOverlayController overlays)
+    private static WinUI.HudWindow CreateHudWindow() =>
+        new()
+        {
+            SystemBackdrop = new TransparentBackdrop()
+        };
+
+    private void SubscribeClientSize(nint hwnd, nint hudHwnd, GameWindowOverlayController overlays)
     {
         // Keep the embedded window and its auxiliary overlays aligned with the game client area.
         _clientSizeSubscription?.Dispose();
@@ -71,6 +93,7 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
             .Subscribe(size =>
             {
                 OsPlatformApi.ResizeWindow(hwnd, size);
+                OsPlatformApi.ResizeWindow(hudHwnd, size);
                 overlays.UpdateClientSize(size);
             });
     }
@@ -84,9 +107,6 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
         WinUI.Touch.TouchControl.ObservableTouchRegionChanged
             .Select(touchRect => touchRect.Scale(window.Dpi).ToGdiRect())
             .Subscribe(observableRegions.SetBaseRegion);
-        window.MessageFlyoutVisibleRegionChanged
-            .Select(rect => rect?.Scale(window.Dpi).ToGdiRect())
-            .Subscribe(observableRegions.SetMessageFlyoutRegion);
     }
 
     private void SubscribeMenuCommands(WinUI.MainWindow window, GameWindowOverlayController overlays)
@@ -116,7 +136,7 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
             });
     }
 
-    private void SubscribeMenuToggles(WinUI.MainWindow window, nint hwnd)
+    private void SubscribeMenuToggles(WinUI.MainWindow window, nint hwnd, WinUI.HudWindow hudWindow)
     {
         WinUI.Menu.MenuControl.ObservableToggleChanged
             .TakeUntil(window.Events().Closed)
@@ -130,21 +150,61 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
                     case "gesture":
                         _gestureEnabled = toggle.IsOn;
                         break;
+                    case "battery":
+                        SetBatteryMonitoring(hudWindow, toggle.IsOn);
+                        break;
                 }
 
                 TouchMenuCommandService.SetToggleState(toggle.Id, toggle.IsOn, _gameWindowHandle, hwnd);
             });
     }
 
-    private static void SubscribeGestures(WinUI.MainWindow window)
+    private void SetBatteryMonitoring(WinUI.HudWindow hudWindow, bool isOn)
+    {
+        _batterySubscription?.Dispose();
+        _batterySubscription = null;
+        _batteryMonitor = null;
+
+        if (!isOn)
+        {
+            hudWindow.SetBatteryVisible(false);
+            return;
+        }
+
+        if (!BatteryMonitor.IsAvailable())
+        {
+            hudWindow.SetBatteryVisible(false);
+            return;
+        }
+
+        var monitor = new BatteryMonitor();
+        _batteryMonitor = monitor;
+        hudWindow.SetBatteryVisible(true);
+        _batterySubscription = monitor.Observe()
+            .Subscribe(snapshot => hudWindow.ApplyBatteryState(ToHudState(snapshot)));
+    }
+
+    private static WinUI.Controls.BatteryHudState ToHudState(BatteryHudSnapshot snapshot) =>
+        new(
+            snapshot.StatusText,
+            snapshot.PercentText,
+            snapshot.TimeLeftText,
+            snapshot.PowerDrawText,
+            snapshot.CapacityText,
+            snapshot.PercentFraction,
+            snapshot.HasBattery,
+            snapshot.IsCharging);
+
+
+    private static void SubscribeGestures(WinUI.MainWindow window, WinUI.HudWindow hudWindow)
     {
         TouchMenuCommandService.ObservableGestureRecognized
             .TakeUntil(window.Events().Closed)
             .Select(GetGestureMessage)
-            .Subscribe(window.ShowMessage);
+            .Subscribe(hudWindow.ShowMessage);
     }
 
-    private void ApplySettings(nint hwnd)
+    private void ApplySettings(nint hwnd, WinUI.HudWindow hudWindow)
     {
         var settings = new AppSettings();
         _touchToMouseEnabled = settings.TouchToMouse;
@@ -153,9 +213,11 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
             TouchMenuCommandService.SetToggleState("touch-to-mouse", true, _gameWindowHandle, hwnd);
         if (settings.Gesture)
             TouchMenuCommandService.SetToggleState("gesture", true, _gameWindowHandle, hwnd);
+        if (settings.Battery && BatteryMonitor.IsAvailable())
+            SetBatteryMonitoring(hudWindow, true);
     }
 
-    private void SubscribeGameWindowDestroyed(nint hwnd, GameWindowOverlayController overlays)
+    private void SubscribeGameWindowDestroyed(nint hwnd, nint hudHwnd, GameWindowOverlayController overlays)
     {
         // TODO: monitor parent destruction and attach to the next game window.
         _windowDestroyedSubscription?.Dispose();
@@ -165,6 +227,7 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
             DisposeGameWindowSubscriptions();
             overlays.HandleGameWindowDestroyed();
             WindowConfiguration.DetachEmbeddedWindow(hwnd);
+            WindowConfiguration.DetachEmbeddedWindow(hudHwnd);
         });
     }
 
@@ -174,6 +237,17 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
         _clientSizeSubscription = null;
         _windowDestroyedSubscription?.Dispose();
         _windowDestroyedSubscription = null;
+        _batterySubscription?.Dispose();
+        _batterySubscription = null;
+        _batteryMonitor = null;
+    }
+
+    private void CloseHudWindow()
+    {
+        var hud = _hudWindow;
+        _hudWindow = null;
+        _hudWindowHandle = nint.Zero;
+        hud?.Close();
     }
 
     private static string GetGestureMessage(RecognizedGesture gesture) =>
@@ -189,7 +263,6 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
     private sealed class WindowObservableRegionSet(nint hwnd)
     {
         private System.Drawing.Rectangle? _baseRegion;
-        private System.Drawing.Rectangle? _messageFlyoutRegion;
         private bool _usesOriginalRegion = true;
 
         public void UseOriginalRegion()
@@ -205,12 +278,6 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
             Apply();
         }
 
-        public void SetMessageFlyoutRegion(System.Drawing.Rectangle? rect)
-        {
-            _messageFlyoutRegion = rect;
-            Apply();
-        }
-
         private void Apply()
         {
             if (_usesOriginalRegion)
@@ -219,13 +286,10 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
                 return;
             }
 
-            var regions = new List<System.Drawing.Rectangle>();
             if (_baseRegion is { } baseRegion)
-                regions.Add(baseRegion);
-            if (_messageFlyoutRegion is { } messageFlyoutRegion)
-                regions.Add(messageFlyoutRegion);
-
-            OsPlatformApi.SetWindowObservableRegions(hwnd, regions);
+                OsPlatformApi.SetWindowObservableRegions(hwnd, [baseRegion]);
+            else
+                OsPlatformApi.ResetWindowOriginalObservableRegion(hwnd);
         }
     }
 }
@@ -248,3 +312,4 @@ public static class WinUIExtension
         public double Dpi => window.Content.XamlRoot.RasterizationScale;
     }
 }
+

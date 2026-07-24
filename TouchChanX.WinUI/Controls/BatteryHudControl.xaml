@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl x:Class="TouchChanX.WinUI.Controls.BatteryHudControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Width="360"
+    Height="112"
+    IsHitTestVisible="False"
+    RequestedTheme="Dark"
+    mc:Ignorable="d">
+
+    <Border Background="#CC2B2B2B"
+        BorderBrush="#575757"
+        BorderThickness="1"
+        CornerRadius="8">
+        <Grid Padding="11,9,12,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Border Width="32"
+                    Height="32"
+                    Background="#3B3B3B"
+                    CornerRadius="8">
+                    <FontIcon x:Name="BatteryIcon"
+                        FontFamily="Segoe MDL2 Assets"
+                        FontSize="20"
+                        Foreground="#60CDFF"
+                        Glyph="&#xF5F5;"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
+                </Border>
+
+                <TextBlock x:Name="StatusText"
+                    Grid.Column="1"
+                    Margin="0,2,0,0"
+                    VerticalAlignment="Top"
+                    FontSize="11"
+                    FontWeight="Medium"
+                    Foreground="White"
+                    Text="On battery" />
+
+                <TextBlock x:Name="PercentText"
+                    Grid.Column="2"
+                    Margin="0,-2,0,0"
+                    VerticalAlignment="Top"
+                    FontSize="20"
+                    FontWeight="Bold"
+                    Foreground="White"
+                    Text="--" />
+            </Grid>
+
+            <Grid Grid.Row="1"
+                Margin="44,8,0,0"
+                ColumnSpacing="16"
+                VerticalAlignment="Top">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock x:Name="TimeLeftLabel"
+                        FontSize="9"
+                        Foreground="#7A7A7A"
+                        Text="Time left" />
+                    <TextBlock x:Name="TimeLeftValue"
+                        FontSize="12"
+                        FontWeight="Medium"
+                        Foreground="White"
+                        Text="--" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock x:Name="PowerDrawLabel"
+                        FontSize="9"
+                        Foreground="#7A7A7A"
+                        Text="Power draw" />
+                    <TextBlock x:Name="PowerDrawValue"
+                        FontSize="12"
+                        FontWeight="Medium"
+                        Foreground="White"
+                        Text="--" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Spacing="2">
+                    <TextBlock x:Name="CapacityLabel"
+                        FontSize="9"
+                        Foreground="#7A7A7A"
+                        Text="Capacity" />
+                    <TextBlock x:Name="CapacityValue"
+                        FontSize="12"
+                        FontWeight="Medium"
+                        Foreground="White"
+                        Text="--" />
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="2"
+                Width="250"
+                Height="3"
+                Margin="44,0,0,0"
+                HorizontalAlignment="Left">
+                <Border Background="#575757" CornerRadius="2" />
+                <Border x:Name="ProgressFill"
+                    Width="0"
+                    HorizontalAlignment="Left"
+                    Background="#60CDFF"
+                    CornerRadius="2" />
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

@@ -1,23 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Shapes;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using TouchChanX.WinUI.Controls;
 
 namespace TouchChanX.WinUI;
 
@@ -28,31 +11,38 @@ public partial class App : Application
 {
     private Window? _window;
 
-    /// <summary>
-    /// Initializes the singleton application object.  This is the first line of authored code
-    /// executed, and as such is the logical equivalent of main() or WinMain().
-    /// </summary>
     public App()
     {
         InitializeComponent();
     }
 
-    /// <summary>
-    /// Invoked when the application is launched.
-    /// </summary>
-    /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         var mainWindow = new MainWindow();
-        AttachMessageFlyoutTestButton(mainWindow);
+        AttachSandboxOverlays(mainWindow);
         _window = mainWindow;
         _window.Activate();
     }
 
-    private static void AttachMessageFlyoutTestButton(MainWindow window)
+    /// <summary>
+    /// Entry sandbox only: visual previews without Win32 battery business logic.
+    /// </summary>
+    private static void AttachSandboxOverlays(MainWindow window)
     {
         if (window.Content is not Grid root)
             return;
+
+        var flyout = new MessageFlyoutControl();
+        root.Children.Add(flyout);
+
+        var batteryHud = new BatteryHudControl
+        {
+            Margin = new Thickness(0, 12, 12, 0),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Top,
+        };
+        batteryHud.Apply(BatteryHudControl.CreateSampleState());
+        root.Children.Add(batteryHud);
 
         var button = new Button
         {
@@ -65,7 +55,7 @@ public partial class App : Application
         };
 
         button.PointerPressed += (_, e) => e.Handled = true;
-        button.Click += (_, _) => window.ShowMessage("鼠标点击");
+        button.Click += (_, _) => flyout.ShowMessage("鼠标点击");
         root.Children.Add(button);
     }
 }
