@@ -10,10 +10,9 @@ namespace TouchChanX;
 internal sealed partial class GameWindowOverlayController : IDisposable
 {
     private readonly Action<string> _showMessage;
+    private readonly Action _dim;
+    private readonly Action _restoreBrightness;
     private nint _gameWindowHandle;
-    private System.Drawing.Size? _clientSize;
-    private WinUI.DimWindow? _dimWindow;
-    private nint _dimWindowHandle;
     private WinUI.LockWindow? _lockWindow;
     private IDisposable? _lockWindowInputSubscription;
     private GameProcessSuspension? _gameProcessSuspension;
@@ -22,17 +21,14 @@ internal sealed partial class GameWindowOverlayController : IDisposable
 
     public GameWindowOverlayController(
         nint gameWindowHandle,
-        Action<string> showMessage)
+        Action<string> showMessage,
+        Action dim,
+        Action restoreBrightness)
     {
         _gameWindowHandle = gameWindowHandle;
         _showMessage = showMessage;
-    }
-
-    public void UpdateClientSize(System.Drawing.Size size)
-    {
-        _clientSize = size;
-        if (_dimWindowHandle != nint.Zero)
-            OsPlatformApi.ResizeWindow(_dimWindowHandle, size);
+        _dim = dim;
+        _restoreBrightness = restoreBrightness;
     }
 
     public void Dim()
@@ -40,8 +36,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
         if (_isDisposed)
             return;
 
-        EnsureDimWindow();
-        _dimWindow!.Dim();
+        _dim();
     }
 
     public void RestoreBrightness()
@@ -49,7 +44,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
         if (_isDisposed)
             return;
 
-        CloseDimWindow();
+        _restoreBrightness();
     }
 
     public void OpenLockWindow()
@@ -97,7 +92,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
                 closedSubscription.Dispose();
             });
 
-            CloseDimWindow();
+            _restoreBrightness();
             candidate.Activate();
         }
         catch (Exception ex)
@@ -117,7 +112,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
         _isDisposed = true;
         CloseLockWindow(activateGame: false);
         _gameWindowHandle = nint.Zero;
-        CloseDimWindow();
+        _restoreBrightness();
     }
 
     public void Dispose()
@@ -127,30 +122,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
 
         _isDisposed = true;
         CloseLockWindow(activateGame: false);
-        CloseDimWindow();
-    }
-
-    private void EnsureDimWindow()
-    {
-        if (_dimWindow is not null)
-            return;
-
-        _dimWindow = new WinUI.DimWindow
-        {
-            SystemBackdrop = new TransparentBackdrop()
-        };
-        _dimWindowHandle = WinRT.Interop.WindowNative.GetWindowHandle(_dimWindow);
-        WindowConfiguration.ConfigureEmbeddedWindow(_dimWindowHandle, _gameWindowHandle, clickThrough: true);
-        if (_clientSize is { } size)
-            OsPlatformApi.ResizeWindow(_dimWindowHandle, size);
-        _dimWindow.Activate();
-    }
-
-    private void CloseDimWindow()
-    {
-        _dimWindow?.Close();
-        _dimWindow = null;
-        _dimWindowHandle = nint.Zero;
+        _restoreBrightness();
     }
 
     private bool FreezeGame(WinUI.LockWindow lockWindow, nint gameWindowHandle)

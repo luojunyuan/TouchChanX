@@ -14,5 +14,10 @@
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
             Visibility="Collapsed" />
+        <Grid x:Name="DimMask"
+            Background="Black"
+            IsHitTestVisible="False"
+            Opacity="0"
+            Visibility="Collapsed" />
     </Grid>
 </Window>

@@ -43,8 +43,10 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
 
         var overlays = new GameWindowOverlayController(
             _gameWindowHandle,
-            hudWindow.ShowMessage);
-        SubscribeClientSize(hwnd, hudHwnd, overlays);
+            hudWindow.ShowMessage,
+            hudWindow.Dim,
+            hudWindow.RestoreBrightness);
+        SubscribeClientSize(hwnd, hudHwnd);
         SubscribeObservableRegions(window, hwnd);
         SubscribeMenuCommands(window, overlays);
         SubscribeMenuToggles(window, hwnd, hudWindow);
@@ -85,7 +87,7 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
             SystemBackdrop = new TransparentBackdrop()
         };
 
-    private void SubscribeClientSize(nint hwnd, nint hudHwnd, GameWindowOverlayController overlays)
+    private void SubscribeClientSize(nint hwnd, nint hudHwnd)
     {
         // Keep the embedded window and its auxiliary overlays aligned with the game client area.
         _clientSizeSubscription?.Dispose();
@@ -94,7 +96,6 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
             {
                 OsPlatformApi.ResizeWindow(hwnd, size);
                 OsPlatformApi.ResizeWindow(hudHwnd, size);
-                overlays.UpdateClientSize(size);
             });
     }
 

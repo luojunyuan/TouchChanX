@@ -28,12 +28,12 @@ public sealed class BatteryMonitor
 
     // mWh capacity reported by the last successful sample.
     private int _lastCapacity;
-    // mW discharge rate reported by the last sample (typically negative while discharging).
+    // Number of consecutive seconds for which the raw discharge rate stayed unchanged.
     private int _lastDischargeRate;
     private int _stableRateSeconds;
     private double _displayCapacityMwh;
-    private int _averageRateMw;
-    private int _totalEnergyMwSeconds;
+    private long _averageRateMw;
+    private long _totalEnergyMwSeconds;
     private int _totalSeconds;
     private int _reserveCapacityMwh;
     private bool _wasOnAc;
@@ -189,16 +189,16 @@ public sealed class BatteryMonitor
 
         var fraction = Math.Clamp(info.CurrentCapacityMwh / (double)info.FullChargeCapacityMwh, 0, 1);
 
-        var powerDrawText = info.DischargeRateMw != 0
+        var powerDrawText = _averageRateMw < 0
             ? string.Create(
                 CultureInfo.InvariantCulture,
-                $"{Math.Abs(info.DischargeRateMw) / 1000.0:0.0} W ({_stableRateSeconds}s)")
+                $"{Math.Abs(_averageRateMw) / 1000.0:0.0} W ({_stableRateSeconds}s)")
             : "--";
 
         var timeLeftText = "--";
-        if (info.DischargeRateMw < 0 && _displayCapacityMwh > 0)
+        if (_averageRateMw < 0 && _displayCapacityMwh > 0)
         {
-            var totalSeconds = (int)(_displayCapacityMwh / -info.DischargeRateMw * 3600.0);
+            var totalSeconds = (long)(_displayCapacityMwh / -_averageRateMw * 3600.0);
             if (totalSeconds > 0)
             {
                 var hours = totalSeconds / 3600;
