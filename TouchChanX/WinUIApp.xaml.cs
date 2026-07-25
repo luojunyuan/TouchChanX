@@ -11,6 +11,14 @@ namespace TouchChanX;
 
 public static class WinUIApplication
 {
+    private static Action? _startupCompletedCallback;
+
+    internal static void SetStartupCompletedCallback(Action callback) =>
+        _startupCompletedCallback = callback;
+
+    internal static void SignalStartupCompleted() =>
+        Interlocked.Exchange(ref _startupCompletedCallback, null)?.Invoke();
+
     public static void ShowUnknownGameDpiNotification()
     {
         var toast = new AppNotificationBuilder()
@@ -59,12 +67,12 @@ public static class WinUIApplication
                 });
     }
 
-    public static void RunWithGameWindow(nint gameWindowHandle, IDisposable? splash = null)
+    public static void RunWithGameWindow(nint gameWindowHandle)
     {
         bool succeed = PrepareMsixDependency();
         if (!succeed)
         {
-            splash?.Dispose();
+            SignalStartupCompleted();
             return;
         }
 
@@ -72,7 +80,7 @@ public static class WinUIApplication
 
         Application.Start(p =>
         {
-            var app = new WinUIApp(gameWindowHandle, splash);
+            var app = new WinUIApp(gameWindowHandle);
             // NOTE: 在 TouchChanX.UWP App.xaml 中引用 RailNavigationViewResources 后
             // 我们这里必须要在 OnLaunched 前调用 InitializeComponent()，否则会报错
             app.InitializeComponent();
@@ -80,13 +88,13 @@ public static class WinUIApplication
     }
 }
 
-public partial class WinUIApp(nint gameWindowHandle, IDisposable? splash = null)
+public partial class WinUIApp(nint gameWindowHandle)
 {
     private WinUIAppController? _controller;
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _controller = new WinUIAppController(gameWindowHandle, splash);
+        _controller = new WinUIAppController(gameWindowHandle);
         _controller.Start();
     }
 }

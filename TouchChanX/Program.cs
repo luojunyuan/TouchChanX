@@ -1,10 +1,9 @@
-using TouchChanX;
 using TouchChanX.SplashScreenGdiPlus;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
 using TouchChanX.Persistence;
 
-if (ExternalLauncherTestStartup.TryHandle(args.FirstOrDefault()))
+if (TouchChanX.ExternalLauncherTestStartup.TryHandle(args.FirstOrDefault()))
     return;
 
 if (args.Length == 0)
@@ -80,5 +79,5 @@ if (GameStartup.HasAttachedCurrentTouchChanX(gameWindowHandle))
 if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000) && OsPlatformApi.IsDpiUnaware(process))
     TouchChanX.WinUIApplication.ShowUnknownGameDpiNotification();
 
-// NOTE: splash 由 WinUIApp.OnLaunched 在 window.Activate() 之后释放
-TouchChanX.WinUIApplication.RunWithGameWindow(gameWindowHandle, splash);
+TouchChanX.WinUIApplication.SetStartupCompletedCallback(splash.Dispose);
+TouchChanX.WinUIApplication.RunWithGameWindow(gameWindowHandle);

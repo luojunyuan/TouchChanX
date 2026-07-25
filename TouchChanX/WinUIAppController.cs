@@ -10,10 +10,9 @@ using TouchChanX.Win32.Menu;
 
 namespace TouchChanX;
 
-internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposable? splash)
+internal sealed partial class WinUIAppController(nint gameWindowHandle)
 {
     private nint _gameWindowHandle = gameWindowHandle;
-    private readonly IDisposable? _splash = splash;
     private nint _touchWindowHandle;
     private nint _hudWindowHandle;
     private WinUI.HudWindow? _hudWindow;
@@ -66,7 +65,7 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle, IDisposa
         window.Activate();
         hudWindow.Activate();
 
-        _splash?.Dispose();
+        WinUIApplication.SignalStartupCompleted();
     }
 
     private static void InitializeReactiveRuntime()
