@@ -11,6 +11,13 @@ namespace TouchChanX;
 
 public static class WinUIApplication
 {
+    private static readonly Lazy<bool> MsixDependencyPrepared = new(PrepareMsixDependency);
+    private static readonly Lazy<bool> ComWrappersInitialized = new(() =>
+    {
+        ComWrappersSupport.InitializeComWrappers();
+        return true;
+    });
+
     private static Action? _startupCompletedCallback;
 
     internal static void SetStartupCompletedCallback(Action callback) =>
@@ -67,34 +74,47 @@ public static class WinUIApplication
                 });
     }
 
-    public static void RunWithGameWindow(nint gameWindowHandle)
+    public static bool RunWithGameWindow(nint gameWindowHandle)
     {
-        bool succeed = PrepareMsixDependency();
-        if (!succeed)
+        if (!MsixDependencyPrepared.Value)
         {
             SignalStartupCompleted();
-            return;
+            return false;
         }
 
-        ComWrappersSupport.InitializeComWrappers();
+        _ = ComWrappersInitialized.Value;
 
         Application.Start(p =>
         {
-            var app = new WinUIApp(gameWindowHandle);
-            // NOTE: 在 TouchChanX.UWP App.xaml 中引用 RailNavigationViewResources 后
-            // 我们这里必须要在 OnLaunched 前调用 InitializeComponent()，否则会报错
-            app.InitializeComponent();
+            var context = new Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(
+                Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
+            SynchronizationContext.SetSynchronizationContext(context);
+            _ = new WinUIApp(gameWindowHandle);
         });
+
+        return true;
     }
 }
 
-public partial class WinUIApp(nint gameWindowHandle)
+public partial class WinUIApp : Application
 {
+    private readonly nint _gameWindowHandle;
     private WinUIAppController? _controller;
+
+    public WinUIApp(nint gameWindowHandle)
+    {
+        _gameWindowHandle = gameWindowHandle;
+        InitializeComponent();
+    }
+
+    public WinUIApp()
+        : this(nint.Zero)
+    {
+    }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _controller = new WinUIAppController(gameWindowHandle);
+        _controller = new WinUIAppController(_gameWindowHandle);
         _controller.Start();
     }
 }

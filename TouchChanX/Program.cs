@@ -53,31 +53,47 @@ if (processResult.IsFailure(out var processError, out var process))
 process.EnableRaisingEvents = true;
 process.Exited += (_, _) => Environment.Exit(0);
 
-var handleResult = GameStartup.FindGoodWindowHandleAsync(process).GetAwaiter().GetResult();
-if (handleResult.IsFailure(out var error, out var gameWindowHandle))
+var isFirstWinUiRun = true;
+while (!process.HasExited)
 {
-    splash.Dispose();
-    switch (error)
+    var handleResult = GameStartup.FindGoodWindowHandleAsync(process).GetAwaiter().GetResult();
+    if (handleResult.IsFailure(out var error, out var gameWindowHandle))
     {
-        case WindowHandleNotFoundError:
-            OsPlatformApi.MessageBox.Show("Timeout! Failed to find a valid window of game");
-            return;
-        case ProcessExitedError:
-        case ProcessPendingExitedError:
-            return;
+        splash.Dispose();
+        switch (error)
+        {
+            case WindowHandleNotFoundError:
+                OsPlatformApi.MessageBox.Show("Timeout! Failed to find a valid window of game");
+                return;
+            case ProcessExitedError:
+            case ProcessPendingExitedError:
+                return;
+        }
     }
+
+    OsPlatformApi.ActivateWindow(gameWindowHandle);
+
+    if (GameStartup.HasAttachedCurrentTouchChanX(gameWindowHandle))
+    {
+        splash.Dispose();
+        return;
+    }
+
+    if (isFirstWinUiRun)
+    {
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000) && OsPlatformApi.IsDpiUnaware(process))
+            TouchChanX.WinUIApplication.ShowUnknownGameDpiNotification();
+
+        TouchChanX.WinUIApplication.SetStartupCompletedCallback(splash.Dispose);
+    }
+
+    if (!TouchChanX.WinUIApplication.RunWithGameWindow(gameWindowHandle))
+    {
+        splash.Dispose();
+        return;
+    }
+
+    isFirstWinUiRun = false;
 }
 
-OsPlatformApi.ActivateWindow(gameWindowHandle);
-
-if (GameStartup.HasAttachedCurrentTouchChanX(gameWindowHandle))
-{
-    splash.Dispose();
-    return;
-}
-
-if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000) && OsPlatformApi.IsDpiUnaware(process))
-    TouchChanX.WinUIApplication.ShowUnknownGameDpiNotification();
-
-TouchChanX.WinUIApplication.SetStartupCompletedCallback(splash.Dispose);
-TouchChanX.WinUIApplication.RunWithGameWindow(gameWindowHandle);
+splash.Dispose();

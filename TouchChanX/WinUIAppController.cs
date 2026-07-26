@@ -59,7 +59,7 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
         SubscribeGamepad(window, gamepadController);
         SubscribeGestures(window, hudWindow);
         ApplySettings(hwnd, hudWindow, gamepadController);
-        SubscribeGameWindowDestroyed(hwnd, hudHwnd, overlays, gamepadController);
+        SubscribeGameWindowDestroyed(window, hudWindow, hwnd, hudHwnd, overlays, gamepadController);
 
         window.InitializeBindings();
         window.Events().Closed.Subscribe(_ =>
@@ -113,9 +113,11 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
         var observableRegions = new WindowObservableRegionSet(hwnd);
         WinUI.Touch.TouchControl.ObservableRegionResetRequested
             .Merge(WinUI.Menu.MenuControl.ObservableRegionResetRequested)
+            .TakeUntil(window.Events().Closed)
             .Subscribe(_ => observableRegions.UseOriginalRegion());
         WinUI.Touch.TouchControl.ObservableTouchRegionChanged
             .Select(touchRect => touchRect.Scale(window.Dpi).ToGdiRect())
+            .TakeUntil(window.Events().Closed)
             .Subscribe(observableRegions.SetBaseRegion);
     }
 
@@ -259,15 +261,21 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
     }
 
     private void SubscribeGameWindowDestroyed(
+        WinUI.MainWindow window,
+        WinUI.HudWindow hudWindow,
         nint hwnd,
         nint hudHwnd,
         GameWindowOverlayController overlays,
         GamepadController gamepadController)
     {
-        // TODO: monitor parent destruction and attach to the next game window.
+        // The outer Program owns the game process and starts a new WinUI
+        // lifetime after this Application.Start call returns.
         _windowDestroyedSubscription?.Dispose();
         _windowDestroyedSubscription = GameWindowService.WindowDestroyed(_gameWindowHandle).Subscribe(_ =>
         {
+            if (_gameWindowHandle == nint.Zero)
+                return;
+
             _gameWindowHandle = nint.Zero;
             DisposeGameWindowSubscriptions();
             gamepadController.SetEnabled(false);
@@ -275,6 +283,14 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
             overlays.HandleGameWindowDestroyed();
             WindowConfiguration.DetachEmbeddedWindow(hwnd);
             WindowConfiguration.DetachEmbeddedWindow(hudHwnd);
+
+            // Application.Exit() stops the current dispatcher, but it does not
+            // close windows that are still alive. Close both windows first so
+            // the XAML tree and resource dictionaries are released before a
+            // later Application.Start creates the next WinUI lifetime.
+            hudWindow.Close();
+            window.Close();
+            Application.Current.Exit();
         });
     }
 
