@@ -86,9 +86,6 @@ public static class WinUIApplication
 
         Application.Start(p =>
         {
-            var context = new Microsoft.UI.Dispatching.DispatcherQueueSynchronizationContext(
-                Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread());
-            SynchronizationContext.SetSynchronizationContext(context);
             _ = new WinUIApp(gameWindowHandle);
         });
 
@@ -104,6 +101,8 @@ public partial class WinUIApp : Application
     public WinUIApp(nint gameWindowHandle)
     {
         _gameWindowHandle = gameWindowHandle;
+        // NOTE: 在 TouchChanX.UWP App.xaml 中引用 RailNavigationViewResources 后
+        // 我们这里必须要在 OnLaunched 前调用 InitializeComponent()，否则会报错
         InitializeComponent();
     }
 

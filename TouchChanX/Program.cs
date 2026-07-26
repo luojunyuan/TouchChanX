@@ -51,7 +51,10 @@ if (processResult.IsFailure(out var processError, out var process))
 
 // NOTE: 无论是 WPF 的 Owned 还是 WinUI 的 Child 窗口都跟随父进程结束而结束
 process.EnableRaisingEvents = true;
-process.Exited += (_, _) => Environment.Exit(0);
+process.Exited += (_, _) =>
+{
+    Environment.Exit(0);
+};
 
 var isFirstWinUiRun = true;
 while (!process.HasExited)
