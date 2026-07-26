@@ -74,46 +74,59 @@ public static class WinUIApplication
                 });
     }
 
-    public static bool RunWithGameWindow(nint gameWindowHandle)
+    public static void RunWithGameProcess(Process process)
     {
+        // WinUI owns one process-scoped dispatcher; game windows rotate inside it.
         if (!MsixDependencyPrepared.Value)
         {
             SignalStartupCompleted();
-            return false;
+            Environment.Exit(0);
+            return;
         }
 
         _ = ComWrappersInitialized.Value;
 
-        Application.Start(p =>
+        try
         {
-            _ = new WinUIApp(gameWindowHandle);
-        });
+            Application.Start(_initializationParams =>
+            {
+                new WinUIApp(process);
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"WinUI application failed: {ex}");
+            SignalStartupCompleted();
+        }
 
-        return true;
+        Environment.Exit(0);
     }
 }
 
 public partial class WinUIApp : Application
 {
-    private readonly nint _gameWindowHandle;
+    private readonly Process _process;
     private WinUIAppController? _controller;
 
-    public WinUIApp(nint gameWindowHandle)
+    public WinUIApp(Process process)
     {
-        _gameWindowHandle = gameWindowHandle;
+        _process = process;
         // NOTE: 在 TouchChanX.UWP App.xaml 中引用 RailNavigationViewResources 后
         // 我们这里必须要在 OnLaunched 前调用 InitializeComponent()，否则会报错
         InitializeComponent();
     }
 
+    // Required by the generated XAML entry point. The packaged entry path
+    // supplies the game process through the constructor above.
     public WinUIApp()
-        : this(nint.Zero)
+        : this(Process.GetCurrentProcess())
     {
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _controller = new WinUIAppController(_gameWindowHandle);
+        DispatcherShutdownMode = DispatcherShutdownMode.OnExplicitShutdown;
+        _controller = new WinUIAppController(_process);
         _controller.Start();
     }
 }

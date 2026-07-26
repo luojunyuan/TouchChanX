@@ -56,47 +56,5 @@ process.Exited += (_, _) =>
     Environment.Exit(0);
 };
 
-var isFirstWinUiRun = true;
-while (!process.HasExited)
-{
-    var handleResult = GameStartup.FindGoodWindowHandleAsync(process).GetAwaiter().GetResult();
-    if (handleResult.IsFailure(out var error, out var gameWindowHandle))
-    {
-        splash.Dispose();
-        switch (error)
-        {
-            case WindowHandleNotFoundError:
-                OsPlatformApi.MessageBox.Show("Timeout! Failed to find a valid window of game");
-                return;
-            case ProcessExitedError:
-            case ProcessPendingExitedError:
-                return;
-        }
-    }
-
-    OsPlatformApi.ActivateWindow(gameWindowHandle);
-
-    if (GameStartup.HasAttachedCurrentTouchChanX(gameWindowHandle))
-    {
-        splash.Dispose();
-        return;
-    }
-
-    if (isFirstWinUiRun)
-    {
-        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000) && OsPlatformApi.IsDpiUnaware(process))
-            TouchChanX.WinUIApplication.ShowUnknownGameDpiNotification();
-
-        TouchChanX.WinUIApplication.SetStartupCompletedCallback(splash.Dispose);
-    }
-
-    if (!TouchChanX.WinUIApplication.RunWithGameWindow(gameWindowHandle))
-    {
-        splash.Dispose();
-        return;
-    }
-
-    isFirstWinUiRun = false;
-}
-
-splash.Dispose();
+TouchChanX.WinUIApplication.SetStartupCompletedCallback(splash.Dispose);
+TouchChanX.WinUIApplication.RunWithGameProcess(process);

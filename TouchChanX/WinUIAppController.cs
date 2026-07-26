@@ -1,81 +1,115 @@
-using Microsoft.UI.Xaml;
 using R3;
-using R3.ObservableEvents;
 using System.Diagnostics;
-using TouchChanX.Persistence;
 using TouchChanX.Win32;
-using TouchChanX.Win32.Gamepad;
-using TouchChanX.Win32.Interop;
 using TouchChanX.Win32.Battery;
-using TouchChanX.Win32.Menu;
+using TouchChanX.Win32.Interop;
 
 namespace TouchChanX;
 
-internal sealed partial class WinUIAppController(nint gameWindowHandle)
+/// <summary>
+/// Owns the process-scoped WinUI lifetime and rotates game-window sessions inside it.
+/// </summary>
+internal sealed partial class WinUIAppController(Process process)
 {
-    private nint _gameWindowHandle = gameWindowHandle;
-    private nint _touchWindowHandle;
-    private nint _hudWindowHandle;
-    private WinUI.HudWindow? _hudWindow;
-    private IDisposable? _clientSizeSubscription;
-    private IDisposable? _windowDestroyedSubscription;
-    private IDisposable? _batterySubscription;
-    private BatteryMonitor? _batteryMonitor;
-    private GamepadController? _gamepadController;
-    private WinUI.GamepadWindow? _gamepadWindow;
-    private IDisposable? _gamepadWindowClosedSubscription;
-    private bool _touchToMouseEnabled;
-    private bool _gestureEnabled;
+    private readonly Process _process = process;
+    private bool _isFirstGameWindow = true;
+    private IDisposable? _windowLoopSubscription;
 
     public void Start()
     {
         InitializeReactiveRuntime();
         WinUI.Menu.MenuControl.IsBatteryFeatureAvailable = BatteryMonitor.IsAvailable();
+        _windowLoopSubscription = CreateWindowLoop()
+            // A window can disappear during startup and complete synchronously.
+            // Trampoline keeps the next lookup from growing the call stack recursively.
+            .Trampoline()
+            .Subscribe(
+                static _ => { },
+                HandleWindowLoopResult);
+    }
 
-        var window = CreateMainWindow();
-        var hudWindow = CreateHudWindow();
-        var gamepadController = new GamepadController(_gameWindowHandle);
-        _gamepadController = gamepadController;
-        _hudWindow = hudWindow;
-        window.SetGamepadFeatureAvailable(gamepadController.HasConnectedController);
+    private Observable<Unit> CreateWindowLoop() =>
+        Observable.Defer(CreateWindowSession);
 
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-        var hudHwnd = WinRT.Interop.WindowNative.GetWindowHandle(hudWindow);
-        _touchWindowHandle = hwnd;
-        _hudWindowHandle = hudHwnd;
-
-        WindowConfiguration.ConfigureEmbeddedWindow(hwnd, _gameWindowHandle);
-        WindowConfiguration.ConfigureEmbeddedWindow(hudHwnd, _gameWindowHandle, clickThrough: true);
-
-        var overlays = new GameWindowOverlayController(
-            _gameWindowHandle,
-            hudWindow.ShowMessage,
-            hudWindow.Dim,
-            hudWindow.RestoreBrightness);
-        SubscribeClientSize(hwnd, hudHwnd);
-        SubscribeObservableRegions(window, hwnd);
-        SubscribeMenuCommands(window, overlays);
-        SubscribeMenuToggles(window, hwnd, hudWindow, gamepadController);
-        SubscribeGamepad(window, gamepadController);
-        SubscribeGestures(window, hudWindow);
-        ApplySettings(hwnd, hudWindow, gamepadController);
-        SubscribeGameWindowDestroyed(window, hudWindow, hwnd, hudHwnd, overlays, gamepadController);
-
-        window.InitializeBindings();
-        window.Events().Closed.Subscribe(_ =>
+    private Observable<Unit> CreateWindowSession()
+    {
+        try
         {
-            DisposeGameWindowSubscriptions();
-            TouchMenuCommandService.DisconnectGameWindowInteractions();
-            gamepadController.Dispose();
-            CloseGamepadWindow();
-            overlays.Dispose();
-            CloseHudWindow();
-        });
+            return CreateWindowSessionCore();
+        }
+        catch (Exception ex)
+        {
+            return Observable.Create<Unit>(observer =>
+            {
+                observer.OnCompleted(Result.Failure(ex));
+                return Disposable.Empty;
+            });
+        }
+    }
 
-        window.Activate();
-        hudWindow.Activate();
+    private Observable<Unit> CreateWindowSessionCore()
+    {
+        if (_process.HasExited)
+            return Observable.Empty<Unit>();
 
+        var handleResult = GameStartup.FindGoodWindowHandle(_process);
+        if (handleResult.IsFailure(out var error, out var gameWindowHandle))
+        {
+            if (error is WindowHandleNotFoundError)
+                OsPlatformApi.MessageBox.Show("Timeout! Failed to find a valid window of game");
+
+            return Observable.Empty<Unit>();
+        }
+
+        if (GameStartup.HasAttachedCurrentTouchChanX(gameWindowHandle))
+            return Observable.Empty<Unit>();
+
+        var windowLifetime = new GameWindowLifetime(
+            _process,
+            gameWindowHandle,
+            isFirstGameWindow: _isFirstGameWindow);
+
+        return Observable.Create<Unit>(observer =>
+        {
+            IDisposable? lifetimeSubscription = null;
+            try
+            {
+                lifetimeSubscription = windowLifetime.Completed.Subscribe(
+                    _ =>
+                    {
+                        _isFirstGameWindow = false;
+                        observer.OnNext(Unit.Default);
+                    },
+                    observer.OnCompleted);
+
+                windowLifetime.Start();
+            }
+            catch (Exception ex)
+            {
+                lifetimeSubscription?.Dispose();
+                windowLifetime.Dispose();
+                observer.OnCompleted(Result.Failure(ex));
+                return Disposable.Empty;
+            }
+
+            return Disposable.Create(() =>
+            {
+                lifetimeSubscription?.Dispose();
+                windowLifetime.Dispose();
+            });
+        }).Concat(Observable.Defer(CreateWindowLoop));
+    }
+
+    private void HandleWindowLoopResult(Result result)
+    {
+        if (result.IsFailure)
+        {
+            Debug.WriteLine($"WinUI game window loop failed: {result.Exception}");
+        }
+
+        _windowLoopSubscription = null;
         WinUIApplication.SignalStartupCompleted();
+        Environment.Exit(0);
     }
 
     private static void InitializeReactiveRuntime()
@@ -83,336 +117,4 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
         ObservableSystem.RegisterUnhandledExceptionHandler(ex => Debug.WriteLine(ex.ToString()));
         ObservableSystem.DefaultTimeProvider = WinUI3DispatcherTimeProvider.Default;
     }
-
-    private static WinUI.MainWindow CreateMainWindow() =>
-        new()
-        {
-            SystemBackdrop = new TransparentBackdrop()
-        };
-
-    private static WinUI.HudWindow CreateHudWindow() =>
-        new()
-        {
-            SystemBackdrop = new TransparentBackdrop()
-        };
-
-    private void SubscribeClientSize(nint hwnd, nint hudHwnd)
-    {
-        // Keep the embedded window and its auxiliary overlays aligned with the game client area.
-        _clientSizeSubscription?.Dispose();
-        _clientSizeSubscription = GameWindowService.ClientSizeChanged(_gameWindowHandle)
-            .Subscribe(size =>
-            {
-                OsPlatformApi.ResizeWindow(hwnd, size);
-                OsPlatformApi.ResizeWindow(hudHwnd, size);
-            });
-    }
-
-    private static void SubscribeObservableRegions(WinUI.MainWindow window, nint hwnd)
-    {
-        var observableRegions = new WindowObservableRegionSet(hwnd);
-        WinUI.Touch.TouchControl.ObservableRegionResetRequested
-            .Merge(WinUI.Menu.MenuControl.ObservableRegionResetRequested)
-            .TakeUntil(window.Events().Closed)
-            .Subscribe(_ => observableRegions.UseOriginalRegion());
-        WinUI.Touch.TouchControl.ObservableTouchRegionChanged
-            .Select(touchRect => touchRect.Scale(window.Dpi).ToGdiRect())
-            .TakeUntil(window.Events().Closed)
-            .Subscribe(observableRegions.SetBaseRegion);
-    }
-
-    private void SubscribeMenuCommands(WinUI.MainWindow window, GameWindowOverlayController overlays)
-    {
-        WinUI.Menu.MenuControl.ObservableCommandRequested
-            .TakeUntil(window.Events().Closed)
-            .SubscribeAwait(async (commandId, _) =>
-            {
-                switch (commandId)
-                {
-                    case "stretch":
-                        StretchWindowService.Toggle(_gameWindowHandle);
-                        return;
-                    case "brightness-down":
-                        overlays.Dim();
-                        return;
-                    case "brightness-up":
-                        overlays.RestoreBrightness();
-                        return;
-                    case "lock-game":
-                        overlays.OpenLockWindow();
-                        return;
-                    default:
-                        await TouchMenuCommandService.ExecuteAsync(commandId, _gameWindowHandle);
-                        return;
-                }
-            });
-    }
-
-    private void SubscribeMenuToggles(
-        WinUI.MainWindow window,
-        nint hwnd,
-        WinUI.HudWindow hudWindow,
-        GamepadController gamepadController)
-    {
-        WinUI.Menu.MenuControl.ObservableToggleChanged
-            .TakeUntil(window.Events().Closed)
-            .Subscribe(toggle =>
-            {
-                switch (toggle.Id)
-                {
-                    case "touch-to-mouse":
-                        _touchToMouseEnabled = toggle.IsOn;
-                        break;
-                    case "gesture":
-                        _gestureEnabled = toggle.IsOn;
-                        break;
-                    case "battery":
-                        SetBatteryMonitoring(hudWindow, toggle.IsOn);
-                        break;
-                    case "game-handler":
-                        gamepadController.SetEnabled(toggle.IsOn);
-                        if (!toggle.IsOn)
-                            CloseGamepadWindow();
-                        break;
-                }
-
-                TouchMenuCommandService.SetToggleState(toggle.Id, toggle.IsOn, _gameWindowHandle, hwnd);
-            });
-    }
-
-    private void SubscribeGamepad(WinUI.MainWindow window, GamepadController gamepadController)
-    {
-        gamepadController.ObservableAvailabilityChanged
-            .TakeUntil(window.Events().Closed)
-            .Subscribe(isAvailable =>
-            {
-                window.SetGamepadFeatureAvailable(isAvailable);
-                if (!isAvailable)
-                    gamepadController.SetEnabled(false);
-            });
-
-        gamepadController.ObservableMappingRequested
-            .TakeUntil(window.Events().Closed)
-            .Subscribe(_ => ToggleGamepadWindow());
-    }
-
-    private void SetBatteryMonitoring(WinUI.HudWindow hudWindow, bool isOn)
-    {
-        _batterySubscription?.Dispose();
-        _batterySubscription = null;
-        _batteryMonitor = null;
-
-        if (!isOn)
-        {
-            hudWindow.SetBatteryVisible(false);
-            return;
-        }
-
-        if (!BatteryMonitor.IsAvailable())
-        {
-            hudWindow.SetBatteryVisible(false);
-            return;
-        }
-
-        var monitor = new BatteryMonitor();
-        _batteryMonitor = monitor;
-        hudWindow.SetBatteryVisible(true);
-        _batterySubscription = monitor.Observe()
-            .Subscribe(snapshot => hudWindow.ApplyBatteryState(ToHudState(snapshot)));
-    }
-
-    private static WinUI.Controls.BatteryHudState ToHudState(BatteryHudSnapshot snapshot) =>
-        new(
-            snapshot.StatusText,
-            snapshot.PercentText,
-            snapshot.TimeLeftText,
-            snapshot.PowerDrawText,
-            snapshot.CapacityText,
-            snapshot.PercentFraction,
-            snapshot.HasBattery,
-            snapshot.IsCharging);
-
-
-    private static void SubscribeGestures(WinUI.MainWindow window, WinUI.HudWindow hudWindow)
-    {
-        TouchMenuCommandService.ObservableGestureRecognized
-            .TakeUntil(window.Events().Closed)
-            .Select(GetGestureMessage)
-            .Subscribe(hudWindow.ShowMessage);
-    }
-
-    private void ApplySettings(
-        nint hwnd,
-        WinUI.HudWindow hudWindow,
-        GamepadController gamepadController)
-    {
-        var settings = new AppSettings();
-        _touchToMouseEnabled = settings.TouchToMouse;
-        _gestureEnabled = settings.Gesture;
-        if (settings.TouchToMouse)
-            TouchMenuCommandService.SetToggleState("touch-to-mouse", true, _gameWindowHandle, hwnd);
-        if (settings.Gesture)
-            TouchMenuCommandService.SetToggleState("gesture", true, _gameWindowHandle, hwnd);
-        if (settings.Battery && BatteryMonitor.IsAvailable())
-            SetBatteryMonitoring(hudWindow, true);
-        if (gamepadController.HasConnectedController &&
-            (!settings.HasGamepadSetting || settings.Gamepad))
-            gamepadController.SetEnabled(true);
-    }
-
-    private void SubscribeGameWindowDestroyed(
-        WinUI.MainWindow window,
-        WinUI.HudWindow hudWindow,
-        nint hwnd,
-        nint hudHwnd,
-        GameWindowOverlayController overlays,
-        GamepadController gamepadController)
-    {
-        // The outer Program owns the game process and starts a new WinUI
-        // lifetime after this Application.Start call returns.
-        _windowDestroyedSubscription?.Dispose();
-        _windowDestroyedSubscription = GameWindowService.WindowDestroyed(_gameWindowHandle).Subscribe(_ =>
-        {
-            if (_gameWindowHandle == nint.Zero)
-                return;
-
-            _gameWindowHandle = nint.Zero;
-            DisposeGameWindowSubscriptions();
-            gamepadController.SetEnabled(false);
-            CloseGamepadWindow();
-            overlays.HandleGameWindowDestroyed();
-            WindowConfiguration.DetachEmbeddedWindow(hwnd);
-            WindowConfiguration.DetachEmbeddedWindow(hudHwnd);
-
-            // Application.Exit() stops the current dispatcher, but it does not
-            // close windows that are still alive. Close both windows first so
-            // the XAML tree and resource dictionaries are released before a
-            // later Application.Start creates the next WinUI lifetime.
-            hudWindow.Close();
-            window.Close();
-            Application.Current.Exit();
-        });
-    }
-
-    private void DisposeGameWindowSubscriptions()
-    {
-        _clientSizeSubscription?.Dispose();
-        _clientSizeSubscription = null;
-        _windowDestroyedSubscription?.Dispose();
-        _windowDestroyedSubscription = null;
-        _batterySubscription?.Dispose();
-        _batterySubscription = null;
-        _batteryMonitor = null;
-    }
-
-    private void ToggleGamepadWindow()
-    {
-        if (_gamepadWindow is not null)
-        {
-            CloseGamepadWindow();
-            return;
-        }
-
-        if (_gamepadController is not { IsEnabled: true })
-            return;
-
-        var mappings = GamepadController.Mappings
-            .Select(static mapping => (mapping.Button, mapping.Key))
-            .ToArray();
-        var candidate = new WinUI.GamepadWindow(mappings);
-        _gamepadWindow = candidate;
-        _gamepadWindowClosedSubscription = candidate.Events().Closed.Subscribe(_ =>
-        {
-            if (!ReferenceEquals(_gamepadWindow, candidate))
-                return;
-
-            _gamepadWindow = null;
-            var subscription = _gamepadWindowClosedSubscription;
-            _gamepadWindowClosedSubscription = null;
-            subscription?.Dispose();
-        });
-        candidate.ShowWithoutActivation();
-    }
-
-    private void CloseGamepadWindow()
-    {
-        var window = _gamepadWindow;
-        _gamepadWindow = null;
-
-        var subscription = _gamepadWindowClosedSubscription;
-        _gamepadWindowClosedSubscription = null;
-        subscription?.Dispose();
-        window?.Close();
-    }
-
-    private void CloseHudWindow()
-    {
-        var hud = _hudWindow;
-        _hudWindow = null;
-        _hudWindowHandle = nint.Zero;
-        hud?.Close();
-    }
-
-    private static string GetGestureMessage(RecognizedGesture gesture) =>
-        gesture switch
-        {
-            RecognizedGesture.ThreeFingerTap => "空格",
-            RecognizedGesture.TwoFingerTap => "鼠标右键",
-            RecognizedGesture.TwoFingerSwipeUp => "滚轮上划",
-            RecognizedGesture.TwoFingerSwipeDown => "滚轮下滑",
-            _ => gesture.ToString(),
-        };
-
-    private sealed class WindowObservableRegionSet(nint hwnd)
-    {
-        private System.Drawing.Rectangle? _baseRegion;
-        private bool _usesOriginalRegion = true;
-
-        public void UseOriginalRegion()
-        {
-            _usesOriginalRegion = true;
-            Apply();
-        }
-
-        public void SetBaseRegion(System.Drawing.Rectangle rect)
-        {
-            _baseRegion = rect;
-            _usesOriginalRegion = false;
-            Apply();
-        }
-
-        private void Apply()
-        {
-            if (_usesOriginalRegion)
-            {
-                OsPlatformApi.ResetWindowOriginalObservableRegion(hwnd);
-                return;
-            }
-
-            if (_baseRegion is { } baseRegion)
-                OsPlatformApi.SetWindowObservableRegions(hwnd, [baseRegion]);
-            else
-                OsPlatformApi.ResetWindowOriginalObservableRegion(hwnd);
-        }
-    }
 }
-
-public static class WinUIExtension
-{
-    private const int AntiClippingOffset = 1;
-
-    extension(Windows.Foundation.Rect rect)
-    {
-        public Windows.Foundation.Rect Scale(double f) =>
-            new(rect.X * f, rect.Y * f, rect.Width * f, rect.Height * f);
-
-        public System.Drawing.Rectangle ToGdiRect() =>
-            new((int)rect.X, (int)rect.Y, (int)rect.Width + AntiClippingOffset, (int)rect.Height + AntiClippingOffset);
-    }
-
-    extension(Window window)
-    {
-        public double Dpi => window.Content.XamlRoot.RasterizationScale;
-    }
-}
-

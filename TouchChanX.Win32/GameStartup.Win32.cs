@@ -16,12 +16,13 @@ public static partial class GameStartup // Win32
     private const int GoodWindowHeight = 240;
 
     /// <summary>
-    /// 查找合适的窗口句柄，这里需要等待是因为超时处理
+    /// 同步查找合适的窗口句柄。
     /// </summary>
-    public static async Task<Result<nint>> FindGoodWindowHandleAsync(Process proc)
+    public static Result<nint> FindGoodWindowHandle(Process proc)
     {
         const int SearchWindowTimeout = 20000;
         const int CheckResponse = 16;
+        var timeoutAt = Environment.TickCount64 + SearchWindowTimeout;
 
         var goodHandle = proc.MainWindowHandle;
 
@@ -33,9 +34,7 @@ public static partial class GameStartup // Win32
                 return goodHandle;
         }
 
-        var cts = new CancellationTokenSource(SearchWindowTimeout);
-        var timeoutToken = cts.Token;
-        while (!timeoutToken.IsCancellationRequested)
+        while (Environment.TickCount64 < timeoutAt)
         {
             if (proc.HasExited)
                 return Result.Failure<nint>(new ProcessExitedError());
@@ -49,7 +48,7 @@ public static partial class GameStartup // Win32
                     return (nint)handle;
             }
 
-            await Task.Delay(CheckResponse, CancellationToken.None);
+            Thread.Sleep(CheckResponse);
         }
 
         return Result.Failure<nint>(new WindowHandleNotFoundError());
