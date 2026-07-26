@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window x:Class="TouchChanX.WinUI.GamepadWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Gamepad mapping"
+    mc:Ignorable="d">
+
+    <Grid Padding="24" Background="#202020">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            FontSize="26"
+            FontWeight="SemiBold"
+            Text="Gamepad mapping" />
+
+        <Grid Grid.Row="1" Margin="0,20,0,8" Padding="12,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock FontWeight="SemiBold" Text="Button" />
+            <TextBlock Grid.Column="1" FontWeight="SemiBold" Text="Keyboard key" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="2"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="MappingItems" />
+        </ScrollViewer>
+
+        <Button x:Name="CloseButton"
+            Grid.Row="3"
+            Margin="0,20,0,0"
+            HorizontalAlignment="Right">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <FontIcon Glyph="&#xE711;" />
+                <TextBlock VerticalAlignment="Center" Text="Close" />
+            </StackPanel>
+        </Button>
+    </Grid>
+</Window>

@@ -77,6 +77,14 @@ public sealed class AppSettings
         set => WriteBool(TogglePrefix + "gesture", value);
     }
 
+    public bool Gamepad
+    {
+        get => ReadBool(TogglePrefix + "game-handler");
+        set => WriteBool(TogglePrefix + "game-handler", value);
+    }
+
+    public bool HasGamepadSetting => HasSetting(TogglePrefix + "game-handler");
+
     private string? ReadString(string key) =>
         _localSettings?.Values[key] as string;
 
@@ -85,6 +93,9 @@ public sealed class AppSettings
 
     private bool ReadBool(string key) =>
         bool.TryParse(ReadString(key), out var value) && value;
+
+    private bool HasSetting(string key) =>
+        _localSettings?.Values.ContainsKey(key) == true;
 
     private void WriteBool(string key, bool value) =>
         WriteString(key, value.ToString(CultureInfo.InvariantCulture));

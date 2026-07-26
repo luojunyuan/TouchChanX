@@ -41,6 +41,7 @@ public sealed partial class MenuControl : UserControl
     private RenderedMenuPage? _activePage;
     private TouchMenuPageId _currentPageId = TouchMenuPageId.Main;
     private bool _isTransitioning;
+    private bool _isGamepadFeatureAvailable;
     private int _brightnessLevel;
 
     private float CellDistance
@@ -91,6 +92,27 @@ public sealed partial class MenuControl : UserControl
             .SubscribeAwait(async (_, _) => await CloseMenuAsync());
 
         ObservableRegionResetRequested = this.Events().SizeChanged.AsUnitObservable();
+    }
+
+    public void SetGamepadFeatureAvailable(bool isAvailable)
+    {
+        if (!isAvailable)
+            _toggleStates["game-handler"] = false;
+
+        if (_isGamepadFeatureAvailable == isAvailable)
+            return;
+
+        _isGamepadFeatureAvailable = isAvailable;
+
+        if (_activePage?.Items.FirstOrDefault(item => item.Descriptor.Id == "game-handler")?.Element is not MenuButton button)
+            return;
+
+        button.IsEnabled = isAvailable;
+        if (isAvailable || !button.IsOn)
+            return;
+
+        button.IsOn = false;
+        ToggleChangedSubject.OnNext(new("game-handler", false));
     }
 
     private async Task OpenMenuAsync()
@@ -320,6 +342,7 @@ public sealed partial class MenuControl : UserControl
             "brightness-down" => _brightnessLevel < MaxBrightnessLevel,
             "brightness-up" => _brightnessLevel > 0,
             "battery" => IsBatteryFeatureAvailable,
+            "game-handler" => _isGamepadFeatureAvailable,
             _ => item.IsEnabled,
         };
 
@@ -348,6 +371,8 @@ public sealed partial class MenuControl : UserControl
             "touch-to-mouse" => _settings.TouchToMouse,
             "battery" => _settings.Battery,
             "gesture" => _settings.Gesture,
+            "game-handler" => _isGamepadFeatureAvailable &&
+                (!_settings.HasGamepadSetting || _settings.Gamepad),
             _ => defaultValue,
         };
 
@@ -369,6 +394,9 @@ public sealed partial class MenuControl : UserControl
                 break;
             case "gesture":
                 _settings.Gesture = isOn;
+                break;
+            case "game-handler":
+                _settings.Gamepad = isOn;
                 break;
         }
     }

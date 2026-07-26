@@ -39,7 +39,7 @@
                 Padding="24,12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <FontIcon FontSize="24" Glyph="&#xE711;" />
-                    <TextBlock FontSize="20" Text="关闭窗口" VerticalAlignment="Center" />
+                    <TextBlock FontSize="20" Text="取消" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
         </StackPanel>

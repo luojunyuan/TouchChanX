@@ -52,7 +52,7 @@ internal static class TouchMenuCatalog
             Toggle("battery", "Battery", ExtendedSymbol.VerticalBattery3, new(1, 2)),
             Command("text-magnifier", "Text Magnifier", ExtendedSymbol.TextSelect, new(2, 0), isEnabled: false),
             Toggle("gesture", "Gesture", ExtendedSymbol.FingerInking, new(2, 1)),
-            Command("game-handler", "Handler", ExtendedSymbol.Game, new(2, 2), isEnabled: false),
+            Toggle("game-handler", "Gamepad", ExtendedSymbol.Game, new(2, 2)),
         ]);
 
     public static TouchMenuPageDescriptor WinMove { get; } = new(

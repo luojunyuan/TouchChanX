@@ -12,13 +12,17 @@ internal static class InputSimulator
     public static async Task PressAsync(params VirtualKeyCode[] keys)
     {
         foreach (var key in keys)
-            SendKey(key, isKeyUp: false);
+            KeyDown(key);
 
         await Task.Delay(KeyPressDelay);
 
         for (var i = keys.Length - 1; i >= 0; i--)
-            SendKey(keys[i], isKeyUp: true);
+            KeyUp(keys[i]);
     }
+
+    internal static void KeyDown(VirtualKeyCode keyCode) => SendKey(keyCode, isKeyUp: false);
+
+    internal static void KeyUp(VirtualKeyCode keyCode) => SendKey(keyCode, isKeyUp: true);
 
     public static async Task RightClickAsync()
     {
@@ -84,11 +88,17 @@ internal static class InputSimulator
 
 internal enum VirtualKeyCode : ushort
 {
+    None = 0x00,
     Tab = 0x09,
     Enter = 0x0D,
     Shift = 0x10,
+    Control = 0x11,
     Menu = 0x12,
     Space = 0x20,
+    Left = 0x25,
+    Up = 0x26,
+    Right = 0x27,
+    Down = 0x28,
     A = 0x41,
     D = 0x44,
     S = 0x53,

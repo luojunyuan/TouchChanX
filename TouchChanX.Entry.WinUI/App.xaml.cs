@@ -10,6 +10,7 @@ namespace TouchChanX.WinUI;
 public partial class App : Application
 {
     private Window? _window;
+    private GamepadWindow? _gamepadWindow;
 
     public App()
     {
@@ -27,7 +28,7 @@ public partial class App : Application
     /// <summary>
     /// Entry sandbox only: visual previews without Win32 battery business logic.
     /// </summary>
-    private static void AttachSandboxOverlays(MainWindow window)
+    private void AttachSandboxOverlays(MainWindow window)
     {
         if (window.Content is not Grid root)
             return;
@@ -57,5 +58,37 @@ public partial class App : Application
         button.PointerPressed += (_, e) => e.Handled = true;
         button.Click += (_, _) => flyout.ShowMessage("鼠标点击");
         root.Children.Add(button);
+
+        var gamepadButton = new Button
+        {
+            Content = "手柄映射",
+            MinWidth = 120,
+            MinHeight = 44,
+            Margin = new Thickness(0, 0, 156, 24),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Bottom,
+        };
+
+        gamepadButton.PointerPressed += (_, e) => e.Handled = true;
+        gamepadButton.Click += (_, _) => ShowGamepadWindow();
+        root.Children.Add(gamepadButton);
+    }
+
+    private void ShowGamepadWindow()
+    {
+        if (_gamepadWindow is { } existingWindow)
+        {
+            existingWindow.Activate();
+            return;
+        }
+
+        var candidate = new GamepadWindow();
+        candidate.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_gamepadWindow, candidate))
+                _gamepadWindow = null;
+        };
+        _gamepadWindow = candidate;
+        candidate.ShowWithoutActivation();
     }
 }

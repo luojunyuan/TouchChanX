@@ -4,6 +4,7 @@ using R3.ObservableEvents;
 using System.Diagnostics;
 using TouchChanX.Persistence;
 using TouchChanX.Win32;
+using TouchChanX.Win32.Gamepad;
 using TouchChanX.Win32.Interop;
 using TouchChanX.Win32.Battery;
 using TouchChanX.Win32.Menu;
@@ -20,6 +21,9 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
     private IDisposable? _windowDestroyedSubscription;
     private IDisposable? _batterySubscription;
     private BatteryMonitor? _batteryMonitor;
+    private GamepadController? _gamepadController;
+    private WinUI.GamepadWindow? _gamepadWindow;
+    private IDisposable? _gamepadWindowClosedSubscription;
     private bool _touchToMouseEnabled;
     private bool _gestureEnabled;
 
@@ -30,7 +34,10 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
 
         var window = CreateMainWindow();
         var hudWindow = CreateHudWindow();
+        var gamepadController = new GamepadController(_gameWindowHandle);
+        _gamepadController = gamepadController;
         _hudWindow = hudWindow;
+        window.SetGamepadFeatureAvailable(gamepadController.HasConnectedController);
 
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
         var hudHwnd = WinRT.Interop.WindowNative.GetWindowHandle(hudWindow);
@@ -48,16 +55,19 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
         SubscribeClientSize(hwnd, hudHwnd);
         SubscribeObservableRegions(window, hwnd);
         SubscribeMenuCommands(window, overlays);
-        SubscribeMenuToggles(window, hwnd, hudWindow);
+        SubscribeMenuToggles(window, hwnd, hudWindow, gamepadController);
+        SubscribeGamepad(window, gamepadController);
         SubscribeGestures(window, hudWindow);
-        ApplySettings(hwnd, hudWindow);
-        SubscribeGameWindowDestroyed(hwnd, hudHwnd, overlays);
+        ApplySettings(hwnd, hudWindow, gamepadController);
+        SubscribeGameWindowDestroyed(hwnd, hudHwnd, overlays, gamepadController);
 
         window.InitializeBindings();
         window.Events().Closed.Subscribe(_ =>
         {
             DisposeGameWindowSubscriptions();
             TouchMenuCommandService.DisconnectGameWindowInteractions();
+            gamepadController.Dispose();
+            CloseGamepadWindow();
             overlays.Dispose();
             CloseHudWindow();
         });
@@ -136,7 +146,11 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
             });
     }
 
-    private void SubscribeMenuToggles(WinUI.MainWindow window, nint hwnd, WinUI.HudWindow hudWindow)
+    private void SubscribeMenuToggles(
+        WinUI.MainWindow window,
+        nint hwnd,
+        WinUI.HudWindow hudWindow,
+        GamepadController gamepadController)
     {
         WinUI.Menu.MenuControl.ObservableToggleChanged
             .TakeUntil(window.Events().Closed)
@@ -153,10 +167,31 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
                     case "battery":
                         SetBatteryMonitoring(hudWindow, toggle.IsOn);
                         break;
+                    case "game-handler":
+                        gamepadController.SetEnabled(toggle.IsOn);
+                        if (!toggle.IsOn)
+                            CloseGamepadWindow();
+                        break;
                 }
 
                 TouchMenuCommandService.SetToggleState(toggle.Id, toggle.IsOn, _gameWindowHandle, hwnd);
             });
+    }
+
+    private void SubscribeGamepad(WinUI.MainWindow window, GamepadController gamepadController)
+    {
+        gamepadController.ObservableAvailabilityChanged
+            .TakeUntil(window.Events().Closed)
+            .Subscribe(isAvailable =>
+            {
+                window.SetGamepadFeatureAvailable(isAvailable);
+                if (!isAvailable)
+                    gamepadController.SetEnabled(false);
+            });
+
+        gamepadController.ObservableMappingRequested
+            .TakeUntil(window.Events().Closed)
+            .Subscribe(_ => ToggleGamepadWindow());
     }
 
     private void SetBatteryMonitoring(WinUI.HudWindow hudWindow, bool isOn)
@@ -204,7 +239,10 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
             .Subscribe(hudWindow.ShowMessage);
     }
 
-    private void ApplySettings(nint hwnd, WinUI.HudWindow hudWindow)
+    private void ApplySettings(
+        nint hwnd,
+        WinUI.HudWindow hudWindow,
+        GamepadController gamepadController)
     {
         var settings = new AppSettings();
         _touchToMouseEnabled = settings.TouchToMouse;
@@ -215,9 +253,16 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
             TouchMenuCommandService.SetToggleState("gesture", true, _gameWindowHandle, hwnd);
         if (settings.Battery && BatteryMonitor.IsAvailable())
             SetBatteryMonitoring(hudWindow, true);
+        if (gamepadController.HasConnectedController &&
+            (!settings.HasGamepadSetting || settings.Gamepad))
+            gamepadController.SetEnabled(true);
     }
 
-    private void SubscribeGameWindowDestroyed(nint hwnd, nint hudHwnd, GameWindowOverlayController overlays)
+    private void SubscribeGameWindowDestroyed(
+        nint hwnd,
+        nint hudHwnd,
+        GameWindowOverlayController overlays,
+        GamepadController gamepadController)
     {
         // TODO: monitor parent destruction and attach to the next game window.
         _windowDestroyedSubscription?.Dispose();
@@ -225,6 +270,8 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
         {
             _gameWindowHandle = nint.Zero;
             DisposeGameWindowSubscriptions();
+            gamepadController.SetEnabled(false);
+            CloseGamepadWindow();
             overlays.HandleGameWindowDestroyed();
             WindowConfiguration.DetachEmbeddedWindow(hwnd);
             WindowConfiguration.DetachEmbeddedWindow(hudHwnd);
@@ -240,6 +287,46 @@ internal sealed partial class WinUIAppController(nint gameWindowHandle)
         _batterySubscription?.Dispose();
         _batterySubscription = null;
         _batteryMonitor = null;
+    }
+
+    private void ToggleGamepadWindow()
+    {
+        if (_gamepadWindow is not null)
+        {
+            CloseGamepadWindow();
+            return;
+        }
+
+        if (_gamepadController is not { IsEnabled: true })
+            return;
+
+        var mappings = GamepadController.Mappings
+            .Select(static mapping => (mapping.Button, mapping.Key))
+            .ToArray();
+        var candidate = new WinUI.GamepadWindow(mappings);
+        _gamepadWindow = candidate;
+        _gamepadWindowClosedSubscription = candidate.Events().Closed.Subscribe(_ =>
+        {
+            if (!ReferenceEquals(_gamepadWindow, candidate))
+                return;
+
+            _gamepadWindow = null;
+            var subscription = _gamepadWindowClosedSubscription;
+            _gamepadWindowClosedSubscription = null;
+            subscription?.Dispose();
+        });
+        candidate.ShowWithoutActivation();
+    }
+
+    private void CloseGamepadWindow()
+    {
+        var window = _gamepadWindow;
+        _gamepadWindow = null;
+
+        var subscription = _gamepadWindowClosedSubscription;
+        _gamepadWindowClosedSubscription = null;
+        subscription?.Dispose();
+        window?.Close();
     }
 
     private void CloseHudWindow()
