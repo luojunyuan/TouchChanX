@@ -58,16 +58,113 @@
                         <FontIcon Glyph="&#xE8F2;" />
                     </ct:SettingsCard.HeaderIcon>
                     <Button x:Name="CopyQqGroupButton">
-                        <Grid>
-                            <StackPanel x:Name="CopyQqGroupContent" Orientation="Horizontal" Spacing="6">
+                        <Grid x:Name="CopyQqGroupButtonContent">
+                            <Grid.Resources>
+                                <Storyboard x:Key="CopyQqGroupSuccessAnimation">
+                                    <DoubleAnimationUsingKeyFrames
+                                        Storyboard.TargetName="CopyQqGroupContent"
+                                        Storyboard.TargetProperty="(UIElement.Opacity)"
+                                        Duration="0:0:1.433">
+                                        <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="1.0" />
+                                        <SplineDoubleKeyFrame
+                                            KeySpline="0.33,0.0 0.67,1.0"
+                                            KeyTime="0:0:0.133"
+                                            Value="0.0" />
+                                        <DiscreteDoubleKeyFrame KeyTime="0:0:1.3" Value="0.0" />
+                                        <SplineDoubleKeyFrame
+                                            KeySpline="1.0,0.0 1.0,1.0"
+                                            KeyTime="0:0:1.433"
+                                            Value="1.0" />
+                                    </DoubleAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames
+                                        Storyboard.TargetName="CopyQqGroupContentScaleTransform"
+                                        Storyboard.TargetProperty="(ScaleX)"
+                                        Duration="0:0:1.2">
+                                        <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="1.0" />
+                                        <SplineDoubleKeyFrame
+                                            KeySpline="0.13,0.0 0.0,1.0"
+                                            KeyTime="0:0:0.133"
+                                            Value="0.273" />
+                                        <DiscreteDoubleKeyFrame KeyTime="0:0:1.167" Value="0.273" />
+                                        <LinearDoubleKeyFrame KeyTime="0:0:1.2" Value="1.0" />
+                                    </DoubleAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames
+                                        Storyboard.TargetName="CopyQqGroupContentScaleTransform"
+                                        Storyboard.TargetProperty="(ScaleY)"
+                                        Duration="0:0:1.2">
+                                        <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="1.0" />
+                                        <SplineDoubleKeyFrame
+                                            KeySpline="0.13,0.0 0.0,1.0"
+                                            KeyTime="0:0:0.133"
+                                            Value="0.273" />
+                                        <DiscreteDoubleKeyFrame KeyTime="0:0:1.167" Value="0.273" />
+                                        <LinearDoubleKeyFrame KeyTime="0:0:1.2" Value="1.0" />
+                                    </DoubleAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames
+                                        Storyboard.TargetName="QqGroupCopiedContent"
+                                        Storyboard.TargetProperty="(UIElement.Opacity)"
+                                        Duration="0:0:1.3">
+                                        <DiscreteDoubleKeyFrame KeyTime="0:0:0.133" Value="0.0" />
+                                        <SplineDoubleKeyFrame
+                                            KeySpline="0.33,0.0 0.67,1.0"
+                                            KeyTime="0:0:0.267"
+                                            Value="1.0" />
+                                        <DiscreteDoubleKeyFrame KeyTime="0:0:1.167" Value="1.0" />
+                                        <SplineDoubleKeyFrame
+                                            KeySpline="1.0,0.0 0.98,1.0"
+                                            KeyTime="0:0:1.3"
+                                            Value="0.0" />
+                                    </DoubleAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames
+                                        Storyboard.TargetName="QqGroupCopiedContentScaleTransform"
+                                        Storyboard.TargetProperty="(ScaleX)"
+                                        Duration="0:0:0.333">
+                                        <DiscreteDoubleKeyFrame KeyTime="0:0:0.133" Value="0.385" />
+                                        <SplineDoubleKeyFrame
+                                            KeySpline="0.39,0.0 0.63,1.0"
+                                            KeyTime="0:0:0.267"
+                                            Value="1.146" />
+                                        <SplineDoubleKeyFrame
+                                            KeySpline="0.55,0.0 0.02,1.0"
+                                            KeyTime="0:0:0.333"
+                                            Value="1.0" />
+                                    </DoubleAnimationUsingKeyFrames>
+                                    <DoubleAnimationUsingKeyFrames
+                                        Storyboard.TargetName="QqGroupCopiedContentScaleTransform"
+                                        Storyboard.TargetProperty="(ScaleY)"
+                                        Duration="0:0:0.333">
+                                        <DiscreteDoubleKeyFrame KeyTime="0:0:0.133" Value="0.385" />
+                                        <SplineDoubleKeyFrame
+                                            KeySpline="0.39,0.0 0.63,1.0"
+                                            KeyTime="0:0:0.267"
+                                            Value="1.146" />
+                                        <SplineDoubleKeyFrame
+                                            KeySpline="0.55,0.0 0.02,1.0"
+                                            KeyTime="0:0:0.333"
+                                            Value="1.0" />
+                                    </DoubleAnimationUsingKeyFrames>
+                                </Storyboard>
+                            </Grid.Resources>
+                            <StackPanel
+                                x:Name="CopyQqGroupContent"
+                                RenderTransformOrigin=".5,.5"
+                                Orientation="Horizontal"
+                                Spacing="6">
+                                <StackPanel.RenderTransform>
+                                    <ScaleTransform x:Name="CopyQqGroupContentScaleTransform" />
+                                </StackPanel.RenderTransform>
                                 <FontIcon Glyph="&#xE8C8;" />
                                 <TextBlock Text="复制" />
                             </StackPanel>
                             <StackPanel
                                 x:Name="QqGroupCopiedContent"
+                                Opacity="0"
+                                RenderTransformOrigin=".5,.5"
                                 Orientation="Horizontal"
-                                Spacing="6"
-                                Visibility="Collapsed">
+                                Spacing="6">
+                                <StackPanel.RenderTransform>
+                                    <ScaleTransform x:Name="QqGroupCopiedContentScaleTransform" />
+                                </StackPanel.RenderTransform>
                                 <FontIcon Glyph="&#xE8FB;" />
                                 <TextBlock Text="完成" />
                             </StackPanel>

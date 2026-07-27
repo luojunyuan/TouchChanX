@@ -8,6 +8,7 @@ using Windows.Services.Store;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Animation;
 using WinRT;
 using WinRT.Interop;
 
@@ -36,20 +37,18 @@ public sealed partial class AboutPage : Page
     {
         InitializeComponent();
 
-        CopyQqGroupButton.Events().Click.SubscribeAwait(
-            async (_, cancellationToken) =>
+        CopyQqGroupButton.Events().Click.Subscribe(
+            _ =>
             {
                 var dataPackage = new DataPackage();
                 dataPackage.SetText(QqGroupNumberText.Text);
                 Clipboard.SetContent(dataPackage);
 
-                CopyQqGroupContent.Visibility = Visibility.Collapsed;
-                QqGroupCopiedContent.Visibility = Visibility.Visible;
-                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
-                CopyQqGroupContent.Visibility = Visibility.Visible;
-                QqGroupCopiedContent.Visibility = Visibility.Collapsed;
-            },
-            AwaitOperation.Drop);
+                if (CopyQqGroupButtonContent.Resources["CopyQqGroupSuccessAnimation"] is Storyboard animation)
+                {
+                    animation.Begin();
+                }
+            });
     }
 
     private StoreContext StoreContext => field ??= new Func<StoreContext>(() =>
