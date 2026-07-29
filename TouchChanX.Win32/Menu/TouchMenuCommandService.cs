@@ -110,8 +110,6 @@ public static class TouchMenuCommandService
             var service = new GestureRecognitionService(touchWindowHandle)
             {
                 IsEnabled = true,
-                GameWindowHandle = gameWindowHandle,
-                TouchWindowHandle = touchWindowHandle,
             };
             var subscription = service.ObservableGestureRecognized.Subscribe(gesture =>
             {

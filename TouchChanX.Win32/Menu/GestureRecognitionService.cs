@@ -1,7 +1,5 @@
-using System.Numerics;
 using System.Runtime.InteropServices;
 using R3;
-using TouchChanX.Win32.Interop;
 using Windows.Win32;
 using Windows.Win32.Devices.HumanInterfaceDevice;
 using Windows.Win32.Foundation;
@@ -10,6 +8,10 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace TouchChanX.Win32.Menu;
 
+/// <summary>
+/// Gesture recognition service using the original TouchChan point pipeline.
+/// Raw Input is delivered through the supplied WinUI window handle.
+/// </summary>
 public enum RecognizedGesture
 {
     ThreeFingerTap,
@@ -22,10 +24,13 @@ public sealed class GestureRecognitionService : IDisposable
 {
     private const uint WM_INPUT = 0x00FF;
     private const uint WM_INPUT_DEVICE_CHANGE = 0x00FE;
-    private const uint WM_POINTERUPDATE = 0x0245;
-    private const uint WM_POINTERDOWN = 0x0246;
-    private const uint WM_POINTERUP = 0x0247;
-    private const uint WM_POINTERCAPTURECHANGED = 0x024C;
+    private const uint WM_DISPLAYCHANGE = 0x007E;
+    private const uint WM_SETTINGCHANGE = 0x001A;
+    private const uint WM_POWERBROADCAST = 0x0218;
+    private const uint WM_ENDSESSION = 0x0016;
+    private const uint PBT_APMRESUMEAUTOMATIC = 0x0012;
+    private const uint PBT_APMRESUMECRITICAL = 0x0006;
+    private const uint PBT_APMRESUMESUSPEND = 0x0007;
     private const int HIDP_STATUS_SUCCESS = 0x00110000;
     private const ushort GenericDesktopPage = 0x01;
     private const ushort DigitizerUsagePage = 0x0D;
@@ -35,27 +40,68 @@ public sealed class GestureRecognitionService : IDisposable
     private const ushort XCoordinateId = 0x30;
     private const ushort YCoordinateId = 0x31;
     private const ushort TouchScreenUsage = 0x04;
-    private const double TapMovementThreshold = 32.0;
-    private const double SwipeDistanceThreshold = 90.0;
-    private static readonly TimeSpan TapDurationThreshold = TimeSpan.FromMilliseconds(450);
+    private const ushort TouchPadUsage = 0x05;
+    private const ushort PenUsage = 0x02;
+    private const int MinimumPointDistance = 20;
+    private const int ProbabilityThreshold = 80;
+    private static readonly GesturePattern[] GesturePatterns =
+    [
+        new(
+            RecognizedGesture.TwoFingerTap,
+            [
+                [new(685, 357)],
+                [new(833, 257)],
+            ]),
+        new(
+            RecognizedGesture.ThreeFingerTap,
+            [
+                [new(615, 345)],
+                [new(735, 268)],
+                [new(897, 277)],
+            ]),
+        new(
+            RecognizedGesture.TwoFingerSwipeUp,
+            [
+                [new(242, 414)],
+                [
+                    new(1000, 213),
+                    new(992, 254),
+                    new(990, 300),
+                    new(987, 340),
+                    new(985, 380),
+                    new(982, 426),
+                    new(981, 469),
+                    new(981, 522),
+                ],
+            ]),
+        new(
+            RecognizedGesture.TwoFingerSwipeDown,
+            [
+                [new(294, 490)],
+                [
+                    new(743, 676),
+                    new(744, 645),
+                    new(745, 613),
+                    new(746, 582),
+                    new(746, 551),
+                ],
+            ]),
+    ];
 
-    private readonly WndProcDelegate _wndProc;
-    private readonly Dictionary<int, PointerStroke> _activeStrokes = [];
-    private readonly Dictionary<nint, ushort> _validRawInputDevices = [];
-    private readonly List<PointerStroke> _completedStrokes = [];
-    private readonly List<RawContact> _rawContacts = [];
     private readonly Subject<RecognizedGesture> _gestureRecognized = new();
-    private DateTimeOffset _captureStartedAt;
+    private readonly Dictionary<nint, ushort> _validDevices = [];
+    private readonly Dictionary<int, List<System.Drawing.Point>> _pointsCaptured = [];
+    private List<RawPoint> _outputTouchs = [];
+    private readonly WndProcDelegate _wndProc;
     private nint _previousWndProc;
     private nint _hwnd;
-    private uint _maxContactCount;
-    private int _requiredRawContactCount;
+    private int _requiringContactCount;
+    private int _lastPointsCount;
+    private bool _sourceActive;
     private bool _disposed;
     private bool _isEnabled;
-
-    public Observable<RecognizedGesture> ObservableGestureRecognized => _gestureRecognized;
-
-    internal System.Drawing.Point LastGesturePosition { get; private set; }
+    private CaptureState _state = CaptureState.Ready;
+    private TouchScreenCoordinateMapper _coordinateMapper;
 
     public GestureRecognitionService(nint hwnd)
     {
@@ -75,8 +121,9 @@ public sealed class GestureRecognitionService : IDisposable
         RegisterRawTouchInput();
     }
 
-    public nint GameWindowHandle { get; set; }
-    public nint TouchWindowHandle { get; set; }
+    public Observable<RecognizedGesture> ObservableGestureRecognized => _gestureRecognized;
+
+    internal System.Drawing.Point LastGesturePosition { get; private set; }
 
     public bool IsEnabled
     {
@@ -87,7 +134,10 @@ public sealed class GestureRecognitionService : IDisposable
                 return;
 
             _isEnabled = value;
-            ResetCapture();
+            if (!value)
+                ResetCapture();
+            else
+                _state = CaptureState.Ready;
         }
     }
 
@@ -103,50 +153,16 @@ public sealed class GestureRecognitionService : IDisposable
             PInvoke.SetWindowLongPtr(new HWND(_hwnd), WINDOW_LONG_PTR_INDEX.GWL_WNDPROC, _previousWndProc);
 
         _disposed = true;
+        _gestureRecognized.Dispose();
     }
 
-    private nint WndProc(nint hwnd, uint msg, nuint wParam, nint lParam)
+    public void UpdateRegistration()
     {
-        // Managed exceptions must not cross the subclassed native window procedure boundary.
-        try
-        {
-            if (_isEnabled)
-            {
-                switch (msg)
-                {
-                    case WM_INPUT:
-                        ProcessRawInput(lParam);
-                        break;
-                    case WM_INPUT_DEVICE_CHANGE:
-                        _validRawInputDevices.Clear();
-                        break;
-                    case WM_POINTERDOWN:
-                        HandlePointerDown(GetPointerId(wParam), TryGetPointerPoint(wParam, out var downPoint) ? downPoint : null);
-                        break;
-                    case WM_POINTERUPDATE:
-                        HandlePointerUpdate(GetPointerId(wParam), TryGetPointerPoint(wParam, out var updatePoint) ? updatePoint : null);
-                        break;
-                    case WM_POINTERUP:
-                        HandlePointerUp(GetPointerId(wParam), TryGetPointerPoint(wParam, out var upPoint) ? upPoint : null);
-                        break;
-                    case WM_POINTERCAPTURECHANGED:
-                        ResetCapture();
-                        break;
-                }
-            }
-        }
-        catch (Exception ex) when (ex is not OutOfMemoryException)
-        {
-            Debug.WriteLine($"Gesture recognition failed: {ex}");
-            ResetCapture();
-        }
+        if (_disposed)
+            return;
 
-        return PInvoke.CallWindowProc(
-            Marshal.GetDelegateForFunctionPointer<WNDPROC>(_previousWndProc),
-            new HWND(hwnd),
-            msg,
-            wParam,
-            lParam);
+        _validDevices.Clear();
+        RegisterRawTouchInput();
     }
 
     private void RegisterRawTouchInput()
@@ -160,7 +176,7 @@ public sealed class GestureRecognitionService : IDisposable
         };
 
         if (!PInvoke.RegisterRawInputDevices([device], (uint)Marshal.SizeOf<RAWINPUTDEVICE>()))
-            throw new InvalidOperationException("Failed to register raw touch input.");
+            throw new InvalidOperationException("Failed to register the gesture raw input device.");
     }
 
     private void UnregisterRawTouchInput()
@@ -175,72 +191,155 @@ public sealed class GestureRecognitionService : IDisposable
         _ = PInvoke.RegisterRawInputDevices([device], (uint)Marshal.SizeOf<RAWINPUTDEVICE>());
     }
 
-    private void ProcessRawInput(nint rawInputHandle)
+    private nint WndProc(nint hwnd, uint message, nuint wParam, nint lParam)
     {
-        if (!TryReadRawInput(rawInputHandle, out var contacts))
-            return;
+        try
+        {
+            if (_isEnabled)
+            {
+                switch (message)
+                {
+                    case WM_INPUT:
+                        ProcessInputCommand(lParam);
+                        break;
+                    case WM_INPUT_DEVICE_CHANGE:
+                        _validDevices.Clear();
+                        RefreshRawTouchInput();
+                        break;
+                    case WM_DISPLAYCHANGE:
+                    case WM_SETTINGCHANGE:
+                        ResetCapture();
+                        break;
+                    case WM_POWERBROADCAST when IsResumeNotification(wParam):
+                        ResetCapture();
+                        RefreshRawTouchInput();
+                        break;
+                    case WM_POWERBROADCAST:
+                    case WM_ENDSESSION:
+                        ResetCapture();
+                        break;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            Debug.WriteLine($"Gesture recognition failed: {ex}");
+            ResetCapture();
+        }
 
-        ProcessRawContacts(contacts);
+        return PInvoke.CallWindowProc(
+            Marshal.GetDelegateForFunctionPointer<WNDPROC>(_previousWndProc),
+            new HWND(hwnd),
+            message,
+            wParam,
+            lParam);
     }
 
-    private unsafe bool TryReadRawInput(nint rawInputHandle, out IReadOnlyList<RawContact> contacts)
+    private void RefreshRawTouchInput()
     {
-        contacts = [];
+        if (_disposed)
+            return;
+
+        try
+        {
+            RegisterRawTouchInput();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ExternalException)
+        {
+            Debug.WriteLine($"Failed to refresh raw touch input: {ex}");
+        }
+    }
+
+    private static bool IsResumeNotification(nuint wParam) =>
+        wParam is PBT_APMRESUMEAUTOMATIC or PBT_APMRESUMECRITICAL or PBT_APMRESUMESUSPEND;
+
+    private unsafe void ProcessInputCommand(nint rawInputHandle)
+    {
         uint size = 0;
         uint headerSize = (uint)Marshal.SizeOf<RAWINPUTHEADER>();
-        _ = PInvoke.GetRawInputData(new HRAWINPUT((void*)rawInputHandle), RAW_INPUT_DATA_COMMAND_FLAGS.RID_INPUT, null, &size, headerSize);
+        _ = PInvoke.GetRawInputData(
+            new HRAWINPUT((void*)rawInputHandle),
+            RAW_INPUT_DATA_COMMAND_FLAGS.RID_INPUT,
+            null,
+            &size,
+            headerSize);
+
         if (size == 0)
-            return false;
+            return;
 
         nint buffer = Marshal.AllocHGlobal((int)size);
         try
         {
-            uint readSize = PInvoke.GetRawInputData(new HRAWINPUT((void*)rawInputHandle), RAW_INPUT_DATA_COMMAND_FLAGS.RID_INPUT, (void*)buffer, &size, headerSize);
+            uint readSize = PInvoke.GetRawInputData(
+                new HRAWINPUT((void*)rawInputHandle),
+                RAW_INPUT_DATA_COMMAND_FLAGS.RID_INPUT,
+                (void*)buffer,
+                &size,
+                headerSize);
             if (readSize != size)
-                return false;
+                return;
 
             var raw = Marshal.PtrToStructure<RAWINPUT>(buffer);
             if (raw.header.dwType != (uint)RID_DEVICE_INFO_TYPE.RIM_TYPEHID)
-                return false;
+                return;
 
-            if (!TryGetRawInputUsage((nint)raw.header.hDevice, out ushort usage) || usage != TouchScreenUsage)
-                return false;
-
-            int contactCount = GetContactCount((nint)raw.header.hDevice, buffer, raw);
-            if (contactCount != 0)
+            if (!_validDevices.TryGetValue((nint)raw.header.hDevice, out ushort usage))
             {
-                _requiredRawContactCount = contactCount;
-                _rawContacts.Clear();
+                if (!ValidateDevice((nint)raw.header.hDevice, out usage))
+                    return;
+
+                _validDevices[(nint)raw.header.hDevice] = usage;
             }
 
-            if (_requiredRawContactCount == 0)
-                return false;
+            if (usage != TouchScreenUsage)
+                return;
 
-            var hid = raw.data.hid;
-            nint rawData = buffer + ((int)raw.header.dwSize - (int)(hid.dwSizeHid * hid.dwCount));
+            nint rawData = buffer + ((int)raw.header.dwSize - (int)(raw.data.hid.dwSizeHid * raw.data.hid.dwCount));
             using var preparsedData = GetPreparsedData((nint)raw.header.hDevice);
+
+            if (!_sourceActive)
+            {
+                _sourceActive = true;
+                _coordinateMapper = TouchScreenCoordinateMapper.Create();
+            }
+
+            int contactCount = GetContactCount(preparsedData.Handle, rawData, (int)raw.data.hid.dwSizeHid);
+            if (contactCount != 0)
+            {
+                _requiringContactCount = contactCount;
+                _outputTouchs = new List<RawPoint>(contactCount);
+            }
+
+            if (_requiringContactCount == 0)
+                return;
+
             var linkNodes = GetLinkCollectionNodes(preparsedData.Handle);
             int childCount = linkNodes.Length > 0 ? linkNodes[0].NumberOfChildren : 1;
-            if (childCount <= 0)
-                childCount = contactCount;
-
             var physicalMax = GetPhysicalMax(preparsedData.Handle, linkNodes.Length);
 
-            for (int packetIndex = 0; packetIndex < hid.dwCount && _requiredRawContactCount > 0; packetIndex++)
+            for (int packetIndex = 0; packetIndex < raw.data.hid.dwCount && _requiringContactCount > 0; packetIndex++)
             {
-                nint packet = rawData + packetIndex * (int)hid.dwSizeHid;
-                for (ushort nodeIndex = 1; nodeIndex <= childCount && _requiredRawContactCount > 0; nodeIndex++)
+                nint packet = rawData + packetIndex * (int)raw.data.hid.dwSizeHid;
+                for (ushort nodeIndex = 1; nodeIndex <= childCount && _requiringContactCount > 0; nodeIndex++)
                 {
-                    _rawContacts.Add(ReadRawContact(preparsedData.Handle, packet, (int)hid.dwSizeHid, nodeIndex, physicalMax));
-                    _requiredRawContactCount--;
+                    _outputTouchs.Add(ReadRawPoint(
+                        preparsedData.Handle,
+                        packet,
+                        (int)raw.data.hid.dwSizeHid,
+                        nodeIndex,
+                        physicalMax,
+                        _coordinateMapper,
+                        rawData));
+                    _requiringContactCount--;
                 }
             }
 
-            if (_requiredRawContactCount != 0)
-                return false;
+            if (_requiringContactCount != 0)
+                return;
 
-            contacts = _rawContacts.ToArray();
-            return true;
+            TranslateTouchEvent(_outputTouchs);
+            if (_outputTouchs.Count == 0 || _outputTouchs.TrueForAll(static point => !point.IsTip))
+                _sourceActive = false;
         }
         finally
         {
@@ -248,28 +347,70 @@ public sealed class GestureRecognitionService : IDisposable
         }
     }
 
-    private unsafe bool TryGetRawInputUsage(nint deviceHandle, out ushort usage)
+    private static unsafe bool ValidateDevice(nint deviceHandle, out ushort usage)
     {
         usage = 0;
-        if (_validRawInputDevices.TryGetValue(deviceHandle, out usage))
-            return true;
-
         uint size = 0;
-        _ = PInvoke.GetRawInputDeviceInfo(new HANDLE((void*)deviceHandle), RAW_INPUT_DEVICE_INFO_COMMAND.RIDI_DEVICEINFO, null, &size);
+        _ = PInvoke.GetRawInputDeviceInfo(
+            new HANDLE((void*)deviceHandle),
+            RAW_INPUT_DEVICE_INFO_COMMAND.RIDI_DEVICEINFO,
+            null,
+            &size);
         if (size == 0)
             return false;
 
         nint buffer = Marshal.AllocHGlobal((int)size);
         try
         {
-            uint result = PInvoke.GetRawInputDeviceInfo(new HANDLE((void*)deviceHandle), RAW_INPUT_DEVICE_INFO_COMMAND.RIDI_DEVICEINFO, (void*)buffer, &size);
+            Marshal.WriteInt32(buffer, Marshal.SizeOf<RID_DEVICE_INFO>());
+            uint result = PInvoke.GetRawInputDeviceInfo(
+                new HANDLE((void*)deviceHandle),
+                RAW_INPUT_DEVICE_INFO_COMMAND.RIDI_DEVICEINFO,
+                (void*)buffer,
+                &size);
             if (result == uint.MaxValue)
                 return false;
 
             var info = Marshal.PtrToStructure<RID_DEVICE_INFO>(buffer);
-            usage = info.Anonymous.hid.usUsage;
-            _validRawInputDevices[deviceHandle] = usage;
-            return true;
+            ushort deviceUsage = info.Anonymous.hid.usUsage;
+            if (deviceUsage is not (TouchPadUsage or TouchScreenUsage or PenUsage))
+                return true;
+
+            uint nameSize = 0;
+            _ = PInvoke.GetRawInputDeviceInfo(
+                new HANDLE((void*)deviceHandle),
+                RAW_INPUT_DEVICE_INFO_COMMAND.RIDI_DEVICENAME,
+                null,
+                &nameSize);
+            if (nameSize == 0)
+                return false;
+
+            nint nameBuffer = Marshal.AllocHGlobal(checked((int)nameSize * sizeof(char)));
+            try
+            {
+                uint nameResult = PInvoke.GetRawInputDeviceInfo(
+                    new HANDLE((void*)deviceHandle),
+                    RAW_INPUT_DEVICE_INFO_COMMAND.RIDI_DEVICENAME,
+                    (void*)nameBuffer,
+                    &nameSize);
+                if (nameResult == uint.MaxValue)
+                    return false;
+
+                string? deviceName = Marshal.PtrToStringUni(nameBuffer);
+                if (string.IsNullOrEmpty(deviceName) ||
+                    deviceName.Contains("VIRTUAL_DIGITIZER", StringComparison.OrdinalIgnoreCase) ||
+                    deviceName.Contains("ROOT", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                usage = deviceUsage;
+                return true;
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(nameBuffer);
+            }
         }
         finally
         {
@@ -277,11 +418,8 @@ public sealed class GestureRecognitionService : IDisposable
         }
     }
 
-    private static unsafe int GetContactCount(nint deviceHandle, nint rawInputBuffer, RAWINPUT raw)
+    private static unsafe int GetContactCount(PHIDP_PREPARSED_DATA preparsedData, nint rawData, int packetSize)
     {
-        var hid = raw.data.hid;
-        nint rawData = rawInputBuffer + ((int)raw.header.dwSize - (int)(hid.dwSizeHid * hid.dwCount));
-        using var preparsedData = GetPreparsedData(deviceHandle);
         uint contactCount = 0;
         var status = PInvoke.HidP_GetUsageValue(
             HIDP_REPORT_TYPE.HidP_Input,
@@ -289,24 +427,30 @@ public sealed class GestureRecognitionService : IDisposable
             0,
             ContactCountId,
             out contactCount,
-            preparsedData.Handle,
+            preparsedData,
             new PSTR((byte*)rawData),
-            hid.dwSizeHid);
+            (uint)packetSize);
 
-        return IsHidSuccess(status)
-            ? (int)contactCount
-            : 0;
+        return IsHidSuccess(status) ? (int)contactCount : 0;
     }
 
     private static unsafe PreparsedDataHandle GetPreparsedData(nint deviceHandle)
     {
         uint size = 0;
-        _ = PInvoke.GetRawInputDeviceInfo(new HANDLE((void*)deviceHandle), RAW_INPUT_DEVICE_INFO_COMMAND.RIDI_PREPARSEDDATA, null, &size);
+        _ = PInvoke.GetRawInputDeviceInfo(
+            new HANDLE((void*)deviceHandle),
+            RAW_INPUT_DEVICE_INFO_COMMAND.RIDI_PREPARSEDDATA,
+            null,
+            &size);
         if (size == 0)
             throw new InvalidOperationException("Raw input preparsed data is empty.");
 
         nint handle = Marshal.AllocHGlobal((int)size);
-        uint result = PInvoke.GetRawInputDeviceInfo(new HANDLE((void*)deviceHandle), RAW_INPUT_DEVICE_INFO_COMMAND.RIDI_PREPARSEDDATA, (void*)handle, &size);
+        uint result = PInvoke.GetRawInputDeviceInfo(
+            new HANDLE((void*)deviceHandle),
+            RAW_INPUT_DEVICE_INFO_COMMAND.RIDI_PREPARSEDDATA,
+            (void*)handle,
+            &size);
         if (result == uint.MaxValue)
         {
             Marshal.FreeHGlobal(handle);
@@ -320,15 +464,12 @@ public sealed class GestureRecognitionService : IDisposable
     {
         uint count = 0;
         _ = PInvoke.HidP_GetLinkCollectionNodes([], ref count, preparsedData);
-        if (count <= 0)
+        if (count == 0)
             return [];
 
         var nodes = new HIDP_LINK_COLLECTION_NODE[count];
         var status = PInvoke.HidP_GetLinkCollectionNodes(nodes, ref count, preparsedData);
-        if (!IsHidSuccess(status))
-            return [];
-
-        return nodes;
+        return IsHidSuccess(status) ? nodes : [];
     }
 
     private static PointerPoint GetPhysicalMax(PHIDP_PREPARSED_DATA preparsedData, int collectionCount)
@@ -336,7 +477,7 @@ public sealed class GestureRecognitionService : IDisposable
         int count = Math.Max(collectionCount, 1);
         var caps = new HIDP_VALUE_CAPS[count];
         ushort capsLength = (ushort)caps.Length;
-        var xStatus = PInvoke.HidP_GetSpecificValueCaps(
+        _ = PInvoke.HidP_GetSpecificValueCaps(
             HIDP_REPORT_TYPE.HidP_Input,
             GenericDesktopPage,
             0,
@@ -344,12 +485,10 @@ public sealed class GestureRecognitionService : IDisposable
             caps,
             ref capsLength,
             preparsedData);
-        int x = IsHidSuccess(xStatus)
-            ? GetMaxCoordinateValue(caps, capsLength)
-            : 0;
+        int x = capsLength > 0 ? GetMaxCoordinateValue(caps) : 0;
 
         capsLength = (ushort)caps.Length;
-        var yStatus = PInvoke.HidP_GetSpecificValueCaps(
+        _ = PInvoke.HidP_GetSpecificValueCaps(
             HIDP_REPORT_TYPE.HidP_Input,
             GenericDesktopPage,
             0,
@@ -357,19 +496,15 @@ public sealed class GestureRecognitionService : IDisposable
             caps,
             ref capsLength,
             preparsedData);
-        int y = IsHidSuccess(yStatus)
-            ? GetMaxCoordinateValue(caps, capsLength)
-            : 0;
-
+        int y = capsLength > 0 ? GetMaxCoordinateValue(caps) : 0;
         return new(x, y);
     }
 
-    private static int GetMaxCoordinateValue(HIDP_VALUE_CAPS[] caps, ushort capsLength)
+    private static int GetMaxCoordinateValue(HIDP_VALUE_CAPS[] caps)
     {
-        int length = Math.Clamp(capsLength, 0, caps.Length);
-        for (int i = 0; i < length; i++)
+        foreach (var cap in caps)
         {
-            int value = caps[i].PhysicalMax != 0 ? caps[i].PhysicalMax : caps[i].LogicalMax;
+            int value = cap.PhysicalMax != 0 ? cap.PhysicalMax : cap.LogicalMax;
             if (value != 0)
                 return value;
         }
@@ -377,7 +512,14 @@ public sealed class GestureRecognitionService : IDisposable
         return 0;
     }
 
-    private static unsafe RawContact ReadRawContact(PHIDP_PREPARSED_DATA preparsedData, nint packet, int packetSize, ushort nodeIndex, PointerPoint physicalMax)
+    private static unsafe RawPoint ReadRawPoint(
+        PHIDP_PREPARSED_DATA preparsedData,
+        nint packet,
+        int packetSize,
+        ushort nodeIndex,
+        PointerPoint physicalMax,
+        TouchScreenCoordinateMapper coordinateMapper,
+        nint firstPacket)
     {
         uint contactId = 0;
         _ = PInvoke.HidP_GetUsageValue(
@@ -411,9 +553,8 @@ public sealed class GestureRecognitionService : IDisposable
             new PSTR((byte*)packet),
             (uint)packetSize);
 
-        var point = ScaleToScreen(physicalX, physicalY, physicalMax);
-        bool isTip = IsTipContact(preparsedData, packet, packetSize, nodeIndex);
-        return new((int)contactId, isTip, point);
+        bool isTip = IsTipContact(preparsedData, firstPacket, packetSize, nodeIndex);
+        return new((int)contactId, isTip, coordinateMapper.Map(physicalX, physicalY, physicalMax.X, physicalMax.Y));
     }
 
     private static unsafe bool IsTipContact(PHIDP_PREPARSED_DATA preparsedData, nint packet, int packetSize, ushort nodeIndex)
@@ -428,8 +569,7 @@ public sealed class GestureRecognitionService : IDisposable
             preparsedData,
             new PSTR((byte*)packet),
             (uint)packetSize);
-
-        if (usageLength <= 0)
+        if (usageLength == 0)
             return false;
 
         var usages = new ushort[usageLength];
@@ -442,256 +582,302 @@ public sealed class GestureRecognitionService : IDisposable
             preparsedData,
             new PSTR((byte*)packet),
             (uint)packetSize);
-
-        return IsHidSuccess(status) &&
-            usages.Take((int)usageLength).Contains(TipId);
+        return IsHidSuccess(status) && usages[0] == TipId;
     }
 
-    private static PointerPoint ScaleToScreen(int physicalX, int physicalY, PointerPoint physicalMax)
+    private void TranslateTouchEvent(IReadOnlyList<RawPoint> rawPoints)
     {
-        if (physicalMax.X <= 0 || physicalMax.Y <= 0)
-            return new(physicalX, physicalY);
+        int releaseCount = rawPoints.Count(static point => !point.IsTip);
+        var points = rawPoints
+            .Select(static point => new InputPoint(point.ContactIdentifier, point.Point))
+            .ToList();
 
-        int screenWidth = Math.Max(1, PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXSCREEN));
-        int screenHeight = Math.Max(1, PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYSCREEN));
-        return new(
-            physicalX * screenWidth / physicalMax.X,
-            physicalY * screenHeight / physicalMax.Y);
-    }
-
-    private void ProcessRawContacts(IReadOnlyList<RawContact> contacts)
-    {
-        foreach (var contact in contacts)
+        if (rawPoints.Count == _lastPointsCount)
         {
-            if (contact.IsTip)
+            if (releaseCount != 0)
             {
-                if (_activeStrokes.ContainsKey(contact.Id))
-                    HandlePointerUpdate(contact.Id, contact.Point);
-                else
-                    HandlePointerDown(contact.Id, contact.Point);
+                OnPointUp(points);
+                _lastPointsCount -= releaseCount;
+                return;
             }
-            else
-            {
-                HandlePointerUp(contact.Id, contact.Point);
-            }
+
+            OnPointMove(points);
         }
+        else if (rawPoints.Count > _lastPointsCount)
+        {
+            if (releaseCount != 0)
+                return;
 
-        if (_activeStrokes.Count == 0 && _completedStrokes.Count > 0)
-            CompleteCapture();
-        else if (ShouldTriggerEarlySwipe())
-            CompleteCapture();
+            if (_pointsCaptured.Values.Any(static points => points.Count > 10))
+            {
+                OnPointMove(points);
+                return;
+            }
+
+            _lastPointsCount = rawPoints.Count;
+            OnPointDown(points);
+        }
+        else
+        {
+            OnPointUp(points);
+            _lastPointsCount = _lastPointsCount - rawPoints.Count > releaseCount
+                ? rawPoints.Count
+                : _lastPointsCount - releaseCount;
+        }
     }
 
-    // Trigger early when one finger lifts with a swipe and the remaining fingers are stationary (held).
-    private bool ShouldTriggerEarlySwipe()
+    private void OnPointDown(List<InputPoint> points)
     {
-        if (_completedStrokes.Count == 0 || _activeStrokes.Count == 0)
-            return false;
-
-        bool anyCompletedSwipe = _completedStrokes.Any(
-            s => Math.Abs(s.Delta.Y) >= SwipeDistanceThreshold &&
-                 Math.Abs(s.Delta.Y) > Math.Abs(s.Delta.X) * 1.3);
-
-        bool allActiveStationary = _activeStrokes.Values.All(
-            s => s.Movement <= TapMovementThreshold);
-
-        return anyCompletedSwipe && allActiveStationary;
-    }
-
-    private void HandlePointerDown(int pointerId, PointerPoint? point)
-    {
-        if (point is not { } value)
+        if (!_isEnabled)
             return;
 
-        if (_activeStrokes.Count == 0)
-        {
-            _completedStrokes.Clear();
-            _captureStartedAt = DateTimeOffset.Now;
+        if (_state is not (CaptureState.Ready or CaptureState.Capturing or CaptureState.CapturingInvalid))
+            return;
 
-            // Filter: only start tracking if point is in valid area
-            if (!IsValidGestureStartPoint(value))
-                return;
-        }
-
-        _activeStrokes[pointerId] = new PointerStroke(value);
-        _maxContactCount = Math.Max(_maxContactCount, (uint)_activeStrokes.Count);
+        _ = TryBeginCapture(points);
     }
 
-    private bool IsValidGestureStartPoint(PointerPoint point)
+    private void OnPointMove(List<InputPoint> points)
     {
-        var screenPoint = new System.Drawing.Point(point.X, point.Y);
+        if (!_isEnabled)
+            return;
 
-        if (GameWindowHandle != nint.Zero && !OsPlatformApi.IsPointInsideClientArea(screenPoint, GameWindowHandle))
-            return false;
+        if (_state is CaptureState.Capturing or CaptureState.CapturingInvalid)
+            AddPoint(points);
+    }
 
-        if (TouchWindowHandle != nint.Zero && OsPlatformApi.IsPointInsideWindowOrChild(screenPoint, TouchWindowHandle))
-            return false;
+    private void OnPointUp(List<InputPoint> points)
+    {
+        if (!_isEnabled)
+            return;
 
+        if (_state is CaptureState.Capturing or CaptureState.CapturingInvalid)
+        {
+            EndCapture();
+            return;
+        }
+
+        if (_state == CaptureState.TriggerFired)
+            _state = CaptureState.Ready;
+    }
+
+    private bool TryBeginCapture(List<InputPoint> firstPoints)
+    {
+        _state = CaptureState.CapturingInvalid;
+        _pointsCaptured.Clear();
+
+        foreach (var point in firstPoints.OrderBy(static point => point.Point.X))
+        {
+            if (!_pointsCaptured.ContainsKey(point.ContactIdentifier))
+                _pointsCaptured.Add(point.ContactIdentifier, new List<System.Drawing.Point>(30));
+        }
+
+        AddPoint(firstPoints);
         return true;
     }
 
-    private void HandlePointerUpdate(int pointerId, PointerPoint? point)
+    private void EndCapture()
     {
-        if (point is not { } value)
-            return;
+        var strokes = _pointsCaptured.Values
+            .Select(static points => points.ToArray())
+            .ToArray();
 
-        if (_activeStrokes.TryGetValue(pointerId, out var stroke))
-            stroke.Add(value);
-    }
-
-    private void HandlePointerUp(int pointerId, PointerPoint? point)
-    {
-        if (point is not { } value)
-            return;
-
-        if (_activeStrokes.Remove(pointerId, out var stroke))
-        {
-            stroke.Add(value);
-            _completedStrokes.Add(stroke);
-        }
-    }
-
-    private readonly List<GestureDefinition> _gestures =
-    [
-        new(RecognizedGesture.ThreeFingerTap, ctx => ctx.MaxContactCount >= 3
-            && ctx.Duration <= TapDurationThreshold
-            && ctx.MaxMovement <= TapMovementThreshold),
-        new(RecognizedGesture.TwoFingerTap,  ctx => ctx.MaxContactCount == 2
-            && ctx.Duration <= TapDurationThreshold
-            && ctx.MaxMovement <= TapMovementThreshold),
-        new(RecognizedGesture.TwoFingerSwipeUp,   ctx => IsVerticalSwipe(ctx) && ctx.DominantStroke!.Delta.Y < 0),
-        new(RecognizedGesture.TwoFingerSwipeDown, ctx => IsVerticalSwipe(ctx) && ctx.DominantStroke!.Delta.Y > 0),
-    ];
-
-    private static bool IsVerticalSwipe(GestureContext ctx) =>
-        ctx.MaxContactCount >= 2 &&
-        ctx.DominantStroke is not null &&
-        Math.Abs(ctx.DominantStroke.Delta.Y) >= SwipeDistanceThreshold &&
-        Math.Abs(ctx.DominantStroke.Delta.Y) > Math.Abs(ctx.DominantStroke.Delta.X) * 1.3;
-
-
-    private void CompleteCapture()
-    {
-        RecognizedGesture? gesture = RecognizeGesture();
+        _state = CaptureState.Ready;
+        var gesture = RecognizeGesture(strokes);
         if (gesture is not null)
         {
+            LastGesturePosition = _pointsCaptured.Values
+                .Select(static points => points.FirstOrDefault())
+                .FirstOrDefault();
             _gestureRecognized.OnNext(gesture.Value);
         }
 
-        ResetCapture();
+        _pointsCaptured.Clear();
     }
 
-    private RecognizedGesture? RecognizeGesture()
+    private void AddPoint(List<InputPoint> points)
     {
-        if (_completedStrokes.Count == 0)
-            return null;
+        bool getNewPoint = false;
+        foreach (var point in points)
+        {
+            if (!_pointsCaptured.TryGetValue(point.ContactIdentifier, out var stroke))
+                continue;
 
-        var ctx = BuildGestureContext();
-        var definition = _gestures.FirstOrDefault(g => g.Matches(ctx));
-        if (definition is null)
-            return null;
+            if (stroke.Count != 0)
+            {
+                if (Distance(stroke[^1], point.Point) < MinimumPointDistance)
+                    continue;
 
-        LastGesturePosition = ctx.Position;
-        return definition.Gesture;
+                if (_state == CaptureState.CapturingInvalid)
+                    _state = CaptureState.Capturing;
+            }
+
+            getNewPoint = true;
+            stroke.Add(point.Point);
+        }
+
+        if (getNewPoint && _state == CaptureState.Capturing)
+            return;
     }
 
-    private GestureContext BuildGestureContext() => new(
-        MaxContactCount: (int)_maxContactCount,
-        Duration: DateTimeOffset.Now - _captureStartedAt,
-        MaxMovement: _completedStrokes.Max(static s => s.Movement),
-        Position: _completedStrokes[0].StartPoint,
-        DominantStroke: _completedStrokes.MaxBy(static s => Math.Abs(s.Delta.Y))
-    );
+    private static double Distance(System.Drawing.Point left, System.Drawing.Point right)
+    {
+        double dx = right.X - left.X;
+        double dy = right.Y - left.Y;
+        return Math.Sqrt(dx * dx + dy * dy);
+    }
+
+    private static double Distance(System.Drawing.PointF left, System.Drawing.PointF right)
+    {
+        double dx = right.X - left.X;
+        double dy = right.Y - left.Y;
+        return Math.Sqrt(dx * dx + dy * dy);
+    }
+
+    private static RecognizedGesture? RecognizeGesture(System.Drawing.Point[][] strokes)
+    {
+        if (strokes.Length == 0)
+            return null;
+
+        double bestProbability = double.MinValue;
+        RecognizedGesture? result = null;
+        foreach (var pattern in GesturePatterns)
+        {
+            if (pattern.Strokes.Length != strokes.Length)
+                continue;
+
+            double probability = 0;
+            bool matches = true;
+            for (int i = 0; i < strokes.Length; i++)
+            {
+                double strokeProbability = GetPointPatternProbability(pattern.Strokes[i], strokes[i]);
+                if (strokeProbability <= ProbabilityThreshold)
+                {
+                    matches = false;
+                    break;
+                }
+
+                probability += strokeProbability;
+            }
+
+            if (matches && probability > bestProbability)
+            {
+                bestProbability = probability;
+                result = pattern.Gesture;
+            }
+        }
+
+        return result;
+    }
+
+    private static double GetPointPatternProbability(System.Drawing.Point[] compareTo, System.Drawing.Point[] points)
+    {
+        if (compareTo.Length == 1 || points.Length <= 1)
+            return points.Length == compareTo.Length ? 100d : 0d;
+
+        var compareToAngles = GetAngularMargins(Interpolate(compareTo, 100));
+        var compareAngles = GetAngularMargins(Interpolate(points, 100));
+        double totalDelta = 0;
+        for (int i = 0; i < compareToAngles.Length; i++)
+            totalDelta += GetAngularDelta(compareToAngles[i], compareAngles[i]);
+
+        return Math.Abs(totalDelta / compareToAngles.Length * 31.830988618379067D - 100);
+    }
+
+    private static System.Drawing.PointF[] Interpolate(System.Drawing.Point[] points, int segments)
+    {
+        var interpolated = new List<System.Drawing.PointF>(segments);
+        double desiredSegmentLength = GetPointArrayLength(points) / segments;
+        double currentSegmentLength = 0;
+        var lastTestPoint = new System.Drawing.PointF(points[0].X, points[0].Y);
+        interpolated.Add(lastTestPoint);
+
+        for (int currentIndex = 1; currentIndex < points.Length; currentIndex++)
+        {
+            var currentPoint = new System.Drawing.PointF(points[currentIndex].X, points[currentIndex].Y);
+            double incrementLength = Distance(lastTestPoint, currentPoint);
+            double testSegmentLength = currentSegmentLength + incrementLength;
+            if (testSegmentLength < desiredSegmentLength)
+            {
+                currentSegmentLength = testSegmentLength;
+                lastTestPoint = currentPoint;
+                continue;
+            }
+
+            double interpolationPosition = (desiredSegmentLength - currentSegmentLength) * (1 / incrementLength);
+            var interpolatedPoint = new System.Drawing.PointF(
+                (float)((1 - interpolationPosition) * lastTestPoint.X + interpolationPosition * currentPoint.X),
+                (float)((1 - interpolationPosition) * lastTestPoint.Y + interpolationPosition * currentPoint.Y));
+            interpolated.Add(interpolatedPoint);
+            if (interpolated.Count == segments)
+                break;
+
+            lastTestPoint = interpolatedPoint;
+            currentSegmentLength = 0;
+            currentIndex--;
+        }
+
+        return interpolated.ToArray();
+    }
+
+    private static double GetPointArrayLength(System.Drawing.Point[] points)
+    {
+        double length = 0;
+        for (int i = 1; i < points.Length; i++)
+            length += Distance(points[i - 1], points[i]);
+        return length;
+    }
+
+    private static double[] GetAngularMargins(System.Drawing.PointF[] points)
+    {
+        var margins = new double[Math.Max(0, points.Length - 1)];
+        for (int i = 1; i < points.Length; i++)
+            margins[i - 1] = Math.Atan2(points[i].Y - points[i - 1].Y, points[i].X - points[i - 1].X);
+        return margins;
+    }
+
+    private static double GetAngularDelta(double left, double right)
+    {
+        double result = Math.Abs(left - right);
+        if (result > Math.PI)
+            result = Math.PI - (result - Math.PI);
+        return result;
+    }
 
     private void ResetCapture()
     {
-        _activeStrokes.Clear();
-        _completedStrokes.Clear();
-        _rawContacts.Clear();
-        _maxContactCount = 0;
-        _requiredRawContactCount = 0;
+        _pointsCaptured.Clear();
+        _outputTouchs.Clear();
+        _requiringContactCount = 0;
+        _lastPointsCount = 0;
+        _sourceActive = false;
+        _state = _isEnabled ? CaptureState.Ready : CaptureState.Disabled;
     }
-
-    private static bool TryGetPointerPoint(nuint wParam, out PointerPoint point)
-    {
-        if (!OperatingSystem.IsWindowsVersionAtLeast(8))
-        {
-            point = default;
-            return false;
-        }
-
-        uint pointerId = (uint)(wParam & 0xFFFF);
-        if (!PInvoke.GetPointerInfo(pointerId, out var pointerInfo))
-        {
-            point = default;
-            return false;
-        }
-
-        point = new(pointerInfo.ptPixelLocation.X, pointerInfo.ptPixelLocation.Y);
-        return true;
-    }
-
-    private static int GetPointerId(nuint wParam) =>
-        (int)(wParam & 0xFFFF);
 
     private static bool IsHidSuccess(NTSTATUS status) =>
         (int)status.Value == HIDP_STATUS_SUCCESS;
 
-    private readonly record struct RawContact(int Id, bool IsTip, PointerPoint Point);
-
-    private readonly record struct PointerPoint(int X, int Y);
-
-    private sealed class PointerStroke
+    private enum CaptureState
     {
-        private readonly PointerPoint _start;
-        private PointerPoint _last;
-
-        public PointerStroke(PointerPoint start)
-        {
-            _start = start;
-            _last = start;
-        }
-
-        public Vector2 Delta => new((float)(_last.X - _start.X), (float)(_last.Y - _start.Y));
-
-        public System.Drawing.Point StartPoint => new(_start.X, _start.Y);
-
-        public double Movement { get; private set; }
-
-        public void Add(PointerPoint point)
-        {
-            double distance = Distance(_last, point);
-            if (distance <= 0)
-                return;
-
-            Movement += distance;
-            _last = point;
-        }
-
-        private static double Distance(PointerPoint left, PointerPoint right)
-        {
-            double dx = right.X - left.X;
-            double dy = right.Y - left.Y;
-            return Math.Sqrt(dx * dx + dy * dy);
-        }
+        Ready,
+        Disabled,
+        Capturing,
+        CapturingInvalid,
+        TriggerFired,
     }
+
+    private readonly record struct RawPoint(int ContactIdentifier, bool IsTip, System.Drawing.Point Point);
+    private readonly record struct InputPoint(int ContactIdentifier, System.Drawing.Point Point);
+    private readonly record struct PointerPoint(int X, int Y);
+    private readonly record struct GesturePattern(RecognizedGesture Gesture, System.Drawing.Point[][] Strokes);
 
     private sealed class PreparsedDataHandle(PHIDP_PREPARSED_DATA handle) : IDisposable
     {
         public PHIDP_PREPARSED_DATA Handle { get; } = handle;
 
-        public void Dispose() =>
-            Marshal.FreeHGlobal(Handle.Value);
+        public void Dispose() => Marshal.FreeHGlobal(Handle.Value);
     }
 
-    private sealed record GestureContext(
-        int MaxContactCount,
-        TimeSpan Duration,
-        double MaxMovement,
-        System.Drawing.Point Position,
-        PointerStroke? DominantStroke);
+    private delegate nint WndProcDelegate(nint hwnd, uint message, nuint wParam, nint lParam);
 
-    private sealed record GestureDefinition(RecognizedGesture Gesture, Func<GestureContext, bool> Matches);
-
-    private delegate nint WndProcDelegate(nint hWnd, uint msg, nuint wParam, nint lParam);
 }
