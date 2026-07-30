@@ -5,6 +5,7 @@ using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.Security;
 using Windows.Win32.Storage.Packaging.Appx;
 using Windows.Win32.UI.HiDpi;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace TouchChanX.Win32.Interop;
@@ -24,15 +25,10 @@ public static partial class OsPlatformApi
     /// </summary>
     public static void SendAltEnter(IntPtr hwnd)
     {
-        const uint WM_SYSKEYDOWN = 0x0104;
-        const uint WM_SYSKEYUP = 0x0105;
-        const int VK_RETURN = 0x0D;
-        const int VK_MENU = 0x12; // Alt key
-
-        PInvoke.SendMessage(new(hwnd), WM_SYSKEYDOWN, VK_MENU, nint.Zero);
-        PInvoke.SendMessage(new(hwnd), WM_SYSKEYDOWN, VK_RETURN, 0x20000000);
-        PInvoke.SendMessage(new(hwnd), WM_SYSKEYUP, VK_RETURN, 0x20000000);
-        PInvoke.SendMessage(new(hwnd), WM_SYSKEYUP, VK_MENU, nint.Zero);
+        PInvoke.SendMessage(new(hwnd), PInvoke.WM_SYSKEYDOWN, (int)VIRTUAL_KEY.VK_MENU, nint.Zero);
+        PInvoke.SendMessage(new(hwnd), PInvoke.WM_SYSKEYDOWN, (int)VIRTUAL_KEY.VK_RETURN, 0x20000000);
+        PInvoke.SendMessage(new(hwnd), PInvoke.WM_SYSKEYUP, (int)VIRTUAL_KEY.VK_RETURN, 0x20000000);
+        PInvoke.SendMessage(new(hwnd), PInvoke.WM_SYSKEYUP, (int)VIRTUAL_KEY.VK_MENU, nint.Zero);
     }
 
     /// <summary>

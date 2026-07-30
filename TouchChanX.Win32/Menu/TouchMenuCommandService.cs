@@ -153,10 +153,9 @@ public static class TouchMenuCommandService
 
     private static void RequestCloseGameWindow(nint hwnd)
     {
-        const uint WM_SYSCOMMAND = 0x0112;
         const nuint SC_CLOSE = 0xF060;
 
-        PInvoke.PostMessage(new(hwnd), WM_SYSCOMMAND, SC_CLOSE, 0);
+        PInvoke.PostMessage(new(hwnd), PInvoke.WM_SYSCOMMAND, SC_CLOSE, 0);
     }
 
     private static void MoveGameWindowBy(nint hwnd, int deltaX, int deltaY)

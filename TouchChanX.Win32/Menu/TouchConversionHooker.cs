@@ -11,8 +11,6 @@ namespace TouchChanX.Win32.Menu;
 internal static class TouchConversionHooker
 {
     private const int MouseClickDelay = 10;
-    private const uint WM_LBUTTONUP = 0x0202;
-    private const uint WM_RBUTTONUP = 0x0205;
     private const ulong MOUSEEVENTF_FROMTOUCH = 0xFF515700;
 
     private static readonly object SyncRoot = new();
@@ -77,7 +75,7 @@ internal static class TouchConversionHooker
             return;
 
         var message = (uint)wParam.Value;
-        if (message is not (WM_LBUTTONUP or WM_RBUTTONUP))
+        if (message is not (PInvoke.WM_LBUTTONUP or PInvoke.WM_RBUTTONUP))
             return;
 
         nint gameWindowHandle;
@@ -100,11 +98,11 @@ internal static class TouchConversionHooker
 
         switch (message)
         {
-            case WM_LBUTTONUP:
+            case PInvoke.WM_LBUTTONUP:
                 PInvoke.SetCursorPos(info.pt.X, info.pt.Y);
                 SendMouseClick(MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN, MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP);
                 break;
-            case WM_RBUTTONUP:
+            case PInvoke.WM_RBUTTONUP:
                 SendMouseClick(MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN, MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP);
                 break;
         }

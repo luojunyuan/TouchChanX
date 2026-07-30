@@ -22,12 +22,6 @@ public enum RecognizedGesture
 
 public sealed class GestureRecognitionService : IDisposable
 {
-    private const uint WM_INPUT = 0x00FF;
-    private const uint WM_INPUT_DEVICE_CHANGE = 0x00FE;
-    private const uint WM_DISPLAYCHANGE = 0x007E;
-    private const uint WM_SETTINGCHANGE = 0x001A;
-    private const uint WM_POWERBROADCAST = 0x0218;
-    private const uint WM_ENDSESSION = 0x0016;
     private const uint PBT_APMRESUMEAUTOMATIC = 0x0012;
     private const uint PBT_APMRESUMECRITICAL = 0x0006;
     private const uint PBT_APMRESUMESUSPEND = 0x0007;
@@ -199,23 +193,23 @@ public sealed class GestureRecognitionService : IDisposable
             {
                 switch (message)
                 {
-                    case WM_INPUT:
+                    case PInvoke.WM_INPUT:
                         ProcessInputCommand(lParam);
                         break;
-                    case WM_INPUT_DEVICE_CHANGE:
+                    case PInvoke.WM_INPUT_DEVICE_CHANGE:
                         _validDevices.Clear();
                         RefreshRawTouchInput();
                         break;
-                    case WM_DISPLAYCHANGE:
-                    case WM_SETTINGCHANGE:
+                    case PInvoke.WM_DISPLAYCHANGE:
+                    case PInvoke.WM_SETTINGCHANGE:
                         ResetCapture();
                         break;
-                    case WM_POWERBROADCAST when IsResumeNotification(wParam):
+                    case PInvoke.WM_POWERBROADCAST when IsResumeNotification(wParam):
                         ResetCapture();
                         RefreshRawTouchInput();
                         break;
-                    case WM_POWERBROADCAST:
-                    case WM_ENDSESSION:
+                    case PInvoke.WM_POWERBROADCAST:
+                    case PInvoke.WM_ENDSESSION:
                         ResetCapture();
                         break;
                 }

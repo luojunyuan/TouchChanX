@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Windows.Win32;
+using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace TouchChanX.Win32.Menu;
@@ -24,11 +25,9 @@ internal readonly partial record struct TouchScreenCoordinateMapper(
     int ScreenHeight,
     TouchScreenOrientation Orientation)
 {
-    private const uint DM_DISPLAYORIENTATION = 0x00000080;
-
     public static TouchScreenCoordinateMapper Create()
     {
-        var orientation = DisplayOrientationNativeMethods.GetCurrentOrientation();
+        var orientation = GetCurrentOrientation();
         var width = Math.Max(1, PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXSCREEN));
         var height = Math.Max(1, PInvoke.GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYSCREEN));
         return new(width, height, orientation);
@@ -55,74 +54,26 @@ internal readonly partial record struct TouchScreenCoordinateMapper(
         return new(mappedX, mappedY);
     }
 
-    private static partial class DisplayOrientationNativeMethods
+    private static TouchScreenOrientation GetCurrentOrientation()
     {
-        public static TouchScreenOrientation GetCurrentOrientation()
+        var mode = default(DEVMODEW);
+        mode.dmSize = (ushort)Marshal.SizeOf<DEVMODEW>();
+
+        if (!PInvoke.EnumDisplaySettings(
+                iModeNum: ENUM_DISPLAY_SETTINGS_MODE.ENUM_CURRENT_SETTINGS,
+                lpDevMode: ref mode) ||
+            (mode.dmFields & DEVMODE_FIELD_FLAGS.DM_DISPLAYORIENTATION) == 0)
         {
-            unsafe
-            {
-                var mode = default(DevMode);
-                mode.dmSize = (ushort)sizeof(DevMode);
-
-                if (!EnumDisplaySettings(nint.Zero, ENUM_CURRENT_SETTINGS, ref mode) ||
-                    (mode.dmFields & DM_DISPLAYORIENTATION) == 0)
-                {
-                    return TouchScreenOrientation.Angle0;
-                }
-
-                return mode.dmDisplayOrientation switch
-                {
-                    0 => TouchScreenOrientation.Angle0,
-                    1 => TouchScreenOrientation.Angle90,
-                    2 => TouchScreenOrientation.Angle180,
-                    3 => TouchScreenOrientation.Angle270,
-                    _ => TouchScreenOrientation.Angle0,
-                };
-            }
+            return TouchScreenOrientation.Angle0;
         }
 
-        private const int ENUM_CURRENT_SETTINGS = -1;
-
-        [LibraryImport("user32.dll", EntryPoint = "EnumDisplaySettingsW", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static partial bool EnumDisplaySettings(
-            nint deviceName,
-            int modeNum,
-            ref DevMode devMode);
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        private unsafe struct DevMode
+        return mode.dmDisplayOrientation switch
         {
-            public fixed char dmDeviceName[32];
-            public ushort dmSpecVersion;
-            public ushort dmDriverVersion;
-            public ushort dmSize;
-            public ushort dmDriverExtra;
-            public uint dmFields;
-            public int dmPositionX;
-            public int dmPositionY;
-            public uint dmDisplayOrientation;
-            public uint dmDisplayFixedOutput;
-            public short dmColor;
-            public short dmDuplex;
-            public short dmYResolution;
-            public short dmTTOption;
-            public short dmCollate;
-            public fixed char dmFormName[32];
-            public ushort dmLogPixels;
-            public uint dmBitsPerPel;
-            public uint dmPelsWidth;
-            public uint dmPelsHeight;
-            public uint dmDisplayFlags;
-            public uint dmDisplayFrequency;
-            public uint dmICMMethod;
-            public uint dmICMIntent;
-            public uint dmMediaType;
-            public uint dmDitherType;
-            public uint dmReserved1;
-            public uint dmReserved2;
-            public uint dmPanningWidth;
-            public uint dmPanningHeight;
-        }
+            DEVMODE_DISPLAY_ORIENTATION.DMDO_DEFAULT => TouchScreenOrientation.Angle0,
+            DEVMODE_DISPLAY_ORIENTATION.DMDO_90 => TouchScreenOrientation.Angle90,
+            DEVMODE_DISPLAY_ORIENTATION.DMDO_180 => TouchScreenOrientation.Angle180,
+            DEVMODE_DISPLAY_ORIENTATION.DMDO_270 => TouchScreenOrientation.Angle270,
+            _ => TouchScreenOrientation.Angle0,
+        };
     }
 }

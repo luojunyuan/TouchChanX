@@ -59,6 +59,7 @@ THREAD_ACCESS_RIGHTS
 THREADENTRY32
 QueryFullProcessImageName
 PROCESS_ACCESS_RIGHTS
+WM_*
 
 // ---- 菜单命令相关 ----
 GetWindowRect
@@ -87,3 +88,4 @@ HidP_GetSpecificValueCaps
 HIDP_LINK_COLLECTION_NODE
 HIDP_VALUE_CAPS
 HIDP_REPORT_TYPE
+EnumDisplaySettings
