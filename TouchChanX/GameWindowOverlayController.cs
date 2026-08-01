@@ -15,6 +15,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
     private readonly Action _restoreBrightness;
     private nint _gameWindowHandle;
     private WinUI.LockWindow? _lockWindow;
+    private nint _lockWindowHandle;
     private IDisposable? _lockWindowInputSubscription;
     private GameProcessSuspension? _gameProcessSuspension;
     private nint _lockedGameWindowHandle;
@@ -67,7 +68,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
         try
         {
             var candidateHwnd = WinRT.Interop.WindowNative.GetWindowHandle(candidate);
-            WindowConfiguration.ConfigureStandaloneWindow(candidateHwnd);
+            WindowConfiguration.ConfigureOwnedWindow(candidateHwnd, gameWindowHandle);
             if (!OsPlatformApi.TryGetWindowRectangle(gameWindowHandle, out var gameWindowRectangle) ||
                 !OsPlatformApi.PositionWindow(candidateHwnd, gameWindowRectangle))
             {
@@ -75,6 +76,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
             }
 
             _lockWindow = candidate;
+            _lockWindowHandle = candidateHwnd;
             _lockedGameWindowHandle = gameWindowHandle;
 
             var freezeSubscription = candidate.FreezeRequested
@@ -140,8 +142,21 @@ internal sealed partial class GameWindowOverlayController : IDisposable
             return false;
         }
 
+        var lockWindowHandle = _lockWindowHandle;
+        if (lockWindowHandle == nint.Zero || !OsPlatformApi.IsWindow(lockWindowHandle))
+        {
+            _showMessage(LocalizedStrings.Current.ErrorUnableToFreezeGame);
+            return false;
+        }
+
+        // An owned window follows the suspended game window. Detach it before suspending
+        // the game so the lock controls remain responsive while the game is frozen.
+        lockWindow.AppWindow.IsShownInSwitchers = false;
+        WindowConfiguration.ConfigureStandaloneWindow(lockWindowHandle);
+
         if (!GameProcessSuspension.TrySuspendForWindow(gameWindowHandle, out var suspension))
         {
+            WindowConfiguration.ConfigureOwnedWindow(lockWindowHandle, gameWindowHandle);
             _showMessage(LocalizedStrings.Current.ErrorUnableToFreezeGame);
             return false;
         }
@@ -158,7 +173,11 @@ internal sealed partial class GameWindowOverlayController : IDisposable
         _gameProcessSuspension = null;
 
         suspension?.Dispose();
-        _lockWindow?.SetFrozenState(false);
+        if (_lockWindow is not null)
+        {
+            WindowConfiguration.ConfigureOwnedWindow(_lockWindowHandle, gameWindowHandle);
+            _lockWindow.SetFrozenState(false);
+        }
 
         if (activateGame && gameWindowHandle != nint.Zero && OsPlatformApi.IsWindow(gameWindowHandle))
             OsPlatformApi.ActivateWindow(gameWindowHandle);
@@ -174,6 +193,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
 
         var overlay = _lockWindow;
         _lockWindow = null;
+        _lockWindowHandle = nint.Zero;
 
         var inputSubscription = _lockWindowInputSubscription;
         _lockWindowInputSubscription = null;
@@ -233,15 +253,27 @@ internal static class WindowConfiguration
         OsPlatformApi.ShowWindowNoActivate(hwnd);
     }
 
+    public static void ConfigureOwnedWindow(nint hwnd, nint owner)
+    {
+        // Keep LockWindow top-level, then assign the game as its owner. Owned windows stay
+        // above their owner and follow its minimize/destroy lifetime without being children.
+        OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.Child, false);
+        OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.TiledWindow, false);
+        OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.Popup, true);
+        OsPlatformApi.ToggleWindowExStyle(hwnd, ExtendedWindowStyles.Layered, true);
+        OsPlatformApi.ToggleWindowExStyle(hwnd, ExtendedWindowStyles.AppWindow, false);
+        OsPlatformApi.SetOwnerWindow(hwnd, owner);
+    }
+
     public static void ConfigureStandaloneWindow(nint hwnd)
     {
-        // LockWindow is a standalone top-level window. It is not a child or owned window
-        // of the game, so moving or suspending the game cannot move this window.
+        // Remove the owner while the game is suspended so this window remains responsive.
         OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.Child, false);
         OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.TiledWindow, false);
         OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.Popup, true);
         OsPlatformApi.ToggleWindowExStyle(hwnd, ExtendedWindowStyles.Layered, true);
         OsPlatformApi.ToggleWindowExStyle(hwnd, ExtendedWindowStyles.AppWindow, true);
+        OsPlatformApi.SetOwnerWindow(hwnd, nint.Zero);
     }
 }
 
