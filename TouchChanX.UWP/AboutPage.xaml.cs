@@ -6,7 +6,6 @@ using TouchChanX.Persistence;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.Resources.Core;
-using Windows.Globalization;
 using Windows.Services.Store;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -21,7 +20,7 @@ public sealed partial class AboutPage : Page
 {
     public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
 
-    public Visibility QqGroupVisibility { get; } = IsZhCn()
+    public Visibility QqGroupVisibility { get; } = IsZhHansCn()
         ? Visibility.Visible
         : Visibility.Collapsed;
 
@@ -71,10 +70,10 @@ public sealed partial class AboutPage : Page
         return storeContext;
     })();
 
-    private static bool IsZhCn()
+    private static bool IsZhHansCn()
     {
         var languages = ResourceContext.GetForViewIndependentUse().Languages;
-        return languages.Count > 0 && string.Equals(languages[0], "zh-CN", StringComparison.OrdinalIgnoreCase);
+        return languages.Count > 0 && string.Equals(languages[0], "zh-Hans-CN", StringComparison.OrdinalIgnoreCase);
     }
 }
 
