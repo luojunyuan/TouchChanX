@@ -123,12 +123,6 @@
   <data name="DisplayName" xml:space="preserve">
     <value>TachiChan</value>
   </data>
-  <data name="DevelopmentNoticeTitle" xml:space="preserve">
-    <value>Notice</value>
-  </data>
-  <data name="DevelopmentNoticeContent" xml:space="preserve">
-    <value>TouchChanX v3 arm64 is still under development. Join QQ group 942698378 for discussion and feedback.</value>
-  </data>
   <data name="Confirm" xml:space="preserve">
     <value>OK</value>
   </data>

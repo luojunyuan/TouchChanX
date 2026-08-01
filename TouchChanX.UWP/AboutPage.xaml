@@ -21,7 +21,7 @@
 
                 <ct:SettingsCard
                     Command="{x:Bind RateInStoreCommand}"
-                    Description="{x:Bind Strings.AboutRateDescription}"
+                    Description="build dev 2026.8"
                     Header="{x:Bind Strings.AboutRateHeader}"
                     IsClickEnabled="True">
                     <ct:SettingsCard.HeaderIcon>
@@ -45,7 +45,9 @@
                     </ct:SettingsCard.ActionIcon>
                 </ct:SettingsCard>
 
-                <ct:SettingsCard Header="{x:Bind Strings.AboutQqHeader}">
+                <ct:SettingsCard
+                    Visibility="{x:Bind QqGroupVisibility}"
+                    Header="{x:Bind Strings.AboutQqHeader}">
                     <ct:SettingsCard.Description>
                         <StackPanel Spacing="2">
                             <TextBlock x:Name="QqGroupNumberText" Text="{x:Bind Strings.QqGroupNumber}" />

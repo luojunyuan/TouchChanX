@@ -14,8 +14,6 @@ public sealed class LocalizedStrings
 
     public string Description => Get(nameof(Description));
     public string DisplayName => Get(nameof(DisplayName));
-    public string DevelopmentNoticeTitle => Get(nameof(DevelopmentNoticeTitle));
-    public string DevelopmentNoticeContent => Get(nameof(DevelopmentNoticeContent));
     public string Confirm => Get(nameof(Confirm));
     public string Cancel => Get(nameof(Cancel));
     public string Save => Get(nameof(Save));

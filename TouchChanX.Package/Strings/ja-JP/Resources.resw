@@ -123,12 +123,6 @@
   <data name="DisplayName" xml:space="preserve">
     <value>タッチちゃん</value>
   </data>
-  <data name="DevelopmentNoticeTitle" xml:space="preserve">
-    <value>お知らせ</value>
-  </data>
-  <data name="DevelopmentNoticeContent" xml:space="preserve">
-    <value>タッチちゃん v3 arm64 は開発中です。QQグループ 942698378 に参加して、交流やフィードバックをお願いします。</value>
-  </data>
   <data name="Confirm" xml:space="preserve">
     <value>OK</value>
   </data>

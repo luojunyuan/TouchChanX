@@ -123,12 +123,6 @@
   <data name="DisplayName" xml:space="preserve">
     <value>触控酱</value>
   </data>
-  <data name="DevelopmentNoticeTitle" xml:space="preserve">
-    <value>提示</value>
-  </data>
-  <data name="DevelopmentNoticeContent" xml:space="preserve">
-    <value>触控酱v3 arm64 仍处于开发中，欢迎加入QQ群 942698378 交流反馈</value>
-  </data>
   <data name="Confirm" xml:space="preserve">
     <value>确定</value>
   </data>

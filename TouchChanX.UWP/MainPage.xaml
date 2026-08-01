@@ -72,7 +72,7 @@
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem Content="{x:Bind Strings.MainNavAbout}" Tag="about">
                     <muxc:NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Help" />
+                        <FontIcon Glyph="&#xE9CE;" Tag="Unknown" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
             </muxc:NavigationView.FooterMenuItems>

@@ -1,9 +1,12 @@
-using R3;
-using R3.ObservableEvents;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
+using R3;
+using R3.ObservableEvents;
+using TouchChanX.Persistence;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.ApplicationModel.Resources.Core;
+using Windows.Globalization;
 using Windows.Services.Store;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -11,13 +14,16 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using WinRT;
 using WinRT.Interop;
-using TouchChanX.Persistence;
 
 namespace TouchChanX.UWP;
 
 public sealed partial class AboutPage : Page
 {
     public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
+    public Visibility QqGroupVisibility { get; } = IsZhCn()
+        ? Visibility.Visible
+        : Visibility.Collapsed;
 
     private const string OpenSourceUrl = "https://github.com/luojunyuan/TachiChanX";
 
@@ -64,6 +70,12 @@ public sealed partial class AboutPage : Page
 
         return storeContext;
     })();
+
+    private static bool IsZhCn()
+    {
+        var languages = ResourceContext.GetForViewIndependentUse().Languages;
+        return languages.Count > 0 && string.Equals(languages[0], "zh-CN", StringComparison.OrdinalIgnoreCase);
+    }
 }
 
 [GeneratedComInterface, Guid("45D64A29-A63E-4CB6-B498-5781D298CB4F")]
