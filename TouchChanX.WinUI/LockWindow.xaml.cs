@@ -1,11 +1,14 @@
 using Microsoft.UI.Xaml;
 using R3;
 using R3.ObservableEvents;
+using TouchChanX.Persistence;
 
 namespace TouchChanX.WinUI;
 
 public sealed partial class LockWindow : Window
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     public Observable<Unit> FreezeRequested { get; }
     public Observable<Unit> UnlockRequested { get; }
     public Observable<Unit> CloseRequested { get; }

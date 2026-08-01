@@ -9,9 +9,9 @@
     DefaultButton="Primary"
     IsPrimaryButtonEnabled="{x:Bind CanStart.Value, Mode=OneWay}"
     PrimaryButtonStyle="{StaticResource AccentButtonStyle}"
-    PrimaryButtonText="启动测试"
-    SecondaryButtonText="取消"
-    Title="测试启动器"
+    PrimaryButtonText="{x:Bind Strings.ExternalDialogStartTest}"
+    SecondaryButtonText="{x:Bind Strings.Cancel}"
+    Title="{x:Bind Strings.TestLauncherTitle}"
     mc:Ignorable="d">
 
     <ContentDialog.Resources>
@@ -24,7 +24,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="16">
             <ComboBox
-                Header="主页已有游戏"
+                Header="{x:Bind Strings.ExternalDialogExistingGames}"
                 HorizontalAlignment="Stretch"
                 ItemTemplate="{StaticResource GameItemTemplate}"
                 ItemsSource="{x:Bind Games}"
@@ -35,18 +35,18 @@
                 HorizontalContentAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <FontIcon Glyph="&#xE8E5;" />
-                    <TextBlock Text="选择其他游戏…" />
+                    <TextBlock Text="{x:Bind Strings.ExternalDialogSelectOther}" />
                 </StackPanel>
             </Button>
             <TextBox
-                Header="测试游戏路径"
+                Header="{x:Bind Strings.ExternalDialogPathHeader}"
                 IsReadOnly="True"
-                PlaceholderText="请选择游戏主程序"
+                PlaceholderText="{x:Bind Strings.ExternalDialogPathPlaceholder}"
                 Text="{x:Bind TestGamePath.Value, Mode=OneWay}" />
             <muxc:InfoBar
                 IsClosable="False"
                 IsOpen="True"
-                Message="测试会实际启动游戏。"
+                Message="{x:Bind Strings.ExternalDialogWarning}"
                 Severity="Warning" />
         </StackPanel>
     </ScrollViewer>

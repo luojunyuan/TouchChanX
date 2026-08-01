@@ -7,7 +7,7 @@
     xmlns:local="clr-namespace:TouchChanX.WPF"
     xmlns:menu="clr-namespace:TouchChanX.WPF.Menu"
     xmlns:touch="clr-namespace:TouchChanX.WPF.Touch"
-    Title="MainWindow"
+    Title="{Binding Strings.DisplayName, RelativeSource={RelativeSource Self}}"
     Width="800"
     Height="450"
     d:DataContext="{d:DesignInstance Type=local:MainWindow}"

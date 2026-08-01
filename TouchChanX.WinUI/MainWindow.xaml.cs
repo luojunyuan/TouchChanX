@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using R3;
 using System.Numerics;
+using TouchChanX.Persistence;
 using Windows.Foundation;
 
 namespace TouchChanX.WinUI;
@@ -10,6 +11,8 @@ namespace TouchChanX.WinUI;
 /// </summary>
 public sealed partial class MainWindow : Window
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     public MainWindow()
     {
         InitializeComponent();

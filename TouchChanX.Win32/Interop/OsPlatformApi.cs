@@ -14,10 +14,12 @@ public static partial class OsPlatformApi
 {
     public static class MessageBox
     {
-        private const string DisplayName = "TachiChan";
-
-        public static void Show(string text, string caption = DisplayName) =>
-            PInvoke.MessageBox(HWND.Null, text, caption, MESSAGEBOX_STYLE.MB_OK);
+        public static void Show(string text, string? caption = null) =>
+            PInvoke.MessageBox(
+                HWND.Null,
+                text,
+                caption ?? "TachiChan",
+                MESSAGEBOX_STYLE.MB_OK);
     }
 
     /// <summary>

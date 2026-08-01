@@ -10,6 +10,8 @@ namespace TouchChanX.UWP;
 
 public sealed partial class SettingsPage : Page
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     private readonly AppSettings _settings = new();
 
     public BindableReactiveProperty<bool> ExternalLauncherEnabled { get; }
@@ -91,17 +93,17 @@ public sealed partial class SettingsPage : Page
             $"touchchanx://test-external-launcher/?path={Uri.EscapeDataString(dialog.SelectedGamePath)}");
         if (!await Launcher.LaunchUriAsync(uri))
         {
-            await new MessageDialog("无法调用 touchchanx 协议。", "无法启动测试").ShowAsync();
+            await new MessageDialog(Strings.ProtocolLaunchFailed, Strings.TestLauncherTitle).ShowAsync();
         }
     }
 
     private string? GetLauncherPathDescription(string path) =>
         ExternalLauncherConfiguration.IsLauncherPathValid(path)
             ? null
-            : "启动程序无效，请选择存在的 .exe 文件。";
+            : Strings.LauncherPathInvalid;
 
     private string GetLauncherArgumentsDescription(string arguments) =>
         ExternalLauncherConfiguration.AreArgumentsValid(arguments)
-            ? "{GamePath} 会替换为游戏主程序的完整路径。"
-            : "启动参数无效，必须包含未加引号的 {GamePath}。";
+            ? Strings.LauncherArgumentsHint
+            : Strings.LauncherArgumentsInvalid;
 }

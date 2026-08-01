@@ -438,10 +438,10 @@ internal sealed partial class GameWindowLifetime(
     private static string GetGestureMessage(RecognizedGesture gesture) =>
         gesture switch
         {
-            RecognizedGesture.ThreeFingerTap => "空格",
-            RecognizedGesture.TwoFingerTap => "鼠标右键",
-            RecognizedGesture.TwoFingerSwipeUp => "滚轮上划",
-            RecognizedGesture.TwoFingerSwipeDown => "滚轮下滑",
+            RecognizedGesture.ThreeFingerTap => LocalizedStrings.Current.GestureSpace,
+            RecognizedGesture.TwoFingerTap => LocalizedStrings.Current.GestureRightClick,
+            RecognizedGesture.TwoFingerSwipeUp => LocalizedStrings.Current.GestureScrollUp,
+            RecognizedGesture.TwoFingerSwipeDown => LocalizedStrings.Current.GestureScrollDown,
             _ => gesture.ToString(),
         };
 

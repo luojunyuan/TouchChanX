@@ -11,10 +11,10 @@
     <ScrollViewer>
         <Grid Margin="32 24 32 32">
             <StackPanel Spacing="16">
-                <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="设置" />
+                <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="{x:Bind Strings.SettingsTitle}" />
                 <ct:SettingsExpander
-                    Description="启动程序和参数有效后才能启用"
-                    Header="使用其他程序启动游戏"
+                    Description="{x:Bind Strings.SettingsExternalLauncherDescription}"
+                    Header="{x:Bind Strings.SettingsExternalLauncherHeader}"
                     IsExpanded="{x:Bind ExternalLauncherEnabled.Value, Mode=OneWay}">
                     <ct:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xE756;" />
@@ -22,24 +22,24 @@
                     <ToggleSwitch
                         IsEnabled="{x:Bind ExternalLauncherConfigurationValid.Value, Mode=OneWay}"
                         IsOn="{x:Bind ExternalLauncherEnabled.Value, Mode=TwoWay}"
-                        OffContent="关闭"
-                        OnContent="开启" />
+                        OffContent="{x:Bind Strings.Off}"
+                        OnContent="{x:Bind Strings.On}" />
                     <ct:SettingsExpander.Items>
                         <ct:SettingsCard>
                             <ct:SettingsCard.Header>
                                 <StackPanel Spacing="4">
                                     <TextBox
                                         Description="{x:Bind GetLauncherPathDescription(ExternalLauncherPath.Value), Mode=OneWay}"
-                                        Header="启动程序"
+                                        Header="{x:Bind Strings.LauncherPathHeader}"
                                         IsReadOnly="True"
-                                        PlaceholderText="请选择启动程序"
+                                        PlaceholderText="{x:Bind Strings.LauncherPathPlaceholder}"
                                         Text="{x:Bind ExternalLauncherPath.Value, Mode=OneWay}" />
                                 </StackPanel>
                             </ct:SettingsCard.Header>
                             <Button x:Name="BrowseExternalLauncherButton">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon Glyph="&#xE8E5;" />
-                                    <TextBlock Text="浏览…" />
+                                    <TextBlock Text="{x:Bind Strings.Browse}" />
                                 </StackPanel>
                             </Button>
                         </ct:SettingsCard>
@@ -48,49 +48,49 @@
                                 <StackPanel Spacing="4">
                                     <TextBox
                                         Description="{x:Bind GetLauncherArgumentsDescription(ExternalLauncherArgs.Value), Mode=OneWay}"
-                                        Header="启动参数"
+                                        Header="{x:Bind Strings.LauncherArgumentsHeader}"
                                         Text="{x:Bind ExternalLauncherArgs.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </ct:SettingsCard.Header>
                             <Button x:Name="InsertGamePathButton">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon Glyph="&#xE943;" />
-                                    <TextBlock Text="插入游戏路径" />
+                                    <TextBlock Text="{x:Bind Strings.InsertGamePath}" />
                                 </StackPanel>
                             </Button>
                         </ct:SettingsCard>
-                        <ct:SettingsCard Header="实际执行的命令" Description="{x:Bind LaunchCommandPreview.Value, Mode=OneWay}">
+                        <ct:SettingsCard Header="{x:Bind Strings.CommandPreviewHeader}" Description="{x:Bind LaunchCommandPreview.Value, Mode=OneWay}">
                             <Button
                                 x:Name="TestExternalLauncherButton"
                                 IsEnabled="{x:Bind ExternalLauncherConfigurationValid.Value, Mode=OneWay}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <SymbolIcon Symbol="Play" />
-                                    <TextBlock Text="测试启动…" />
+                                    <TextBlock Text="{x:Bind Strings.TestLaunch}" />
                                 </StackPanel>
                             </Button>
                         </ct:SettingsCard>
                     </ct:SettingsExpander.Items>
                 </ct:SettingsExpander>
                 <!--
-                <ct:SettingsCard Description="仅占位 UI，暂未连接 ShellMenuHandler 业务逻辑。" Header="在上下文菜单中显示 TouchChanX">
+                <ct:SettingsCard Description="{x:Bind Strings.SettingsPlaceholderShellMenuDescription}" Header="{x:Bind Strings.SettingsPlaceholderShellMenuHeader}">
                     <ct:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xE8A5;" />
                     </ct:SettingsCard.HeaderIcon>
-                    <ToggleSwitch IsOn="True" OffContent="关闭" OnContent="开启" />
+                    <ToggleSwitch IsOn="True" OffContent="{x:Bind Strings.Off}" OnContent="{x:Bind Strings.On}" />
                 </ct:SettingsCard>
 
-                <ct:SettingsCard Description="仅占位 UI，计划在游戏画面顶部保留数像素触摸缓冲区。" Header="顶部边缘防误触">
+                <ct:SettingsCard Description="{x:Bind Strings.SettingsPlaceholderEdgeDescription}" Header="{x:Bind Strings.SettingsPlaceholderEdgeHeader}">
                     <ct:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xE7C9;" />
                     </ct:SettingsCard.HeaderIcon>
-                    <ToggleSwitch OffContent="关闭" OnContent="开启" />
+                    <ToggleSwitch OffContent="{x:Bind Strings.Off}" OnContent="{x:Bind Strings.On}" />
                 </ct:SettingsCard>
 
                 <muxc:InfoBar
                     IsOpen="True"
                     IsClosable="False"
                     Severity="Informational"
-                    Message="设置会自动保存；正式启用前可以先测试当前启动配置。" />
+                    Message="{x:Bind Strings.SettingsAutoSaveMessage}" />
                 -->
             </StackPanel>
         </Grid>

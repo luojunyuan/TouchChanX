@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using TouchChanX.Persistence;
 
 namespace TouchChanX.WinUI.Controls;
 
@@ -21,6 +22,8 @@ public readonly record struct BatteryHudState(
 /// </summary>
 public sealed partial class BatteryHudControl : UserControl
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     private const double ProgressRailWidth = 250.0;
     private const string UnknownBatteryGlyph = "\uF608";
 
@@ -45,12 +48,15 @@ public sealed partial class BatteryHudControl : UserControl
     /// Sample state for design-time / Entry sandbox preview (no real battery IO).
     /// </summary>
     public static BatteryHudState CreateSampleState() =>
+        CreateSampleState(LocalizedStrings.Current);
+
+    private static BatteryHudState CreateSampleState(LocalizedStrings strings) =>
         new(
-            StatusText: "On battery",
-            PercentText: "68%",
-            TimeLeftText: "5h 42m",
-            PowerDrawText: "6.4 W (5s)",
-            CapacityText: "45.2 Wh",
+            StatusText: strings.BatteryOnBattery,
+            PercentText: strings.Format(nameof(LocalizedStrings.BatteryPercentFormat), 68),
+            TimeLeftText: strings.Format(nameof(LocalizedStrings.BatteryTimeHoursFormat), 5, 42),
+            PowerDrawText: strings.Format(nameof(LocalizedStrings.BatteryPowerDrawFormat), 6.4, 5),
+            CapacityText: strings.Format(nameof(LocalizedStrings.BatteryCapacityFormat), 45.2),
             PercentFraction: 0.68,
             HasBattery: true,
             IsCharging: false);

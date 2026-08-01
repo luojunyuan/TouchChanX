@@ -46,18 +46,18 @@
                 Margin="24 0 0 0"
                 VerticalAlignment="Center"
                 Style="{StaticResource CaptionTextBlockStyle}"
-                Text="触控酱" />
+                Text="{x:Bind Strings.DisplayName}" />
         </Border>
 
         <muxc:NavigationView x:Name="AppNav"
             Grid.Row="1"
-            Header="主页"
+            Header="{x:Bind Strings.MainNavHome}"
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
             PaneDisplayMode="Left"
             Style="{StaticResource RailNavigationViewStyle}">
             <muxc:NavigationView.MenuItems>
-                <muxc:NavigationViewItem Content="主页" IsSelected="True" Tag="home">
+                <muxc:NavigationViewItem Content="{x:Bind Strings.MainNavHome}" IsSelected="True" Tag="home">
                     <muxc:NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Home" />
                     </muxc:NavigationViewItem.Icon>
@@ -65,12 +65,12 @@
             </muxc:NavigationView.MenuItems>
 
             <muxc:NavigationView.FooterMenuItems>
-                <muxc:NavigationViewItem Content="设置" Tag="settings">
+                <muxc:NavigationViewItem Content="{x:Bind Strings.MainNavSettings}" Tag="settings">
                     <muxc:NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Setting" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem Content="关于" Tag="about">
+                <muxc:NavigationViewItem Content="{x:Bind Strings.MainNavAbout}" Tag="about">
                     <muxc:NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Help" />
                     </muxc:NavigationViewItem.Icon>

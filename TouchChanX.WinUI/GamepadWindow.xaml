@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="Gamepad mapping"
+    Title="{x:Bind Strings.GamepadMappingTitle}"
     mc:Ignorable="d">
 
     <Grid Padding="24" Background="#202020">
@@ -18,15 +18,15 @@
         <TextBlock
             FontSize="26"
             FontWeight="SemiBold"
-            Text="Gamepad mapping" />
+            Text="{x:Bind Strings.GamepadMappingTitle}" />
 
         <Grid Grid.Row="1" Margin="0,20,0,8" Padding="12,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBlock FontWeight="SemiBold" Text="Button" />
-            <TextBlock Grid.Column="1" FontWeight="SemiBold" Text="Keyboard key" />
+            <TextBlock FontWeight="SemiBold" Text="{x:Bind Strings.GamepadButtonHeader}" />
+            <TextBlock Grid.Column="1" FontWeight="SemiBold" Text="{x:Bind Strings.GamepadKeyboardKeyHeader}" />
         </Grid>
 
         <ScrollViewer Grid.Row="2"
@@ -41,7 +41,7 @@
             HorizontalAlignment="Right">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <FontIcon Glyph="&#xE711;" />
-                <TextBlock VerticalAlignment="Center" Text="Close" />
+                <TextBlock VerticalAlignment="Center" Text="{x:Bind Strings.GamepadClose}" />
             </StackPanel>
         </Button>
     </Grid>

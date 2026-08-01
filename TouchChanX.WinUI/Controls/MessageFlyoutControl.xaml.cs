@@ -6,12 +6,15 @@ using Microsoft.UI.Xaml.Media;
 using R3;
 using R3.ObservableEvents;
 using System.Numerics;
+using TouchChanX.Persistence;
 using Windows.Foundation;
 
 namespace TouchChanX.WinUI.Controls;
 
 public sealed partial class MessageFlyoutControl : UserControl
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     private static readonly TimeSpan DisplayDuration = TimeSpan.FromSeconds(1.6);
     private static readonly TimeSpan ShowDuration = TimeSpan.FromMilliseconds(280);
     private static readonly TimeSpan HideDuration = TimeSpan.FromMilliseconds(220);

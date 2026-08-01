@@ -4,6 +4,7 @@ using Windows.UI.Xaml;
 using R3;
 using R3.ObservableEvents;
 using Windows.UI.Xaml.Controls;
+using TouchChanX.Persistence;
 
 namespace TouchChanX.UWP;
 
@@ -12,6 +13,8 @@ namespace TouchChanX.UWP;
 /// </summary>
 public sealed partial class App : Application
 {
+    private static LocalizedStrings Strings => LocalizedStrings.Current;
+
     private const string DevelopmentNoticeShownKey = "DevelopmentNoticeShown";
 
     /// <summary>
@@ -68,9 +71,9 @@ public sealed partial class App : Application
 
                     await new ContentDialog
                     {
-                        Title = "提示",
-                        Content = "触控酱v3 arm64 仍处于开发中，欢迎加入QQ群 942698378 交流反馈",
-                        CloseButtonText = "确定",
+                        Title = Strings.DevelopmentNoticeTitle,
+                        Content = Strings.DevelopmentNoticeContent,
+                        CloseButtonText = Strings.Confirm,
                     }.ShowAsync();
                 }
             }

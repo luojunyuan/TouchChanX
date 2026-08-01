@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="TouchChanX Lock"
+    Title="{x:Bind Strings.LockWindowTitle}"
     mc:Ignorable="d">
 
     <Grid Background="#B8000000">
@@ -19,7 +19,7 @@
                 Padding="24,12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <FontIcon FontSize="24" Glyph="&#xE769;" />
-                    <TextBlock FontSize="20" Text="冻结" VerticalAlignment="Center" />
+                    <TextBlock FontSize="20" Text="{x:Bind Strings.Freeze}" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
 
@@ -29,7 +29,7 @@
                 Padding="24,12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <FontIcon FontSize="24" Glyph="&#xE785;" />
-                    <TextBlock FontSize="20" Text="解锁" VerticalAlignment="Center" />
+                    <TextBlock FontSize="20" Text="{x:Bind Strings.Unlock}" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
 
@@ -39,7 +39,7 @@
                 Padding="24,12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <FontIcon FontSize="24" Glyph="&#xE711;" />
-                    <TextBlock FontSize="20" Text="取消" VerticalAlignment="Center" />
+                    <TextBlock FontSize="20" Text="{x:Bind Strings.Cancel}" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
         </StackPanel>

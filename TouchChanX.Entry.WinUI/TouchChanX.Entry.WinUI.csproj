@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TouchChanX.Persistence\TouchChanX.Persistence.csproj" />
     <ProjectReference Include="..\TouchChanX.WinUI\TouchChanX.WinUI.csproj" />
   </ItemGroup>
 

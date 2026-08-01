@@ -312,7 +312,9 @@ public sealed partial class MenuControl : UserControl
             var button = new MenuButton
             {
                 Symbol = item.Symbol,
-                Text = item.Text,
+                Text = string.IsNullOrWhiteSpace(item.TextKey)
+                    ? string.Empty
+                    : LocalizedStrings.Current.Get(item.TextKey),
                 IsToggle = item.Kind == TouchMenuItemKind.Toggle,
                 IsOn = isOn,
                 IsEnabled = IsCommandEnabled(item),
@@ -320,8 +322,8 @@ public sealed partial class MenuControl : UserControl
                 VerticalAlignment = VerticalAlignment.Stretch,
             };
 
-            if (!string.IsNullOrWhiteSpace(item.ToolTip))
-                ToolTipService.SetToolTip(button, item.ToolTip);
+            if (!string.IsNullOrWhiteSpace(item.ToolTipKey))
+                ToolTipService.SetToolTip(button, LocalizedStrings.Current.Get(item.ToolTipKey));
 
             Grid.SetRow(cellHost, item.Cell.Row);
             Grid.SetColumn(cellHost, item.Cell.Column);

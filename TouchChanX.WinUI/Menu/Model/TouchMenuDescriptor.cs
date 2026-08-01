@@ -25,14 +25,14 @@ internal readonly record struct MenuCell(int Row, int Column)
 
 internal sealed record TouchMenuItemDescriptor(
     string Id,
-    string Text,
+    string TextKey,
     Symbol Symbol,
     MenuCell Cell,
     TouchMenuItemKind Kind = TouchMenuItemKind.Command,
     TouchMenuPageId? TargetPage = null,
     bool IsEnabled = true,
     bool IsOn = false,
-    string? ToolTip = null);
+    string? ToolTipKey = null);
 
 internal sealed record TouchMenuPageDescriptor(
     TouchMenuPageId Id,

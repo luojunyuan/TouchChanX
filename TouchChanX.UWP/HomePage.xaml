@@ -38,13 +38,13 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Spacing="4">
-                        <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="游戏启动" />
-                        <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="选择或拖入游戏主程序，TouchChanX 会通过 touchchanx 协议启动。" TextWrapping="Wrap" />
+                        <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="{x:Bind Strings.HomeTitle}" />
+                        <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Strings.HomeDescription}" TextWrapping="Wrap" />
                     </StackPanel>
                     <Button Grid.Column="1" VerticalAlignment="Center" Command="{x:Bind ViewModel.AddGameCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <SymbolIcon Symbol="Add" />
-                            <TextBlock Text="添加游戏" />
+                            <TextBlock Text="{x:Bind Strings.HomeAddGame}" />
                         </StackPanel>
                     </Button>
                 </Grid>
@@ -65,11 +65,11 @@
                             Spacing="12"
                             Visibility="{x:Bind ViewModel.EmptyStateVisibility.Value, Mode=OneWay}">
                             <FontIcon HorizontalAlignment="Center" FontSize="36" Glyph="&#xE7FC;" />
-                            <TextBlock HorizontalAlignment="Center" Style="{ThemeResource SubtitleTextBlockStyle}" Text="拖入 .exe 或 .lnk 添加游戏" />
+                            <TextBlock HorizontalAlignment="Center" Style="{ThemeResource SubtitleTextBlockStyle}" Text="{x:Bind Strings.HomeDropHint}" />
                             <TextBlock
                                 HorizontalAlignment="Center"
                                 Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                Text="添加后会显示为竖向游戏列表。"
+                                Text="{x:Bind Strings.HomeListHint}"
                                 TextAlignment="Center" />
                         </StackPanel>
 
@@ -90,13 +90,13 @@
                                         Text="{x:Bind ViewModel.SelectedGameName.Value, Mode=OneWay}"
                                         TextTrimming="CharacterEllipsis" />
                                 </CommandBar.Content>
-                                <AppBarButton Icon="Play" Label="启动" 
+                                <AppBarButton Icon="Play" Label="{x:Bind Strings.HomeLaunch}"
                                     Command="{x:Bind ViewModel.LaunchSelectedGameCommand}"
                                     CommandParameter="{x:Bind ViewModel.SelectedGame.Value, Mode=OneWay}" />
-                                <AppBarButton Icon="Edit" Label="重命名"
+                                <AppBarButton Icon="Edit" Label="{x:Bind Strings.HomeRename}"
                                     Command="{x:Bind ViewModel.RenameSelectedGameCommand}"
                                     CommandParameter="{x:Bind ViewModel.SelectedGame.Value, Mode=OneWay}" />
-                                <AppBarButton Icon="Delete" Label="移除" 
+                                <AppBarButton Icon="Delete" Label="{x:Bind Strings.HomeRemove}"
                                     Command="{x:Bind ViewModel.RemoveSelectedGameCommand}"
                                     CommandParameter="{x:Bind ViewModel.SelectedGame.Value, Mode=OneWay}" />
                             </CommandBar>

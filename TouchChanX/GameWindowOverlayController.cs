@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using R3;
 using R3.ObservableEvents;
 using System.Diagnostics;
+using TouchChanX.Persistence;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Interop;
 
@@ -103,7 +104,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
             else
                 candidate.Close();
 
-            _showMessage("无法锁定游戏");
+            _showMessage(LocalizedStrings.Current.ErrorUnableToLockGame);
         }
     }
 
@@ -135,13 +136,13 @@ internal sealed partial class GameWindowOverlayController : IDisposable
 
         if (_gameWindowHandle != gameWindowHandle || !OsPlatformApi.IsWindow(gameWindowHandle))
         {
-            _showMessage("无法冻结游戏");
+            _showMessage(LocalizedStrings.Current.ErrorUnableToFreezeGame);
             return false;
         }
 
         if (!GameProcessSuspension.TrySuspendForWindow(gameWindowHandle, out var suspension))
         {
-            _showMessage("无法冻结游戏");
+            _showMessage(LocalizedStrings.Current.ErrorUnableToFreezeGame);
             return false;
         }
 

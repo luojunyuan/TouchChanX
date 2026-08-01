@@ -8,51 +8,51 @@ internal static class TouchMenuCatalog
         TouchMenuPageId.Main,
         MenuCell.Center,
         [
-            Navigate("device", "Device", ExtendedSymbol.Tablet, new(0, 1), TouchMenuPageId.Device),
-            Navigate("game", "Game", ExtendedSymbol.Favicon, new(1, 0), TouchMenuPageId.Game),
-            Navigate("function", "Function", Symbol.Repair, new(1, 2), TouchMenuPageId.Function),
+            Navigate("device", "MenuDevice", ExtendedSymbol.Tablet, new(0, 1), TouchMenuPageId.Device),
+            Navigate("game", "MenuGame", ExtendedSymbol.Favicon, new(1, 0), TouchMenuPageId.Game),
+            Navigate("function", "MenuFunction", Symbol.Repair, new(1, 2), TouchMenuPageId.Function),
         ]);
 
     public static TouchMenuPageDescriptor Device { get; } = new(
         TouchMenuPageId.Device,
         new(0, 1),
         [
-            Command("volume-down", "Volume Down", ExtendedSymbol.Volume1, new(0, 0)),
-            Command("volume-up", "Volume Up", Symbol.Volume, new(0, 1)),
-            Command("screenshot", "Screenshot", ExtendedSymbol.ClippingTool, new(0, 2)),
-            Command("task-view", "Task View", ExtendedSymbol.TaskView, new(1, 0)),
+            Command("volume-down", "MenuVolumeDown", ExtendedSymbol.Volume1, new(0, 0)),
+            Command("volume-up", "MenuVolumeUp", Symbol.Volume, new(0, 1)),
+            Command("screenshot", "MenuScreenshot", ExtendedSymbol.ClippingTool, new(0, 2)),
+            Command("task-view", "MenuTaskView", ExtendedSymbol.TaskView, new(1, 0)),
             Navigate("device-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
-            Command("action-center", "Action Center", Symbol.DockRight, new(1, 2)),
-            Command("virtual-touchpad", "Touchpad", ExtendedSymbol.Touchpad, new(2, 0)),
-            Command("desktop", "Desktop", ExtendedSymbol.StaplingLandscapeBottomRight, new(2, 1)),
+            Command("action-center", "MenuActionCenter", Symbol.DockRight, new(1, 2)),
+            Command("virtual-touchpad", "MenuTouchpad", ExtendedSymbol.Touchpad, new(2, 0)),
+            Command("desktop", "MenuDesktop", ExtendedSymbol.StaplingLandscapeBottomRight, new(2, 1)),
         ]);
 
     public static TouchMenuPageDescriptor Game { get; } = new(
         TouchMenuPageId.Game,
         new(1, 0),
         [
-            Command("fullscreen", "Fullscreen", Symbol.FullScreen, new(0, 1)),
-            Navigate("move-game", "Move", Symbol.Trim, new(0, 2), TouchMenuPageId.WinMove),
-            Command("stretch", "Stretch", ExtendedSymbol.AspectRatio, new(1, 0)),
+            Command("fullscreen", "MenuFullscreen", Symbol.FullScreen, new(0, 1)),
+            Navigate("move-game", "MenuMove", Symbol.Trim, new(0, 2), TouchMenuPageId.WinMove),
+            Command("stretch", "MenuStretch", ExtendedSymbol.AspectRatio, new(1, 0)),
             Navigate("game-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
-            Command("close-game", "Close", ExtendedSymbol.ChromeClose, new(1, 2)),
-            Command("brightness-down", "Dim", ExtendedSymbol.KeyboardLowerBrightness, new(2, 0)),
-            Command("brightness-up", "Restore", ExtendedSymbol.KeyboardBrightness, new(2, 1), isEnabled: false),
-            Command("lock-game", "Lock", ExtendedSymbol.Lock, new(2, 2)),
+            Command("close-game", "MenuClose", ExtendedSymbol.ChromeClose, new(1, 2)),
+            Command("brightness-down", "MenuDim", ExtendedSymbol.KeyboardLowerBrightness, new(2, 0)),
+            Command("brightness-up", "MenuRestore", ExtendedSymbol.KeyboardBrightness, new(2, 1), isEnabled: false),
+            Command("lock-game", "MenuLock", ExtendedSymbol.Lock, new(2, 2)),
         ]);
 
     public static TouchMenuPageDescriptor Function { get; } = new(
         TouchMenuPageId.Function,
         new(1, 2),
         [
-            Toggle("touch-bar", "TouchBar", Symbol.SwitchApps, new(0, 1), isEnabled: false),
-            Toggle("keyboard", "Keyboard", ExtendedSymbol.KeyboardClassic, new(0, 2), isEnabled: false),
-            Toggle("touch-to-mouse", "Tap Click", Symbol.TouchPointer, new(1, 0), toolTip: "When you tap, the previous tapped position will be clicked."),
+            Toggle("touch-bar", "MenuTouchBar", Symbol.SwitchApps, new(0, 1), isEnabled: false),
+            Toggle("keyboard", "MenuKeyboard", ExtendedSymbol.KeyboardClassic, new(0, 2), isEnabled: false),
+            Toggle("touch-to-mouse", "MenuTapClick", Symbol.TouchPointer, new(1, 0), toolTipKey: "MenuTapClickTooltip"),
             Navigate("function-back", string.Empty, Symbol.Back, new(1, 1), TouchMenuPageId.Main),
-            Toggle("battery", "Battery", ExtendedSymbol.VerticalBattery3, new(1, 2)),
-            Command("text-magnifier", "Text Magnifier", ExtendedSymbol.TextSelect, new(2, 0), isEnabled: false),
-            Toggle("gesture", "Gesture", ExtendedSymbol.FingerInking, new(2, 1)),
-            Toggle("game-handler", "Gamepad", ExtendedSymbol.Game, new(2, 2)),
+            Toggle("battery", "MenuBattery", ExtendedSymbol.VerticalBattery3, new(1, 2)),
+            Command("text-magnifier", "MenuTextMagnifier", ExtendedSymbol.TextSelect, new(2, 0), isEnabled: false),
+            Toggle("gesture", "MenuGesture", ExtendedSymbol.FingerInking, new(2, 1)),
+            Toggle("game-handler", "MenuGamepad", ExtendedSymbol.Game, new(2, 2)),
         ]);
 
     public static TouchMenuPageDescriptor WinMove { get; } = new(
@@ -78,28 +78,28 @@ internal static class TouchMenuCatalog
 
     private static TouchMenuItemDescriptor Command(
         string id,
-        string text,
+        string textKey,
         Symbol symbol,
         MenuCell cell,
         bool isEnabled = true) =>
-        new(id, text, symbol, cell, IsEnabled: isEnabled);
+        new(id, textKey, symbol, cell, IsEnabled: isEnabled);
 
     private static TouchMenuItemDescriptor Navigate(
         string id,
-        string text,
+        string textKey,
         Symbol symbol,
         MenuCell cell,
         TouchMenuPageId targetPage) =>
-        new(id, text, symbol, cell, TouchMenuItemKind.Navigation, targetPage);
+        new(id, textKey, symbol, cell, TouchMenuItemKind.Navigation, targetPage);
 
     private static TouchMenuItemDescriptor Toggle(
         string id,
-        string text,
+        string textKey,
         Symbol symbol,
         MenuCell cell,
         bool isEnabled = true,
-        string? toolTip = null) =>
-        new(id, text, symbol, cell, TouchMenuItemKind.Toggle, IsEnabled: isEnabled, ToolTip: toolTip);
+        string? toolTipKey = null) =>
+        new(id, textKey, symbol, cell, TouchMenuItemKind.Toggle, IsEnabled: isEnabled, ToolTipKey: toolTipKey);
 }
 
 internal static class ExtendedSymbol

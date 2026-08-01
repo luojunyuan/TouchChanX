@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TouchChanX.WinUI.Controls;
+using TouchChanX.Persistence;
 
 namespace TouchChanX.WinUI;
 
@@ -47,7 +48,7 @@ public partial class App : Application
 
         var button = new Button
         {
-            Content = "发送消息",
+            Content = LocalizedStrings.Current.SandboxSendMessage,
             MinWidth = 120,
             MinHeight = 44,
             Margin = new Thickness(0, 0, 24, 24),
@@ -56,12 +57,12 @@ public partial class App : Application
         };
 
         button.PointerPressed += (_, e) => e.Handled = true;
-        button.Click += (_, _) => flyout.ShowMessage("鼠标点击");
+        button.Click += (_, _) => flyout.ShowMessage(LocalizedStrings.Current.MouseClick);
         root.Children.Add(button);
 
         var gamepadButton = new Button
         {
-            Content = "手柄映射",
+            Content = LocalizedStrings.Current.SandboxGamepadMapping,
             MinWidth = 120,
             MinHeight = 44,
             Margin = new Thickness(0, 0, 156, 24),

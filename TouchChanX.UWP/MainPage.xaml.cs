@@ -1,5 +1,6 @@
 using R3;
 using R3.ObservableEvents;
+using TouchChanX.Persistence;
 using Windows.ApplicationModel.Core;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -12,6 +13,8 @@ namespace TouchChanX.UWP;
 /// </summary>
 public sealed partial class MainPage : Page
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     public MainPage()
     {
         InitializeComponent();
@@ -52,9 +55,9 @@ public sealed partial class MainPage : Page
 
         AppNav.Header = tag switch
         {
-            "settings" => "设置",
-            "about" => "关于",
-            _ => "主页",
+            "settings" => Strings.MainNavSettings,
+            "about" => Strings.MainNavAbout,
+            _ => Strings.MainNavHome,
         };
     }
 }

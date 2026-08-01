@@ -21,7 +21,7 @@ public static partial class GameStartup
         path = NormalizeProtocolPath(path);
 
         if (!File.Exists(path))
-            return Result.Failure<string>($"Game path \"{path}\" not found, please check if it exist.");
+            return Result.Failure<string>($"Game path \"{path}\" not found, please check if it exists.");
 
         var isNotLnkFile = !Path.GetExtension(path).Equals(".lnk", StringComparison.OrdinalIgnoreCase);
 
@@ -36,11 +36,11 @@ public static partial class GameStartup
         }
         catch (Exception ex) when (ex is FileNotFoundException or COMException)
         {
-            return Result.Failure<string>($"Failed when resolve \"{path}\", please try start from game folder.");
+            return Result.Failure<string>($"Failed to resolve \"{path}\", please try starting from the game folder.");
         }
 
         if (!File.Exists(resolvedPath))
-            return Result.Failure<string>($"Resolved link path \"{resolvedPath}\" not found, please try start from game folder.");
+            return Result.Failure<string>($"Resolved link path \"{resolvedPath}\" not found, please try starting from the game folder.");
 
         return resolvedPath;
     }
@@ -171,7 +171,7 @@ public static partial class GameStartup
             await Task.Delay(UIMinimumResponseTime, CancellationToken.None);
         }
 
-        return Result.Failure<Process>("Failed to start game within the timeout period.");
+        return Result.Failure<Process>("Failed to start the game within the timeout period.");
     }
 
     /// <summary>

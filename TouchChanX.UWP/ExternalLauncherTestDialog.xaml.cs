@@ -2,11 +2,14 @@ using R3;
 using R3.ObservableEvents;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml.Controls;
+using TouchChanX.Persistence;
 
 namespace TouchChanX.UWP;
 
 public sealed partial class ExternalLauncherTestDialog : ContentDialog
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     public List<GameEntry> Games { get; }
     public BindableReactiveProperty<GameEntry?> SelectedGame { get; }
     public BindableReactiveProperty<string> TestGamePath { get; }

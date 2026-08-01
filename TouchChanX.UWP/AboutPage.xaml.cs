@@ -11,11 +11,14 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using WinRT;
 using WinRT.Interop;
+using TouchChanX.Persistence;
 
 namespace TouchChanX.UWP;
 
 public sealed partial class AboutPage : Page
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     private const string OpenSourceUrl = "https://github.com/luojunyuan/TachiChanX";
 
     public ReactiveCommand RateInStoreCommand => field ??= new(async (_, _) =>

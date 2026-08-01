@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TouchChanX.SplashScreenGdiPlus\TouchChanX.SplashScreenGdiPlus.csproj" />
+    <ProjectReference Include="..\TouchChanX.Persistence\TouchChanX.Persistence.csproj" />
     <ProjectReference Include="..\TouchChanX.Win32\TouchChanX.Win32.csproj" />
     <ProjectReference Include="..\TouchChanX.WinUI\TouchChanX.WinUI.csproj" />
   </ItemGroup>

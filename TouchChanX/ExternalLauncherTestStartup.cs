@@ -23,7 +23,7 @@ internal static class ExternalLauncherTestStartup
             settings.ExternalLauncherPath,
             settings.ExternalLauncherArgs))
         {
-            OsPlatformApi.MessageBox.Show("Invalid external launcher configuration.");
+            OsPlatformApi.MessageBox.Show(LocalizedStrings.Current.ErrorExternalLauncherInvalid);
             return true;
         }
 

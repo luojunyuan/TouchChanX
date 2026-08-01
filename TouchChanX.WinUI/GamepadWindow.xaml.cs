@@ -4,29 +4,16 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using R3;
 using R3.ObservableEvents;
+using TouchChanX.Persistence;
 
 namespace TouchChanX.WinUI;
 
 public sealed partial class GamepadWindow : Window
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     public GamepadWindow()
-        : this(
-        [
-            ("D-pad Left", "Left"),
-            ("D-pad Up", "Up"),
-            ("D-pad Right", "Right"),
-            ("D-pad Down", "Down"),
-            ("A", "Enter"),
-            ("B", "Space"),
-            ("X", "-"),
-            ("Y", "-"),
-            ("LB", "-"),
-            ("RB", "Ctrl"),
-            ("Start", "-"),
-            ("Back", "Show mapping"),
-            ("Left stick", "-"),
-            ("Right stick", "-"),
-        ])
+        : this(LocalizedStrings.Current.CreateGamepadMappings())
     {
     }
 

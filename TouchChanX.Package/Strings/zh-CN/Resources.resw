@@ -118,298 +118,298 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Description" xml:space="preserve">
-    <value>A visual novel tool for win-tablet</value>
+    <value>平板设备的美少女游戏工具</value>
   </data>
   <data name="DisplayName" xml:space="preserve">
-    <value>TachiChan</value>
+    <value>触控酱</value>
   </data>
   <data name="DevelopmentNoticeTitle" xml:space="preserve">
-    <value>Notice</value>
+    <value>提示</value>
   </data>
   <data name="DevelopmentNoticeContent" xml:space="preserve">
-    <value>TouchChanX v3 arm64 is still under development. Join QQ group 942698378 for discussion and feedback.</value>
+    <value>触控酱v3 arm64 仍处于开发中，欢迎加入QQ群 942698378 交流反馈</value>
   </data>
   <data name="Confirm" xml:space="preserve">
-    <value>OK</value>
+    <value>确定</value>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>Cancel</value>
+    <value>取消</value>
   </data>
   <data name="Save" xml:space="preserve">
-    <value>Save</value>
+    <value>保存</value>
   </data>
   <data name="Close" xml:space="preserve">
-    <value>Close</value>
+    <value>关闭</value>
   </data>
   <data name="Browse" xml:space="preserve">
-    <value>Browse…</value>
+    <value>浏览…</value>
   </data>
   <data name="Copy" xml:space="preserve">
-    <value>Copy</value>
+    <value>复制</value>
   </data>
   <data name="Done" xml:space="preserve">
-    <value>Done</value>
+    <value>完成</value>
   </data>
   <data name="On" xml:space="preserve">
-    <value>On</value>
+    <value>开启</value>
   </data>
   <data name="Off" xml:space="preserve">
-    <value>Off</value>
+    <value>关闭</value>
   </data>
   <data name="MainNavHome" xml:space="preserve">
-    <value>Home</value>
+    <value>主页</value>
   </data>
   <data name="MainNavSettings" xml:space="preserve">
-    <value>Settings</value>
+    <value>设置</value>
   </data>
   <data name="MainNavAbout" xml:space="preserve">
-    <value>About</value>
+    <value>关于</value>
   </data>
   <data name="HomeTitle" xml:space="preserve">
-    <value>Launch Game</value>
+    <value>游戏启动</value>
   </data>
   <data name="HomeDescription" xml:space="preserve">
-    <value>Select or drag in a game executable; TouchChanX will launch it through the touchchanx protocol.</value>
+    <value>选择或拖入游戏主程序，TouchChanX 会通过 touchchanx 协议启动。</value>
   </data>
   <data name="HomeAddGame" xml:space="preserve">
-    <value>Add Game</value>
+    <value>添加游戏</value>
   </data>
   <data name="HomeDropHint" xml:space="preserve">
-    <value>Drop an .exe or .lnk to add a game</value>
+    <value>拖入 .exe 或 .lnk 添加游戏</value>
   </data>
   <data name="HomeListHint" xml:space="preserve">
-    <value>Added games will appear in a vertical list.</value>
+    <value>添加后会显示为竖向游戏列表。</value>
   </data>
   <data name="HomeLaunch" xml:space="preserve">
-    <value>Launch</value>
+    <value>启动</value>
   </data>
   <data name="HomeRename" xml:space="preserve">
-    <value>Rename</value>
+    <value>重命名</value>
   </data>
   <data name="HomeRemove" xml:space="preserve">
-    <value>Remove</value>
+    <value>移除</value>
   </data>
   <data name="HomeLaunchFailedTitle" xml:space="preserve">
-    <value>Launch failed</value>
+    <value>启动失败</value>
   </data>
   <data name="ProtocolLaunchFailed" xml:space="preserve">
-    <value>Unable to call the touchchanx protocol.</value>
+    <value>无法调用 touchchanx 协议。</value>
   </data>
   <data name="HomeDisplayNameHeader" xml:space="preserve">
-    <value>Display name</value>
+    <value>显示名称</value>
   </data>
   <data name="HomeRenameTitle" xml:space="preserve">
-    <value>Rename game</value>
+    <value>重命名游戏</value>
   </data>
   <data name="HomeDragCaption" xml:space="preserve">
-    <value>Add to TouchChanX</value>
+    <value>添加到 TouchChanX</value>
   </data>
   <data name="AboutBuildLabel" xml:space="preserve">
-    <value>Build dev 2026.7</value>
+    <value>构建 dev 2026.7</value>
   </data>
   <data name="AboutTouchMenuHint" xml:space="preserve">
-    <value>Tap the game window to open the Touch menu.</value>
+    <value>轻触游戏窗口的 Touch 菜单。</value>
   </data>
   <data name="AboutRateHeader" xml:space="preserve">
-    <value>Rate TouchChanX</value>
+    <value>为 TouchChanX 评分</value>
   </data>
   <data name="AboutRateDescription" xml:space="preserve">
-    <value>Open the Microsoft Store rating entry.</value>
+    <value>打开 Microsoft Store 评分入口。</value>
   </data>
   <data name="AboutOpenSourceHeader" xml:space="preserve">
-    <value>Open-source project</value>
+    <value>开源项目</value>
   </data>
   <data name="AboutOpenSourceDescription" xml:space="preserve">
-    <value>View the source code, license, and issues.</value>
+    <value>查看源码、许可和 issue。</value>
   </data>
   <data name="AboutQqHeader" xml:space="preserve">
-    <value>QQ group</value>
+    <value>QQ 交流群</value>
   </data>
   <data name="AboutQqDescription" xml:space="preserve">
-    <value>Share feedback and ideas with the developer and discuss new features.</value>
+    <value>第一时间向开发者吐槽问题、分享想法，围观讨论新功能。</value>
   </data>
   <data name="QqGroupNumber" xml:space="preserve">
     <value>942698378</value>
   </data>
   <data name="AboutLicenseNotice" xml:space="preserve">
-    <value>TouchChanX is an open-source project distributed under the license in the repository.</value>
+    <value>TouchChanX 是开源项目，遵循仓库中的开源许可。</value>
   </data>
   <data name="SettingsTitle" xml:space="preserve">
-    <value>Settings</value>
+    <value>设置</value>
   </data>
   <data name="SettingsExternalLauncherHeader" xml:space="preserve">
-    <value>Launch games with another program</value>
+    <value>使用其他程序启动游戏</value>
   </data>
   <data name="SettingsExternalLauncherDescription" xml:space="preserve">
-    <value>Available after the launcher and its arguments are valid.</value>
+    <value>启动程序和参数有效后才能启用</value>
   </data>
   <data name="LauncherPathHeader" xml:space="preserve">
-    <value>Launcher program</value>
+    <value>启动程序</value>
   </data>
   <data name="LauncherPathPlaceholder" xml:space="preserve">
-    <value>Select a launcher program</value>
+    <value>请选择启动程序</value>
   </data>
   <data name="LauncherArgumentsHeader" xml:space="preserve">
-    <value>Launch arguments</value>
+    <value>启动参数</value>
   </data>
   <data name="InsertGamePath" xml:space="preserve">
-    <value>Insert game path</value>
+    <value>插入游戏路径</value>
   </data>
   <data name="CommandPreviewHeader" xml:space="preserve">
-    <value>Command to execute</value>
+    <value>实际执行的命令</value>
   </data>
   <data name="TestLaunch" xml:space="preserve">
-    <value>Test launch…</value>
+    <value>测试启动…</value>
   </data>
   <data name="SettingsPlaceholderShellMenuHeader" xml:space="preserve">
-    <value>Show TouchChanX in the context menu</value>
+    <value>在上下文菜单中显示 TouchChanX</value>
   </data>
   <data name="SettingsPlaceholderShellMenuDescription" xml:space="preserve">
-    <value>Placeholder UI; not connected to ShellMenuHandler business logic yet.</value>
+    <value>仅占位 UI，暂未连接 ShellMenuHandler 业务逻辑。</value>
   </data>
   <data name="SettingsPlaceholderEdgeHeader" xml:space="preserve">
-    <value>Prevent accidental touches at the top edge</value>
+    <value>顶部边缘防误触</value>
   </data>
   <data name="SettingsPlaceholderEdgeDescription" xml:space="preserve">
-    <value>Placeholder UI; a small touch buffer is planned at the top of the game window.</value>
+    <value>仅占位 UI，计划在游戏画面顶部保留数像素触摸缓冲区。</value>
   </data>
   <data name="SettingsAutoSaveMessage" xml:space="preserve">
-    <value>Settings are saved automatically; test the current launch configuration before enabling it for real.</value>
+    <value>设置会自动保存；正式启用前可以先测试当前启动配置。</value>
   </data>
   <data name="LauncherPathInvalid" xml:space="preserve">
-    <value>The launcher program is invalid. Select an existing .exe file.</value>
+    <value>启动程序无效，请选择存在的 .exe 文件。</value>
   </data>
   <data name="LauncherArgumentsHint" xml:space="preserve">
-    <value>{GamePath} is replaced with the full path to the game executable.</value>
+    <value>{GamePath} 会替换为游戏主程序的完整路径。</value>
   </data>
   <data name="LauncherArgumentsInvalid" xml:space="preserve">
-    <value>The launch arguments are invalid. They must contain an unquoted {GamePath}.</value>
+    <value>启动参数无效，必须包含未加引号的 {GamePath}。</value>
   </data>
   <data name="TestLauncherTitle" xml:space="preserve">
-    <value>Test launcher</value>
+    <value>测试启动器</value>
   </data>
   <data name="ExternalDialogStartTest" xml:space="preserve">
-    <value>Start test</value>
+    <value>启动测试</value>
   </data>
   <data name="ExternalDialogExistingGames" xml:space="preserve">
-    <value>Games on the home page</value>
+    <value>主页已有游戏</value>
   </data>
   <data name="ExternalDialogSelectOther" xml:space="preserve">
-    <value>Select another game…</value>
+    <value>选择其他游戏…</value>
   </data>
   <data name="ExternalDialogPathHeader" xml:space="preserve">
-    <value>Test game path</value>
+    <value>测试游戏路径</value>
   </data>
   <data name="ExternalDialogPathPlaceholder" xml:space="preserve">
-    <value>Select the game executable</value>
+    <value>请选择游戏主程序</value>
   </data>
   <data name="ExternalDialogWarning" xml:space="preserve">
-    <value>The test will actually launch the game.</value>
+    <value>测试会实际启动游戏。</value>
   </data>
   <data name="MenuDevice" xml:space="preserve">
-    <value>Device</value>
+    <value>设备</value>
   </data>
   <data name="MenuGame" xml:space="preserve">
-    <value>Game</value>
+    <value>游戏</value>
   </data>
   <data name="MenuFunction" xml:space="preserve">
-    <value>Function</value>
+    <value>功能</value>
   </data>
   <data name="MenuVolumeDown" xml:space="preserve">
-    <value>Volume down</value>
+    <value>音量减小</value>
   </data>
   <data name="MenuVolumeUp" xml:space="preserve">
-    <value>Volume up</value>
+    <value>音量增大</value>
   </data>
   <data name="MenuScreenshot" xml:space="preserve">
-    <value>Screenshot</value>
+    <value>截图</value>
   </data>
   <data name="MenuTaskView" xml:space="preserve">
-    <value>Task view</value>
+    <value>任务视图</value>
   </data>
   <data name="MenuActionCenter" xml:space="preserve">
-    <value>Action center</value>
+    <value>操作中心</value>
   </data>
   <data name="MenuTouchpad" xml:space="preserve">
-    <value>Touchpad</value>
+    <value>触摸板</value>
   </data>
   <data name="MenuDesktop" xml:space="preserve">
-    <value>Desktop</value>
+    <value>桌面</value>
   </data>
   <data name="MenuFullscreen" xml:space="preserve">
-    <value>Fullscreen</value>
+    <value>全屏</value>
   </data>
   <data name="MenuMove" xml:space="preserve">
-    <value>Move</value>
+    <value>移动</value>
   </data>
   <data name="MenuStretch" xml:space="preserve">
-    <value>Stretch</value>
+    <value>拉伸</value>
   </data>
   <data name="MenuClose" xml:space="preserve">
-    <value>Close</value>
+    <value>关闭</value>
   </data>
   <data name="MenuDim" xml:space="preserve">
-    <value>Dim</value>
+    <value>调暗</value>
   </data>
   <data name="MenuRestore" xml:space="preserve">
-    <value>Restore</value>
+    <value>恢复</value>
   </data>
   <data name="MenuLock" xml:space="preserve">
-    <value>Lock</value>
+    <value>锁定</value>
   </data>
   <data name="MenuTouchBar" xml:space="preserve">
     <value>TouchBar</value>
   </data>
   <data name="MenuKeyboard" xml:space="preserve">
-    <value>Keyboard</value>
+    <value>键盘</value>
   </data>
   <data name="MenuTapClick" xml:space="preserve">
-    <value>Tap click</value>
+    <value>轻触点击</value>
   </data>
   <data name="MenuTapClickTooltip" xml:space="preserve">
-    <value>When you tap, the previous tapped position will be clicked.</value>
+    <value>轻触时会点击上一次轻触的位置。</value>
   </data>
   <data name="MenuBattery" xml:space="preserve">
-    <value>Battery</value>
+    <value>电池</value>
   </data>
   <data name="MenuTextMagnifier" xml:space="preserve">
-    <value>Text magnifier</value>
+    <value>文字放大镜</value>
   </data>
   <data name="MenuGesture" xml:space="preserve">
-    <value>Gesture</value>
+    <value>手势</value>
   </data>
   <data name="MenuGamepad" xml:space="preserve">
-    <value>Gamepad</value>
+    <value>手柄</value>
   </data>
   <data name="LockWindowTitle" xml:space="preserve">
-    <value>TouchChanX lock</value>
+    <value>TouchChanX 锁定</value>
   </data>
   <data name="Freeze" xml:space="preserve">
-    <value>Freeze</value>
+    <value>冻结</value>
   </data>
   <data name="Unlock" xml:space="preserve">
-    <value>Unlock</value>
+    <value>解锁</value>
   </data>
   <data name="GamepadMappingTitle" xml:space="preserve">
-    <value>Gamepad mapping</value>
+    <value>手柄映射</value>
   </data>
   <data name="GamepadButtonHeader" xml:space="preserve">
-    <value>Button</value>
+    <value>按键</value>
   </data>
   <data name="GamepadKeyboardKeyHeader" xml:space="preserve">
-    <value>Keyboard key</value>
+    <value>键盘按键</value>
   </data>
   <data name="GamepadDPadLeft" xml:space="preserve">
-    <value>D-pad Left</value>
+    <value>方向键 左</value>
   </data>
   <data name="GamepadDPadUp" xml:space="preserve">
-    <value>D-pad Up</value>
+    <value>方向键 上</value>
   </data>
   <data name="GamepadDPadRight" xml:space="preserve">
-    <value>D-pad Right</value>
+    <value>方向键 右</value>
   </data>
   <data name="GamepadDPadDown" xml:space="preserve">
-    <value>D-pad Down</value>
+    <value>方向键 下</value>
   </data>
   <data name="GamepadA" xml:space="preserve">
     <value>A</value>
@@ -430,34 +430,34 @@
     <value>RB</value>
   </data>
   <data name="GamepadStart" xml:space="preserve">
-    <value>Start</value>
+    <value>开始</value>
   </data>
   <data name="GamepadBack" xml:space="preserve">
-    <value>Back</value>
+    <value>返回</value>
   </data>
   <data name="GamepadLeftStick" xml:space="preserve">
-    <value>Left stick</value>
+    <value>左摇杆</value>
   </data>
   <data name="GamepadRightStick" xml:space="preserve">
-    <value>Right stick</value>
+    <value>右摇杆</value>
   </data>
   <data name="GamepadKeyLeft" xml:space="preserve">
-    <value>Left</value>
+    <value>左</value>
   </data>
   <data name="GamepadKeyUp" xml:space="preserve">
-    <value>Up</value>
+    <value>上</value>
   </data>
   <data name="GamepadKeyRight" xml:space="preserve">
-    <value>Right</value>
+    <value>右</value>
   </data>
   <data name="GamepadKeyDown" xml:space="preserve">
-    <value>Down</value>
+    <value>下</value>
   </data>
   <data name="GamepadKeyEnter" xml:space="preserve">
-    <value>Enter</value>
+    <value>回车</value>
   </data>
   <data name="GamepadKeySpace" xml:space="preserve">
-    <value>Space</value>
+    <value>空格</value>
   </data>
   <data name="GamepadKeyNone" xml:space="preserve">
     <value>-</value>
@@ -466,40 +466,40 @@
     <value>Ctrl</value>
   </data>
   <data name="GamepadKeyShowMapping" xml:space="preserve">
-    <value>Show mapping</value>
+    <value>显示映射</value>
   </data>
   <data name="GamepadClose" xml:space="preserve">
-    <value>Close</value>
+    <value>关闭</value>
   </data>
   <data name="BatteryOnBattery" xml:space="preserve">
-    <value>On battery</value>
+    <value>使用电池</value>
   </data>
   <data name="BatteryCharging" xml:space="preserve">
-    <value>Charging</value>
+    <value>充电中</value>
   </data>
   <data name="BatteryRecovering" xml:space="preserve">
-    <value>Recovering</value>
+    <value>恢复中</value>
   </data>
   <data name="BatteryTimeLeft" xml:space="preserve">
-    <value>Time left</value>
+    <value>剩余时间</value>
   </data>
   <data name="BatteryPowerDraw" xml:space="preserve">
-    <value>Power draw</value>
+    <value>功耗</value>
   </data>
   <data name="BatteryCapacity" xml:space="preserve">
-    <value>Capacity</value>
+    <value>容量</value>
   </data>
   <data name="Unavailable" xml:space="preserve">
     <value>--</value>
   </data>
   <data name="BatteryTimeHoursFormat" xml:space="preserve">
-    <value>{0}h {1}m</value>
+    <value>{0}小时{1}分钟</value>
   </data>
   <data name="BatteryTimeMinutesFormat" xml:space="preserve">
-    <value>{0}m</value>
+    <value>{0}分钟</value>
   </data>
   <data name="BatteryPowerDrawFormat" xml:space="preserve">
-    <value>{0:0.0} W ({1}s)</value>
+    <value>{0:0.0} W（{1}秒）</value>
   </data>
   <data name="BatteryCapacityFormat" xml:space="preserve">
     <value>{0:0.0} Wh</value>
@@ -508,66 +508,66 @@
     <value>{0:0}%</value>
   </data>
   <data name="MouseClick" xml:space="preserve">
-    <value>Mouse click</value>
+    <value>鼠标点击</value>
   </data>
   <data name="GestureSpace" xml:space="preserve">
-    <value>Space</value>
+    <value>空格</value>
   </data>
   <data name="GestureRightClick" xml:space="preserve">
-    <value>Right-click</value>
+    <value>鼠标右键</value>
   </data>
   <data name="GestureScrollUp" xml:space="preserve">
-    <value>Scroll up</value>
+    <value>滚轮上划</value>
   </data>
   <data name="GestureScrollDown" xml:space="preserve">
-    <value>Scroll down</value>
+    <value>滚轮下滑</value>
   </data>
   <data name="SandboxSendMessage" xml:space="preserve">
-    <value>Send message</value>
+    <value>发送消息</value>
   </data>
   <data name="SandboxGamepadMapping" xml:space="preserve">
-    <value>Gamepad mapping</value>
+    <value>手柄映射</value>
   </data>
   <data name="UnknownDpiTitle" xml:space="preserve">
-    <value>TouchChanX cannot determine the game's DPI scaling</value>
+    <value>触控酱无法确定当前游戏的 DPI 缩放</value>
   </data>
   <data name="UnknownDpiContent" xml:space="preserve">
-    <value>Consider restarting the game from TouchChanX</value>
+    <value>请考虑从触控酱重新启动游戏</value>
   </data>
   <data name="ErrorGamePathRequired" xml:space="preserve">
-    <value>No game path was provided.</value>
+    <value>未提供游戏路径。</value>
   </data>
   <data name="ErrorInvalidGamePath" xml:space="preserve">
-    <value>Game path "{0}" not found, please check if it exists.</value>
+    <value>游戏路径“{0}”不存在，请检查路径是否正确。</value>
   </data>
   <data name="ErrorShortcutResolve" xml:space="preserve">
-    <value>Failed to resolve "{0}", please try starting from the game folder.</value>
+    <value>解析“{0}”失败，请尝试从游戏文件夹启动。</value>
   </data>
   <data name="ErrorResolvedLinkPath" xml:space="preserve">
-    <value>Resolved link path "{0}" not found, please try starting from the game folder.</value>
+    <value>链接目标“{0}”不存在，请尝试从游戏文件夹启动。</value>
   </data>
   <data name="ErrorExternalLauncherNotFound" xml:space="preserve">
-    <value>External launcher "{0}" not found, please check the launcher setting.</value>
+    <value>外部启动程序“{0}”不存在，请检查启动程序设置。</value>
   </data>
   <data name="ErrorExternalLauncherInvalid" xml:space="preserve">
-    <value>Invalid external launcher configuration.</value>
+    <value>外部启动程序配置无效。</value>
   </data>
   <data name="ErrorExternalLauncherStart" xml:space="preserve">
-    <value>Failed to start "{0}".</value>
+    <value>无法启动“{0}”。</value>
   </data>
   <data name="ErrorExternalLauncherStartDetails" xml:space="preserve">
-    <value>Failed to start "{0}": {1}</value>
+    <value>无法启动“{0}”：{1}</value>
   </data>
   <data name="ErrorGameStartTimeout" xml:space="preserve">
-    <value>Failed to start the game within the timeout period.</value>
+    <value>在超时时间内无法启动游戏。</value>
   </data>
   <data name="ErrorWindowNotFound" xml:space="preserve">
-    <value>Timeout! Failed to find a valid game window.</value>
+    <value>超时：找不到有效的游戏窗口。</value>
   </data>
   <data name="ErrorUnableToLockGame" xml:space="preserve">
-    <value>Unable to lock the game.</value>
+    <value>无法锁定游戏。</value>
   </data>
   <data name="ErrorUnableToFreezeGame" xml:space="preserve">
-    <value>Unable to freeze the game.</value>
+    <value>无法冻结游戏。</value>
   </data>
 </root>

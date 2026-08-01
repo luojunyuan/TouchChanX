@@ -25,7 +25,7 @@
             Opacity="0">
             <TextBlock x:Name="MessageText"
                 VerticalAlignment="Center"
-                Text="鼠标点击"
+                Text="{x:Bind Strings.MouseClick}"
                 TextAlignment="Center" />
         </Border>
     </Grid>

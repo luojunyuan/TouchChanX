@@ -1,5 +1,6 @@
 using R3;
 using System.Diagnostics;
+using TouchChanX.Persistence;
 using TouchChanX.Win32;
 using TouchChanX.Win32.Battery;
 using TouchChanX.Win32.Interop;
@@ -56,7 +57,7 @@ internal sealed partial class WinUIAppController(Process process)
         if (handleResult.IsFailure(out var error, out var gameWindowHandle))
         {
             if (error is WindowHandleNotFoundError)
-                OsPlatformApi.MessageBox.Show("Timeout! Failed to find a valid window of game");
+                OsPlatformApi.MessageBox.Show(LocalizedStrings.Current.ErrorWindowNotFound);
 
             return Observable.Empty<Unit>();
         }

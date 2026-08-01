@@ -13,16 +13,16 @@
                 <StackPanel Orientation="Horizontal" Spacing="16">
                     <Image Width="64" Height="64" Source="ms-appx:///Images/StoreLogo.png" />
                     <StackPanel VerticalAlignment="Center" Spacing="2">
-                        <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="TouchChanX" />
-                        <TextBlock Text="Build dev 2026.7" />
-                        <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="轻触游戏窗口的 Touch 菜单。" />
+                        <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="{x:Bind Strings.DisplayName}" />
+                        <TextBlock Text="{x:Bind Strings.AboutBuildLabel}" />
+                        <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Strings.AboutTouchMenuHint}" />
                     </StackPanel>
                 </StackPanel>
 
                 <ct:SettingsCard
                     Command="{x:Bind RateInStoreCommand}"
-                    Description="打开 Microsoft Store 评分入口。"
-                    Header="为 TouchChanX 评分"
+                    Description="{x:Bind Strings.AboutRateDescription}"
+                    Header="{x:Bind Strings.AboutRateHeader}"
                     IsClickEnabled="True">
                     <ct:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xE8D4;" />
@@ -34,8 +34,8 @@
 
                 <ct:SettingsCard
                     Command="{x:Bind OpenSourceCommand}"
-                    Description="查看源码、许可和 issue。"
-                    Header="开源项目"
+                    Description="{x:Bind Strings.AboutOpenSourceDescription}"
+                    Header="{x:Bind Strings.AboutOpenSourceHeader}"
                     IsClickEnabled="True">
                     <ct:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xE943;" />
@@ -45,12 +45,12 @@
                     </ct:SettingsCard.ActionIcon>
                 </ct:SettingsCard>
 
-                <ct:SettingsCard Header="QQ 交流群">
+                <ct:SettingsCard Header="{x:Bind Strings.AboutQqHeader}">
                     <ct:SettingsCard.Description>
                         <StackPanel Spacing="2">
-                            <TextBlock x:Name="QqGroupNumberText" Text="942698378" />
+                            <TextBlock x:Name="QqGroupNumberText" Text="{x:Bind Strings.QqGroupNumber}" />
                             <TextBlock
-                                Text="第一时间向开发者吐槽问题、分享想法，围观讨论新功能。"
+                                Text="{x:Bind Strings.AboutQqDescription}"
                                 TextWrapping="Wrap" />
                         </StackPanel>
                     </ct:SettingsCard.Description>
@@ -154,7 +154,7 @@
                                     <ScaleTransform x:Name="CopyQqGroupContentScaleTransform" />
                                 </StackPanel.RenderTransform>
                                 <FontIcon Glyph="&#xE8C8;" />
-                                <TextBlock Text="复制" />
+                                <TextBlock Text="{x:Bind Strings.Copy}" />
                             </StackPanel>
                             <StackPanel
                                 x:Name="QqGroupCopiedContent"
@@ -166,13 +166,13 @@
                                     <ScaleTransform x:Name="QqGroupCopiedContentScaleTransform" />
                                 </StackPanel.RenderTransform>
                                 <FontIcon Glyph="&#xE8FB;" />
-                                <TextBlock Text="完成" />
+                                <TextBlock Text="{x:Bind Strings.Done}" />
                             </StackPanel>
                         </Grid>
                     </Button>
                 </ct:SettingsCard>
 
-                <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="TouchChanX 是开源项目，遵循仓库中的开源许可。" TextWrapping="Wrap" />
+                <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Strings.AboutLicenseNotice}" TextWrapping="Wrap" />
             </StackPanel>
         </Grid>
     </ScrollViewer>

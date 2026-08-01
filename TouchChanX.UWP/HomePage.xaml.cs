@@ -11,6 +11,8 @@ namespace TouchChanX.UWP;
 
 public sealed partial class HomePage : Page
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     public HomePageViewModel ViewModel { get; }
 
     public HomePage()
@@ -38,9 +40,9 @@ public sealed partial class HomePage : Page
         {
             await new ContentDialog
             {
-                Title = "启动失败",
-                Content = "无法调用 touchchanx 协议。",
-                CloseButtonText = "确定",
+                Title = Strings.HomeLaunchFailedTitle,
+                Content = Strings.ProtocolLaunchFailed,
+                CloseButtonText = Strings.Confirm,
             }.ShowAsync();
 
             context.SetOutput(Unit.Default);
@@ -52,17 +54,17 @@ public sealed partial class HomePage : Page
 
             var nameBox = new TextBox
             {
-                Header = "显示名称",
+                Header = Strings.HomeDisplayNameHeader,
                 MaxLength = 80,
                 Text = gameName,
             };
 
             var result = await new ContentDialog
             {
-                Title = "重命名游戏",
+                Title = Strings.HomeRenameTitle,
                 Content = nameBox,
-                PrimaryButtonText = "保存",
-                SecondaryButtonText = "取消",
+                PrimaryButtonText = Strings.Save,
+                SecondaryButtonText = Strings.Cancel,
                 DefaultButton = ContentDialogButton.Primary,
             }.ShowAsync();
 
@@ -81,7 +83,7 @@ public sealed partial class HomePage : Page
             .Do(e =>
             {
                 e.AcceptedOperation = DataPackageOperation.Copy;
-                e.DragUIOverride.Caption = "添加到 TouchChanX";
+                e.DragUIOverride.Caption = Strings.HomeDragCaption;
                 e.DragUIOverride.IsCaptionVisible = true;
             })
             .Subscribe();

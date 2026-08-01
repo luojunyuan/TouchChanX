@@ -118,298 +118,298 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Description" xml:space="preserve">
-    <value>A visual novel tool for win-tablet</value>
+    <value>タブレットためのエロゲツール</value>
   </data>
   <data name="DisplayName" xml:space="preserve">
-    <value>TachiChan</value>
+    <value>タッチちゃん</value>
   </data>
   <data name="DevelopmentNoticeTitle" xml:space="preserve">
-    <value>Notice</value>
+    <value>お知らせ</value>
   </data>
   <data name="DevelopmentNoticeContent" xml:space="preserve">
-    <value>TouchChanX v3 arm64 is still under development. Join QQ group 942698378 for discussion and feedback.</value>
+    <value>タッチちゃん v3 arm64 は開発中です。QQグループ 942698378 に参加して、交流やフィードバックをお願いします。</value>
   </data>
   <data name="Confirm" xml:space="preserve">
     <value>OK</value>
   </data>
   <data name="Cancel" xml:space="preserve">
-    <value>Cancel</value>
+    <value>キャンセル</value>
   </data>
   <data name="Save" xml:space="preserve">
-    <value>Save</value>
+    <value>保存</value>
   </data>
   <data name="Close" xml:space="preserve">
-    <value>Close</value>
+    <value>閉じる</value>
   </data>
   <data name="Browse" xml:space="preserve">
-    <value>Browse…</value>
+    <value>参照…</value>
   </data>
   <data name="Copy" xml:space="preserve">
-    <value>Copy</value>
+    <value>コピー</value>
   </data>
   <data name="Done" xml:space="preserve">
-    <value>Done</value>
+    <value>完了</value>
   </data>
   <data name="On" xml:space="preserve">
-    <value>On</value>
+    <value>オン</value>
   </data>
   <data name="Off" xml:space="preserve">
-    <value>Off</value>
+    <value>オフ</value>
   </data>
   <data name="MainNavHome" xml:space="preserve">
-    <value>Home</value>
+    <value>ホーム</value>
   </data>
   <data name="MainNavSettings" xml:space="preserve">
-    <value>Settings</value>
+    <value>設定</value>
   </data>
   <data name="MainNavAbout" xml:space="preserve">
-    <value>About</value>
+    <value>概要</value>
   </data>
   <data name="HomeTitle" xml:space="preserve">
-    <value>Launch Game</value>
+    <value>ゲーム起動</value>
   </data>
   <data name="HomeDescription" xml:space="preserve">
-    <value>Select or drag in a game executable; TouchChanX will launch it through the touchchanx protocol.</value>
+    <value>ゲームのメインプログラムを選択またはドラッグすると、TouchChanX が touchchanx プロトコルで起動します。</value>
   </data>
   <data name="HomeAddGame" xml:space="preserve">
-    <value>Add Game</value>
+    <value>ゲームを追加</value>
   </data>
   <data name="HomeDropHint" xml:space="preserve">
-    <value>Drop an .exe or .lnk to add a game</value>
+    <value>.exe または .lnk をドロップしてゲームを追加</value>
   </data>
   <data name="HomeListHint" xml:space="preserve">
-    <value>Added games will appear in a vertical list.</value>
+    <value>追加したゲームは縦方向のリストに表示されます。</value>
   </data>
   <data name="HomeLaunch" xml:space="preserve">
-    <value>Launch</value>
+    <value>起動</value>
   </data>
   <data name="HomeRename" xml:space="preserve">
-    <value>Rename</value>
+    <value>名前を変更</value>
   </data>
   <data name="HomeRemove" xml:space="preserve">
-    <value>Remove</value>
+    <value>削除</value>
   </data>
   <data name="HomeLaunchFailedTitle" xml:space="preserve">
-    <value>Launch failed</value>
+    <value>起動に失敗しました</value>
   </data>
   <data name="ProtocolLaunchFailed" xml:space="preserve">
-    <value>Unable to call the touchchanx protocol.</value>
+    <value>touchchanx プロトコルを呼び出せません。</value>
   </data>
   <data name="HomeDisplayNameHeader" xml:space="preserve">
-    <value>Display name</value>
+    <value>表示名</value>
   </data>
   <data name="HomeRenameTitle" xml:space="preserve">
-    <value>Rename game</value>
+    <value>ゲーム名を変更</value>
   </data>
   <data name="HomeDragCaption" xml:space="preserve">
-    <value>Add to TouchChanX</value>
+    <value>TouchChanX に追加</value>
   </data>
   <data name="AboutBuildLabel" xml:space="preserve">
-    <value>Build dev 2026.7</value>
+    <value>ビルド dev 2026.7</value>
   </data>
   <data name="AboutTouchMenuHint" xml:space="preserve">
-    <value>Tap the game window to open the Touch menu.</value>
+    <value>ゲームウィンドウをタップすると Touch メニューを開けます。</value>
   </data>
   <data name="AboutRateHeader" xml:space="preserve">
-    <value>Rate TouchChanX</value>
+    <value>TouchChanX を評価</value>
   </data>
   <data name="AboutRateDescription" xml:space="preserve">
-    <value>Open the Microsoft Store rating entry.</value>
+    <value>Microsoft Store の評価ページを開きます。</value>
   </data>
   <data name="AboutOpenSourceHeader" xml:space="preserve">
-    <value>Open-source project</value>
+    <value>オープンソースプロジェクト</value>
   </data>
   <data name="AboutOpenSourceDescription" xml:space="preserve">
-    <value>View the source code, license, and issues.</value>
+    <value>ソースコード、ライセンス、issue を確認します。</value>
   </data>
   <data name="AboutQqHeader" xml:space="preserve">
-    <value>QQ group</value>
+    <value>QQ グループ</value>
   </data>
   <data name="AboutQqDescription" xml:space="preserve">
-    <value>Share feedback and ideas with the developer and discuss new features.</value>
+    <value>開発者へのフィードバックやアイデアの共有、新機能の議論に参加できます。</value>
   </data>
   <data name="QqGroupNumber" xml:space="preserve">
     <value>942698378</value>
   </data>
   <data name="AboutLicenseNotice" xml:space="preserve">
-    <value>TouchChanX is an open-source project distributed under the license in the repository.</value>
+    <value>TouchChanX はオープンソースプロジェクトで、リポジトリのライセンスに従います。</value>
   </data>
   <data name="SettingsTitle" xml:space="preserve">
-    <value>Settings</value>
+    <value>設定</value>
   </data>
   <data name="SettingsExternalLauncherHeader" xml:space="preserve">
-    <value>Launch games with another program</value>
+    <value>別のプログラムでゲームを起動</value>
   </data>
   <data name="SettingsExternalLauncherDescription" xml:space="preserve">
-    <value>Available after the launcher and its arguments are valid.</value>
+    <value>起動プログラムと引数が有効な場合のみ有効にできます。</value>
   </data>
   <data name="LauncherPathHeader" xml:space="preserve">
-    <value>Launcher program</value>
+    <value>起動プログラム</value>
   </data>
   <data name="LauncherPathPlaceholder" xml:space="preserve">
-    <value>Select a launcher program</value>
+    <value>起動プログラムを選択してください</value>
   </data>
   <data name="LauncherArgumentsHeader" xml:space="preserve">
-    <value>Launch arguments</value>
+    <value>起動引数</value>
   </data>
   <data name="InsertGamePath" xml:space="preserve">
-    <value>Insert game path</value>
+    <value>ゲームパスを挿入</value>
   </data>
   <data name="CommandPreviewHeader" xml:space="preserve">
-    <value>Command to execute</value>
+    <value>実行されるコマンド</value>
   </data>
   <data name="TestLaunch" xml:space="preserve">
-    <value>Test launch…</value>
+    <value>起動をテスト…</value>
   </data>
   <data name="SettingsPlaceholderShellMenuHeader" xml:space="preserve">
-    <value>Show TouchChanX in the context menu</value>
+    <value>コンテキストメニューに TouchChanX を表示</value>
   </data>
   <data name="SettingsPlaceholderShellMenuDescription" xml:space="preserve">
-    <value>Placeholder UI; not connected to ShellMenuHandler business logic yet.</value>
+    <value>プレースホルダー UI。ShellMenuHandler のロジックにはまだ接続されていません。</value>
   </data>
   <data name="SettingsPlaceholderEdgeHeader" xml:space="preserve">
-    <value>Prevent accidental touches at the top edge</value>
+    <value>上端の誤操作防止</value>
   </data>
   <data name="SettingsPlaceholderEdgeDescription" xml:space="preserve">
-    <value>Placeholder UI; a small touch buffer is planned at the top of the game window.</value>
+    <value>プレースホルダー UI。ゲーム画面の上部に数ピクセルのタッチ余白を設ける予定です。</value>
   </data>
   <data name="SettingsAutoSaveMessage" xml:space="preserve">
-    <value>Settings are saved automatically; test the current launch configuration before enabling it for real.</value>
+    <value>設定は自動保存されます。正式に有効化する前に、現在の起動設定をテストできます。</value>
   </data>
   <data name="LauncherPathInvalid" xml:space="preserve">
-    <value>The launcher program is invalid. Select an existing .exe file.</value>
+    <value>起動プログラムが無効です。存在する .exe ファイルを選択してください。</value>
   </data>
   <data name="LauncherArgumentsHint" xml:space="preserve">
-    <value>{GamePath} is replaced with the full path to the game executable.</value>
+    <value>{GamePath} はゲーム本体の完全なパスに置き換えられます。</value>
   </data>
   <data name="LauncherArgumentsInvalid" xml:space="preserve">
-    <value>The launch arguments are invalid. They must contain an unquoted {GamePath}.</value>
+    <value>起動引数が無効です。引用符で囲まれていない {GamePath} を含めてください。</value>
   </data>
   <data name="TestLauncherTitle" xml:space="preserve">
-    <value>Test launcher</value>
+    <value>テストランチャー</value>
   </data>
   <data name="ExternalDialogStartTest" xml:space="preserve">
-    <value>Start test</value>
+    <value>テスト起動</value>
   </data>
   <data name="ExternalDialogExistingGames" xml:space="preserve">
-    <value>Games on the home page</value>
+    <value>ホームにあるゲーム</value>
   </data>
   <data name="ExternalDialogSelectOther" xml:space="preserve">
-    <value>Select another game…</value>
+    <value>別のゲームを選択…</value>
   </data>
   <data name="ExternalDialogPathHeader" xml:space="preserve">
-    <value>Test game path</value>
+    <value>テストするゲームのパス</value>
   </data>
   <data name="ExternalDialogPathPlaceholder" xml:space="preserve">
-    <value>Select the game executable</value>
+    <value>ゲーム本体を選択してください</value>
   </data>
   <data name="ExternalDialogWarning" xml:space="preserve">
-    <value>The test will actually launch the game.</value>
+    <value>テストでは実際にゲームを起動します。</value>
   </data>
   <data name="MenuDevice" xml:space="preserve">
-    <value>Device</value>
+    <value>デバイス</value>
   </data>
   <data name="MenuGame" xml:space="preserve">
-    <value>Game</value>
+    <value>ゲーム</value>
   </data>
   <data name="MenuFunction" xml:space="preserve">
-    <value>Function</value>
+    <value>機能</value>
   </data>
   <data name="MenuVolumeDown" xml:space="preserve">
-    <value>Volume down</value>
+    <value>音量を下げる</value>
   </data>
   <data name="MenuVolumeUp" xml:space="preserve">
-    <value>Volume up</value>
+    <value>音量を上げる</value>
   </data>
   <data name="MenuScreenshot" xml:space="preserve">
-    <value>Screenshot</value>
+    <value>スクリーンショット</value>
   </data>
   <data name="MenuTaskView" xml:space="preserve">
-    <value>Task view</value>
+    <value>タスクビュー</value>
   </data>
   <data name="MenuActionCenter" xml:space="preserve">
-    <value>Action center</value>
+    <value>アクションセンター</value>
   </data>
   <data name="MenuTouchpad" xml:space="preserve">
-    <value>Touchpad</value>
+    <value>タッチパッド</value>
   </data>
   <data name="MenuDesktop" xml:space="preserve">
-    <value>Desktop</value>
+    <value>デスクトップ</value>
   </data>
   <data name="MenuFullscreen" xml:space="preserve">
-    <value>Fullscreen</value>
+    <value>全画面</value>
   </data>
   <data name="MenuMove" xml:space="preserve">
-    <value>Move</value>
+    <value>移動</value>
   </data>
   <data name="MenuStretch" xml:space="preserve">
-    <value>Stretch</value>
+    <value>引き伸ばす</value>
   </data>
   <data name="MenuClose" xml:space="preserve">
-    <value>Close</value>
+    <value>閉じる</value>
   </data>
   <data name="MenuDim" xml:space="preserve">
-    <value>Dim</value>
+    <value>暗くする</value>
   </data>
   <data name="MenuRestore" xml:space="preserve">
-    <value>Restore</value>
+    <value>元に戻す</value>
   </data>
   <data name="MenuLock" xml:space="preserve">
-    <value>Lock</value>
+    <value>ロック</value>
   </data>
   <data name="MenuTouchBar" xml:space="preserve">
     <value>TouchBar</value>
   </data>
   <data name="MenuKeyboard" xml:space="preserve">
-    <value>Keyboard</value>
+    <value>キーボード</value>
   </data>
   <data name="MenuTapClick" xml:space="preserve">
-    <value>Tap click</value>
+    <value>タップでクリック</value>
   </data>
   <data name="MenuTapClickTooltip" xml:space="preserve">
-    <value>When you tap, the previous tapped position will be clicked.</value>
+    <value>タップすると、前回タップした位置をクリックします。</value>
   </data>
   <data name="MenuBattery" xml:space="preserve">
-    <value>Battery</value>
+    <value>バッテリー</value>
   </data>
   <data name="MenuTextMagnifier" xml:space="preserve">
-    <value>Text magnifier</value>
+    <value>文字拡大鏡</value>
   </data>
   <data name="MenuGesture" xml:space="preserve">
-    <value>Gesture</value>
+    <value>ジェスチャー</value>
   </data>
   <data name="MenuGamepad" xml:space="preserve">
-    <value>Gamepad</value>
+    <value>ゲームパッド</value>
   </data>
   <data name="LockWindowTitle" xml:space="preserve">
-    <value>TouchChanX lock</value>
+    <value>TouchChanX ロック</value>
   </data>
   <data name="Freeze" xml:space="preserve">
-    <value>Freeze</value>
+    <value>フリーズ</value>
   </data>
   <data name="Unlock" xml:space="preserve">
-    <value>Unlock</value>
+    <value>解除</value>
   </data>
   <data name="GamepadMappingTitle" xml:space="preserve">
-    <value>Gamepad mapping</value>
+    <value>ゲームパッドの割り当て</value>
   </data>
   <data name="GamepadButtonHeader" xml:space="preserve">
-    <value>Button</value>
+    <value>ボタン</value>
   </data>
   <data name="GamepadKeyboardKeyHeader" xml:space="preserve">
-    <value>Keyboard key</value>
+    <value>キーボードキー</value>
   </data>
   <data name="GamepadDPadLeft" xml:space="preserve">
-    <value>D-pad Left</value>
+    <value>Dパッド 左</value>
   </data>
   <data name="GamepadDPadUp" xml:space="preserve">
-    <value>D-pad Up</value>
+    <value>Dパッド 上</value>
   </data>
   <data name="GamepadDPadRight" xml:space="preserve">
-    <value>D-pad Right</value>
+    <value>Dパッド 右</value>
   </data>
   <data name="GamepadDPadDown" xml:space="preserve">
-    <value>D-pad Down</value>
+    <value>Dパッド 下</value>
   </data>
   <data name="GamepadA" xml:space="preserve">
     <value>A</value>
@@ -430,28 +430,28 @@
     <value>RB</value>
   </data>
   <data name="GamepadStart" xml:space="preserve">
-    <value>Start</value>
+    <value>スタート</value>
   </data>
   <data name="GamepadBack" xml:space="preserve">
-    <value>Back</value>
+    <value>戻る</value>
   </data>
   <data name="GamepadLeftStick" xml:space="preserve">
-    <value>Left stick</value>
+    <value>左スティック</value>
   </data>
   <data name="GamepadRightStick" xml:space="preserve">
-    <value>Right stick</value>
+    <value>右スティック</value>
   </data>
   <data name="GamepadKeyLeft" xml:space="preserve">
-    <value>Left</value>
+    <value>左</value>
   </data>
   <data name="GamepadKeyUp" xml:space="preserve">
-    <value>Up</value>
+    <value>上</value>
   </data>
   <data name="GamepadKeyRight" xml:space="preserve">
-    <value>Right</value>
+    <value>右</value>
   </data>
   <data name="GamepadKeyDown" xml:space="preserve">
-    <value>Down</value>
+    <value>下</value>
   </data>
   <data name="GamepadKeyEnter" xml:space="preserve">
     <value>Enter</value>
@@ -466,40 +466,40 @@
     <value>Ctrl</value>
   </data>
   <data name="GamepadKeyShowMapping" xml:space="preserve">
-    <value>Show mapping</value>
+    <value>割り当てを表示</value>
   </data>
   <data name="GamepadClose" xml:space="preserve">
-    <value>Close</value>
+    <value>閉じる</value>
   </data>
   <data name="BatteryOnBattery" xml:space="preserve">
-    <value>On battery</value>
+    <value>バッテリー使用中</value>
   </data>
   <data name="BatteryCharging" xml:space="preserve">
-    <value>Charging</value>
+    <value>充電中</value>
   </data>
   <data name="BatteryRecovering" xml:space="preserve">
-    <value>Recovering</value>
+    <value>回復中</value>
   </data>
   <data name="BatteryTimeLeft" xml:space="preserve">
-    <value>Time left</value>
+    <value>残り時間</value>
   </data>
   <data name="BatteryPowerDraw" xml:space="preserve">
-    <value>Power draw</value>
+    <value>消費電力</value>
   </data>
   <data name="BatteryCapacity" xml:space="preserve">
-    <value>Capacity</value>
+    <value>容量</value>
   </data>
   <data name="Unavailable" xml:space="preserve">
     <value>--</value>
   </data>
   <data name="BatteryTimeHoursFormat" xml:space="preserve">
-    <value>{0}h {1}m</value>
+    <value>{0}時間 {1}分</value>
   </data>
   <data name="BatteryTimeMinutesFormat" xml:space="preserve">
-    <value>{0}m</value>
+    <value>{0}分</value>
   </data>
   <data name="BatteryPowerDrawFormat" xml:space="preserve">
-    <value>{0:0.0} W ({1}s)</value>
+    <value>{0:0.0} W（{1}秒）</value>
   </data>
   <data name="BatteryCapacityFormat" xml:space="preserve">
     <value>{0:0.0} Wh</value>
@@ -508,66 +508,66 @@
     <value>{0:0}%</value>
   </data>
   <data name="MouseClick" xml:space="preserve">
-    <value>Mouse click</value>
+    <value>マウスクリック</value>
   </data>
   <data name="GestureSpace" xml:space="preserve">
-    <value>Space</value>
+    <value>スペース</value>
   </data>
   <data name="GestureRightClick" xml:space="preserve">
-    <value>Right-click</value>
+    <value>マウス右クリック</value>
   </data>
   <data name="GestureScrollUp" xml:space="preserve">
-    <value>Scroll up</value>
+    <value>ホイール上</value>
   </data>
   <data name="GestureScrollDown" xml:space="preserve">
-    <value>Scroll down</value>
+    <value>ホイール下</value>
   </data>
   <data name="SandboxSendMessage" xml:space="preserve">
-    <value>Send message</value>
+    <value>メッセージを送信</value>
   </data>
   <data name="SandboxGamepadMapping" xml:space="preserve">
-    <value>Gamepad mapping</value>
+    <value>ゲームパッド割り当て</value>
   </data>
   <data name="UnknownDpiTitle" xml:space="preserve">
-    <value>TouchChanX cannot determine the game's DPI scaling</value>
+    <value>タッチちゃんがゲームの DPI スケールを確認できません</value>
   </data>
   <data name="UnknownDpiContent" xml:space="preserve">
-    <value>Consider restarting the game from TouchChanX</value>
+    <value>タッチちゃんからゲームを再起動することを検討してください</value>
   </data>
   <data name="ErrorGamePathRequired" xml:space="preserve">
-    <value>No game path was provided.</value>
+    <value>ゲームパスが指定されていません。</value>
   </data>
   <data name="ErrorInvalidGamePath" xml:space="preserve">
-    <value>Game path "{0}" not found, please check if it exists.</value>
+    <value>ゲームパス「{0}」が見つかりません。存在を確認してください。</value>
   </data>
   <data name="ErrorShortcutResolve" xml:space="preserve">
-    <value>Failed to resolve "{0}", please try starting from the game folder.</value>
+    <value>「{0}」の解決に失敗しました。ゲームフォルダーから起動してください。</value>
   </data>
   <data name="ErrorResolvedLinkPath" xml:space="preserve">
-    <value>Resolved link path "{0}" not found, please try starting from the game folder.</value>
+    <value>リンク先「{0}」が見つかりません。ゲームフォルダーから起動してください。</value>
   </data>
   <data name="ErrorExternalLauncherNotFound" xml:space="preserve">
-    <value>External launcher "{0}" not found, please check the launcher setting.</value>
+    <value>外部ランチャー「{0}」が見つかりません。ランチャーの設定を確認してください。</value>
   </data>
   <data name="ErrorExternalLauncherInvalid" xml:space="preserve">
-    <value>Invalid external launcher configuration.</value>
+    <value>外部ランチャーの設定が無効です。</value>
   </data>
   <data name="ErrorExternalLauncherStart" xml:space="preserve">
-    <value>Failed to start "{0}".</value>
+    <value>「{0}」の起動に失敗しました。</value>
   </data>
   <data name="ErrorExternalLauncherStartDetails" xml:space="preserve">
-    <value>Failed to start "{0}": {1}</value>
+    <value>「{0}」の起動に失敗しました: {1}</value>
   </data>
   <data name="ErrorGameStartTimeout" xml:space="preserve">
-    <value>Failed to start the game within the timeout period.</value>
+    <value>制限時間内にゲームを起動できませんでした。</value>
   </data>
   <data name="ErrorWindowNotFound" xml:space="preserve">
-    <value>Timeout! Failed to find a valid game window.</value>
+    <value>タイムアウトしました。ゲームの有効なウィンドウが見つかりません。</value>
   </data>
   <data name="ErrorUnableToLockGame" xml:space="preserve">
-    <value>Unable to lock the game.</value>
+    <value>ゲームをロックできません。</value>
   </data>
   <data name="ErrorUnableToFreezeGame" xml:space="preserve">
-    <value>Unable to freeze the game.</value>
+    <value>ゲームを一時停止できません。</value>
   </data>
 </root>

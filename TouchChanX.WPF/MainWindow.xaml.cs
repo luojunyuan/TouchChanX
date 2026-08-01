@@ -1,5 +1,6 @@
 ﻿using R3;
 using System.Windows;
+using TouchChanX.Persistence;
 using TouchChanX.WPF.Menu;
 using TouchChanX.WPF.Touch;
 
@@ -10,6 +11,8 @@ namespace TouchChanX.WPF;
 /// </summary>
 public partial class MainWindow : Window
 {
+    public LocalizedStrings Strings { get; } = LocalizedStrings.Current;
+
     public MainWindow()
     {
         InitializeComponent();

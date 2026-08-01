@@ -8,7 +8,7 @@ if (TouchChanX.ExternalLauncherTestStartup.TryHandle(args.FirstOrDefault()))
 
 if (args.Length == 0)
 {
-    OsPlatformApi.MessageBox.Show("invalid game path");
+    OsPlatformApi.MessageBox.Show(LocalizedStrings.Current.ErrorGamePathRequired);
     return;
 }
 
@@ -23,7 +23,9 @@ var settings = new AppSettings();
 if (settings.ExternalLauncherEnabled && !File.Exists(settings.ExternalLauncherPath))
 {
     OsPlatformApi.MessageBox.Show(
-        $"External launcher \"{settings.ExternalLauncherPath}\" not found, please check the launcher setting.");
+        LocalizedStrings.Current.Format(
+            nameof(LocalizedStrings.ErrorExternalLauncherNotFound),
+            settings.ExternalLauncherPath));
     return;
 }
 
