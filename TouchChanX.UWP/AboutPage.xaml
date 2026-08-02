@@ -14,14 +14,14 @@
                     <Image Width="64" Height="64" Source="ms-appx:///Images/StoreLogo.png" />
                     <StackPanel VerticalAlignment="Center" Spacing="2">
                         <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="{x:Bind Strings.DisplayName}" />
-                        <TextBlock Text="{x:Bind Strings.AboutBuildLabel}" />
+                        <TextBlock Text="build dev 2026.8" />
                         <TextBlock Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Strings.AboutTouchMenuHint}" />
                     </StackPanel>
                 </StackPanel>
 
                 <ct:SettingsCard
                     Command="{x:Bind RateInStoreCommand}"
-                    Description="build dev 2026.8"
+                    Description="{x:Bind Strings.AboutRateDescription}"
                     Header="{x:Bind Strings.AboutRateHeader}"
                     IsClickEnabled="True">
                     <ct:SettingsCard.HeaderIcon>
