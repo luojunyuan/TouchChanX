@@ -31,6 +31,24 @@ public static partial class OsPlatformApi // Window
         PInvoke.ShowWindow(new(hwnd), SHOW_WINDOW_CMD.SW_SHOWNOACTIVATE);
 
     /// <summary>
+    /// 判断窗口句柄当前是否仍由指定进程创建。
+    /// </summary>
+    public static bool IsWindowFromProcess(nint hwnd, int processId)
+    {
+        if (hwnd == nint.Zero || processId <= 0 || !PInvoke.IsWindow(new(hwnd)))
+            return false;
+
+        _ = PInvoke.GetWindowThreadProcessId(new(hwnd), out var windowProcessId);
+        return windowProcessId == (uint)processId;
+    }
+
+    /// <summary>
+    /// 判断窗口句柄当前是否仍由本进程创建。
+    /// </summary>
+    public static bool IsWindowFromCurrentProcess(nint hwnd) =>
+        IsWindowFromProcess(hwnd, Environment.ProcessId);
+
+    /// <summary>
     /// 在窗口处于最小化时恢复窗口
     /// </summary>
     public static void RestoreWindowQwQ(nint windowHandle)

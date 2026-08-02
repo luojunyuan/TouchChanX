@@ -1,3 +1,4 @@
+using Microsoft.UI.Dispatching;
 using R3;
 using System.Diagnostics;
 using TouchChanX.Persistence;
@@ -110,7 +111,13 @@ internal sealed partial class WinUIAppController(Process process)
 
         _windowLoopSubscription = null;
         WinUIApplication.SignalStartupCompleted();
-        Environment.Exit(0);
+
+        // The game can destroy cross-process child HWNDs without giving WinUI a chance to close
+        // its Window objects. Normal XAML shutdown can then access those destroyed native objects.
+        // Leave the current lifetime callback first, then terminate without entering XAML teardown.
+        var dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+        if (!dispatcherQueue.TryEnqueue(static () => Environment.Exit(0)))
+            Environment.Exit(0);
     }
 
     private static void InitializeReactiveRuntime()

@@ -81,7 +81,6 @@ public static class WinUIApplication
         if (!MsixDependencyPrepared.Value)
         {
             SignalStartupCompleted();
-            Environment.Exit(0);
             return;
         }
 
@@ -100,7 +99,6 @@ public static class WinUIApplication
             SignalStartupCompleted();
         }
 
-        Environment.Exit(0);
     }
 }
 

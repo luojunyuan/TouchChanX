@@ -51,12 +51,5 @@ if (processResult.IsFailure(out var processError, out var process))
     return;
 }
 
-// NOTE: 无论是 WPF 的 Owned 还是 WinUI 的 Child 窗口都跟随父进程结束而结束
-process.EnableRaisingEvents = true;
-process.Exited += (_, _) =>
-{
-    Environment.Exit(0);
-};
-
 TouchChanX.WinUIApplication.SetStartupCompletedCallback(splash.Dispose);
 TouchChanX.WinUIApplication.RunWithGameProcess(process);

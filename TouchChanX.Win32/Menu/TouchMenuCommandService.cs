@@ -81,7 +81,7 @@ public static class TouchMenuCommandService
             case "touch-to-mouse":
                 TouchConversionHooker.Uninstall();
                 break;
-            case "gesture" when isOn && touchWindowHandle != nint.Zero && OsPlatformApi.IsWindow(touchWindowHandle):
+            case "gesture" when isOn && OsPlatformApi.IsWindowFromCurrentProcess(touchWindowHandle):
                 if (!OperatingSystem.IsWindowsVersionAtLeast(8))
                     return;
 

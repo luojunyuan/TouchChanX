@@ -112,10 +112,12 @@ internal sealed partial class GameWindowOverlayController : IDisposable
 
     public void HandleGameWindowDestroyed()
     {
+        if (_isDisposed)
+            return;
+
         _isDisposed = true;
-        CloseLockWindow(activateGame: false);
         _gameWindowHandle = nint.Zero;
-        _restoreBrightness();
+        AbandonLockWindow();
     }
 
     public void Dispose()
@@ -143,7 +145,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
         }
 
         var lockWindowHandle = _lockWindowHandle;
-        if (lockWindowHandle == nint.Zero || !OsPlatformApi.IsWindow(lockWindowHandle))
+        if (!OsPlatformApi.IsWindowFromCurrentProcess(lockWindowHandle))
         {
             _showMessage(LocalizedStrings.Current.ErrorUnableToFreezeGame);
             return false;
@@ -173,7 +175,8 @@ internal sealed partial class GameWindowOverlayController : IDisposable
         _gameProcessSuspension = null;
 
         suspension?.Dispose();
-        if (_lockWindow is not null)
+        if (_lockWindow is not null &&
+            OsPlatformApi.IsWindowFromCurrentProcess(_lockWindowHandle))
         {
             WindowConfiguration.ConfigureOwnedWindow(_lockWindowHandle, gameWindowHandle);
             _lockWindow.SetFrozenState(false);
@@ -193,6 +196,7 @@ internal sealed partial class GameWindowOverlayController : IDisposable
 
         var overlay = _lockWindow;
         _lockWindow = null;
+        var lockWindowHandle = _lockWindowHandle;
         _lockWindowHandle = nint.Zero;
 
         var inputSubscription = _lockWindowInputSubscription;
@@ -200,11 +204,52 @@ internal sealed partial class GameWindowOverlayController : IDisposable
 
         inputSubscription?.Dispose();
         suspension?.Dispose();
-        overlay?.SetFrozenState(false);
-        overlay?.Close();
+        if (overlay is not null && OsPlatformApi.IsWindowFromCurrentProcess(lockWindowHandle))
+        {
+            try
+            {
+                overlay.SetFrozenState(false);
+                overlay.Close();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to close the lock window: {ex}");
+            }
+        }
 
         if (activateGame && gameWindowHandle != nint.Zero && OsPlatformApi.IsWindow(gameWindowHandle))
             OsPlatformApi.ActivateWindow(gameWindowHandle);
+    }
+
+    private void AbandonLockWindow()
+    {
+        _lockedGameWindowHandle = nint.Zero;
+
+        var suspension = _gameProcessSuspension;
+        _gameProcessSuspension = null;
+
+        var overlay = _lockWindow;
+        _lockWindow = null;
+        var lockWindowHandle = _lockWindowHandle;
+        _lockWindowHandle = nint.Zero;
+
+        var inputSubscription = _lockWindowInputSubscription;
+        _lockWindowInputSubscription = null;
+
+        inputSubscription?.Dispose();
+        suspension?.Dispose();
+
+        if (overlay is not null && OsPlatformApi.IsWindowFromCurrentProcess(lockWindowHandle))
+        {
+            try
+            {
+                overlay.Close();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to close the remaining lock window: {ex}");
+            }
+        }
     }
 }
 
@@ -230,13 +275,22 @@ internal static class WindowConfiguration
 
     public static void DetachEmbeddedWindow(nint hwnd)
     {
-        if (hwnd == nint.Zero || !OsPlatformApi.IsWindow(hwnd))
+        // IsWindow alone is insufficient because Windows can already have reused a stale HWND
+        // for an Explorer or UWP window by the time an out-of-context destroy event is delivered.
+        if (!OsPlatformApi.IsWindowFromCurrentProcess(hwnd))
             return;
 
-        OsPlatformApi.HideWindow(hwnd);
-        OsPlatformApi.SetParentWindowQwQ(hwnd, nint.Zero);
-        OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.Child, false);
-        OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.Popup, true);
+        try
+        {
+            OsPlatformApi.HideWindow(hwnd);
+            OsPlatformApi.SetParentWindowQwQ(hwnd, nint.Zero);
+            OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.Child, false);
+            OsPlatformApi.ToggleWindowStyle(hwnd, WindowStyles.Popup, true);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to detach an embedded TouchChanX window during cleanup: {ex}");
+        }
     }
 
     public static void RestoreEmbeddedWindow(nint hwnd, nint parent)

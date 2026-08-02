@@ -1,3 +1,4 @@
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using R3;
 using R3.ObservableEvents;
@@ -15,9 +16,9 @@ namespace TouchChanX;
 /// Represents one embedded game-window session.
 /// </summary>
 /// <remarks>
-/// The completion observable emits when the game window is destroyed or the TouchChanX
-/// window is closed. This lets the process controller react to the session without owning
-/// any of its XAML resources or native subscriptions.
+/// The completion observable emits when the game process exits, the game window is destroyed,
+/// or the TouchChanX window is closed. This lets the process controller react to the session
+/// without owning any of its XAML resources or native subscriptions.
 /// </remarks>
 internal sealed partial class GameWindowLifetime(
     Process process,
@@ -25,15 +26,17 @@ internal sealed partial class GameWindowLifetime(
     bool isFirstGameWindow) : IDisposable
 {
     private readonly Process _process = process;
+    private readonly int _gameProcessId = process.Id;
     private readonly nint _gameWindowHandle = gameWindowHandle;
     private readonly bool _isFirstGameWindow = isFirstGameWindow;
     private readonly Subject<Unit> _completed = new();
+    private readonly DispatcherQueue _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
     private WinUI.MainWindow? _mainWindow;
     private WinUI.HudWindow? _hudWindow;
     private GameWindowOverlayController? _overlays;
     private IDisposable? _clientSizeSubscription;
-    private IDisposable? _windowDestroyedSubscription;
+    private IDisposable? _lifetimeEndSubscription;
     private IDisposable? _batterySubscription;
     private BatteryMonitor? _batteryMonitor;
     private GamepadController? _gamepadController;
@@ -57,7 +60,7 @@ internal sealed partial class GameWindowLifetime(
         }
     }
 
-    public void Dispose() => CompleteWindowLifetime();
+    public void Dispose() => CompleteWindowLifetime(WindowLifetimeEndReason.Disposed);
 
     private void StartCore()
     {
@@ -103,8 +106,7 @@ internal sealed partial class GameWindowLifetime(
         ApplySettings(mainWindowHandle, hudWindow, gamepadController);
 
         mainWindow.InitializeBindings();
-        mainWindow.Events().Closed.Subscribe(_ => CompleteWindowLifetime());
-        SubscribeGameWindowDestroyed();
+        SubscribeLifetimeEnd(mainWindow);
 
         if (Volatile.Read(ref _completionState) != 0)
             return;
@@ -134,8 +136,10 @@ internal sealed partial class GameWindowLifetime(
         _clientSizeSubscription = GameWindowService.ClientSizeChanged(_gameWindowHandle)
             .Subscribe(size =>
             {
-                OsPlatformApi.ResizeWindow(mainWindowHandle, size);
-                OsPlatformApi.ResizeWindow(hudWindowHandle, size);
+                if (OsPlatformApi.IsWindowFromCurrentProcess(mainWindowHandle))
+                    OsPlatformApi.ResizeWindow(mainWindowHandle, size);
+                if (OsPlatformApi.IsWindowFromCurrentProcess(hudWindowHandle))
+                    OsPlatformApi.ResizeWindow(hudWindowHandle, size);
             });
     }
 
@@ -283,26 +287,63 @@ internal sealed partial class GameWindowLifetime(
             gamepadController.SetEnabled(true);
     }
 
-    private void SubscribeGameWindowDestroyed()
+    private void SubscribeLifetimeEnd(WinUI.MainWindow mainWindow)
     {
-        if (!OsPlatformApi.IsWindow(_gameWindowHandle))
+        if (_process.HasExited ||
+            !OsPlatformApi.IsWindowFromProcess(_gameWindowHandle, _gameProcessId))
         {
-            CompleteWindowLifetime();
+            CompleteWindowLifetime(WindowLifetimeEndReason.GameEnded);
             return;
         }
 
-        _windowDestroyedSubscription = GameWindowService.WindowDestroyed(_gameWindowHandle)
-            .Subscribe(_ => CompleteWindowLifetime());
+        var mainWindowClosedSubscription = mainWindow.Events().Closed
+            .Take(1)
+            .Subscribe(_ => RequestWindowLifetimeCompletion(WindowLifetimeEndReason.MainWindowClosed));
+        var gameWindowDestroyedSubscription = GameWindowService.WindowDestroyed(_gameWindowHandle)
+            .Take(1)
+            .Subscribe(_ => RequestWindowLifetimeCompletion(WindowLifetimeEndReason.GameEnded));
+        var processExitedSubscription = _process.Events().Exited
+            .Take(1)
+            .Subscribe(_ => RequestWindowLifetimeCompletion(WindowLifetimeEndReason.GameEnded));
+        _lifetimeEndSubscription = Disposable.Combine(
+            mainWindowClosedSubscription,
+            gameWindowDestroyedSubscription,
+            processExitedSubscription);
+        _process.EnableRaisingEvents = true;
 
-        // The game can disappear between the initial lookup and hook creation.
-        if (!OsPlatformApi.IsWindow(_gameWindowHandle))
-            CompleteWindowLifetime();
+        // The game can disappear between the initial checks and the subscriptions.
+        if (_process.HasExited ||
+            !OsPlatformApi.IsWindowFromProcess(_gameWindowHandle, _gameProcessId))
+        {
+            RequestWindowLifetimeCompletion(WindowLifetimeEndReason.GameEnded);
+        }
     }
 
-    private void CompleteWindowLifetime()
+    private void RequestWindowLifetimeCompletion(WindowLifetimeEndReason reason)
     {
-        if (Interlocked.Exchange(ref _completionState, 1) != 0)
+        if (Interlocked.CompareExchange(ref _completionState, 1, 0) != 0)
             return;
+
+        // Never tear down WinUI windows from a WinEvent, Window.Closed, or Process.Exited stack.
+        if (!_dispatcherQueue.TryEnqueue(() => CompleteWindowLifetimeCore(reason)))
+            Debug.WriteLine("Unable to enqueue TouchChanX window cleanup because the dispatcher is shutting down.");
+    }
+
+    private void CompleteWindowLifetime(WindowLifetimeEndReason reason)
+    {
+        if (Interlocked.CompareExchange(ref _completionState, 1, 0) != 0)
+            return;
+
+        CompleteWindowLifetimeCore(reason);
+    }
+
+    private void CompleteWindowLifetimeCore(WindowLifetimeEndReason reason)
+    {
+        if (reason != WindowLifetimeEndReason.GameEnded &&
+            !OsPlatformApi.IsWindowFromProcess(_gameWindowHandle, _gameProcessId))
+        {
+            reason = WindowLifetimeEndReason.GameEnded;
+        }
 
         var touchWindowHandle = _touchWindowHandle;
         var hudWindowHandle = _hudWindowHandle;
@@ -319,16 +360,12 @@ internal sealed partial class GameWindowLifetime(
 
         var overlays = _overlays;
         _overlays = null;
-        overlays?.HandleGameWindowDestroyed();
-        overlays?.Dispose();
+        if (reason == WindowLifetimeEndReason.GameEnded)
+            overlays?.HandleGameWindowDestroyed();
+        else
+            overlays?.Dispose();
 
-        if (touchWindowHandle != nint.Zero)
-            WindowConfiguration.DetachEmbeddedWindow(touchWindowHandle);
-        if (hudWindowHandle != nint.Zero)
-            WindowConfiguration.DetachEmbeddedWindow(hudWindowHandle);
-
-        CloseHudWindow();
-        CloseMainWindow();
+        CleanupEmbeddedWindows(reason, touchWindowHandle, hudWindowHandle);
         _completed.OnNext(Unit.Default);
         _completed.OnCompleted(Result.Success);
     }
@@ -346,26 +383,61 @@ internal sealed partial class GameWindowLifetime(
         gamepadController?.Dispose();
         CloseGamepadWindow();
 
+        var touchWindowHandle = _touchWindowHandle;
+        var hudWindowHandle = _hudWindowHandle;
+        _touchWindowHandle = nint.Zero;
+        _hudWindowHandle = nint.Zero;
+
+        var gameEnded = !OsPlatformApi.IsWindowFromProcess(_gameWindowHandle, _gameProcessId);
         var overlays = _overlays;
         _overlays = null;
-        overlays?.Dispose();
+        if (gameEnded)
+            overlays?.HandleGameWindowDestroyed();
+        else
+            overlays?.Dispose();
 
-        if (_touchWindowHandle != nint.Zero)
-            WindowConfiguration.DetachEmbeddedWindow(_touchWindowHandle);
-        if (_hudWindowHandle != nint.Zero)
-            WindowConfiguration.DetachEmbeddedWindow(_hudWindowHandle);
-
-        CloseHudWindow();
-        CloseMainWindow();
+        CleanupEmbeddedWindows(
+            gameEnded ? WindowLifetimeEndReason.GameEnded : WindowLifetimeEndReason.Disposed,
+            touchWindowHandle,
+            hudWindowHandle);
         _completed.OnCompleted(Result.Failure(exception));
+    }
+
+    private void CleanupEmbeddedWindows(
+        WindowLifetimeEndReason reason,
+        nint touchWindowHandle,
+        nint hudWindowHandle)
+    {
+        // A foreign parent destroys its WS_CHILD windows before reporting its own destruction.
+        // Their cached HWND values are no longer safe to detach or close here.
+        if (reason == WindowLifetimeEndReason.GameEnded)
+        {
+            _hudWindow = null;
+            _mainWindow = null;
+            return;
+        }
+
+        if (hudWindowHandle != nint.Zero)
+            WindowConfiguration.DetachEmbeddedWindow(hudWindowHandle);
+        CloseHudWindow(hudWindowHandle);
+
+        if (reason == WindowLifetimeEndReason.MainWindowClosed)
+        {
+            _mainWindow = null;
+            return;
+        }
+
+        if (touchWindowHandle != nint.Zero)
+            WindowConfiguration.DetachEmbeddedWindow(touchWindowHandle);
+        CloseMainWindow(touchWindowHandle);
     }
 
     private void DisposeGameWindowSubscriptions()
     {
         _clientSizeSubscription?.Dispose();
         _clientSizeSubscription = null;
-        _windowDestroyedSubscription?.Dispose();
-        _windowDestroyedSubscription = null;
+        _lifetimeEndSubscription?.Dispose();
+        _lifetimeEndSubscription = null;
         _batterySubscription?.Dispose();
         _batterySubscription = null;
         _batteryMonitor = null;
@@ -411,18 +483,28 @@ internal sealed partial class GameWindowLifetime(
         window?.Close();
     }
 
-    private void CloseHudWindow()
+    private void CloseHudWindow(nint windowHandle)
     {
         var hud = _hudWindow;
         _hudWindow = null;
-        hud?.Close();
+        if (hud is null || !OsPlatformApi.IsWindowFromCurrentProcess(windowHandle))
+            return;
+
+        try
+        {
+            hud.Close();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to close TouchChanX HUD window: {ex}");
+        }
     }
 
-    private void CloseMainWindow()
+    private void CloseMainWindow(nint windowHandle)
     {
         var window = _mainWindow;
         _mainWindow = null;
-        if (window is null)
+        if (window is null || !OsPlatformApi.IsWindowFromCurrentProcess(windowHandle))
             return;
 
         try
@@ -433,6 +515,13 @@ internal sealed partial class GameWindowLifetime(
         {
             Debug.WriteLine($"Failed to close TouchChanX window: {ex}");
         }
+    }
+
+    private enum WindowLifetimeEndReason
+    {
+        Disposed,
+        MainWindowClosed,
+        GameEnded,
     }
 
     private static string GetGestureMessage(RecognizedGesture gesture) =>
@@ -465,6 +554,9 @@ internal sealed partial class GameWindowLifetime(
 
         private void Apply()
         {
+            if (!OsPlatformApi.IsWindowFromCurrentProcess(hwnd))
+                return;
+
             if (_usesOriginalRegion)
             {
                 OsPlatformApi.ResetWindowOriginalObservableRegion(hwnd);
